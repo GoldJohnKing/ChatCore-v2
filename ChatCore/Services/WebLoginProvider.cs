@@ -46,20 +46,33 @@ namespace ChatCore.Services
 			}
 
 			_cancellationToken = new CancellationTokenSource();
-			_listener = new HttpListener {Prefixes = {$"http://*:{_settings.WebAppPort}/"}};
+			_listener = new HttpListener
+			{
+				Prefixes = {$"http://localhost:{_settings.WebAppPort}/"}
+			};
 			_listener.Start();
+
+			_logger.Log(LogLevel.Information, $"Listening on {string.Join(", ",_listener.Prefixes)}");
 
 			Task.Run(async () =>
 			{
 				while (true)
 				{
-					var httpListenerContext = await _listener.GetContextAsync().ConfigureAwait(false);
-					_logger.LogWarning("Request received");
-					await OnContext(httpListenerContext).ConfigureAwait(false);
+					try
+					{
+						_logger.LogInformation("Waiting for incoming request...");
+						var httpListenerContext = await _listener.GetContextAsync();
+						_logger.LogWarning("Request received");
+						await OnContext(httpListenerContext);
+					}
+					catch (Exception e)
+					{
+						_logger.LogError(e, "WebLoginProvider errored.");
+					}
 				}
 
 				// ReSharper disable once FunctionNeverReturns
-			});
+			}).ConfigureAwait(false);
 		}
 
 		private async Task OnContext(HttpListenerContext ctx)
@@ -150,6 +163,7 @@ namespace ChatCore.Services
 				resp.ContentEncoding = Encoding.UTF8;
 				resp.ContentLength64 = data.LongLength;
 				await resp.OutputStream.WriteAsync(data, 0, data.Length);
+				resp.Close();
 			}
 			catch (Exception ex)
 			{
