@@ -32,7 +32,14 @@ namespace ChatCore
             OnLogReceived?.Invoke(level, category, message);
         }
 
+        // Method is kept to keep binary compatibility
         public static ChatCoreInstance Create()
+        {
+	        return Create(null);
+        }
+
+        // ReSharper disable once MethodOverloadWithOptionalParameter
+        public static ChatCoreInstance Create(Action<CustomLogLevel, string, string>? logReceiver = null!)
         {
             lock (CreateLock)
             {
@@ -42,7 +49,7 @@ namespace ChatCore
 	            }
 
 	            _instance = new ChatCoreInstance();
-                var serviceCollection = new ServiceCollection();
+	            var serviceCollection = new ServiceCollection();
                 serviceCollection
 	                .AddLogging(builder =>
 	                {
@@ -88,19 +95,30 @@ namespace ChatCore
 	                .AddSingleton<IEmojiParser, FrwTwemojiParser>()
 	                .AddSingleton<IDefaultBrowserLauncherService, ProcessDotStartBrowserLauncherService>()
 	                .AddTransient<IWebSocketService, WebSocket4NetServiceProvider>();
+
+                if (logReceiver != null)
+                {
+	                _instance.OnLogReceived += logReceiver;
+                }
+
                 _serviceProvider = serviceCollection.BuildServiceProvider();
 
+                var logger = _serviceProvider.GetService<ILogger<ChatCoreInstance>>();
                 var settings = _serviceProvider.GetService<MainSettingsProvider>();
                 if (settings.DisableWebApp)
                 {
+	                logger.Log(LogLevel.Information, $"WebLoginProvider disabled...");
 	                return _instance;
                 }
 
+                logger.Log(LogLevel.Information, $"Attempting to start WebLoginProvider");
                 _serviceProvider.GetService<IWebLoginProvider>().Start();
+                logger.Log(LogLevel.Information, $"Supposedly started WebLoginProvider");
                 if (settings.LaunchWebAppOnStartup)
                 {
 	                _serviceProvider.GetService<IDefaultBrowserLauncherService>().Launch($"http://localhost:{_serviceProvider.GetService<MainSettingsProvider>().WebAppPort}");
                 }
+
                 return _instance;
             }
         }

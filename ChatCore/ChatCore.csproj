@@ -53,7 +53,7 @@
 	</Target>
 
 	<Target Name="PostBuild" AfterTargets="ILMerge" Condition="Exists('$(BeatSaberDir)')">
-		<Exec Command="copy /Y &quot;$(OutDir)$(TargetFileName)&quot; &quot;$(BeatSaberDir)\Libs&quot;"/>
+		<Copy SourceFiles="$(OutDir)$(TargetFileName)" DestinationFiles="$(BeatSaberDir)\Libs\$(TargetFileName)"/>
 	</Target>
 
 </Project>
