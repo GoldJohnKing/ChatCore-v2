@@ -398,7 +398,7 @@ namespace ChatCore.Config
 
 				if (fieldInfo == null)
 				{
-					// Skip missing fields, in-case one was changed or removed.
+					// Skip missing fields, in case one was changed or removed.
 					continue;
 				}
 
