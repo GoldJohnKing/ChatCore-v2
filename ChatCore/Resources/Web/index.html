@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 	<title>ChatCore Settings</title>
@@ -76,6 +76,7 @@
 						<div class="row">
 							<div class="chips">
 							</div>
+							<a class="btn-floating pulse cyan tooltipped" data-position="right"><i class="material-icons">info_outline</i></a>
 						</div>
 
 						<div class="row">
@@ -172,6 +173,7 @@
 
 <script>
 	var channelChipsInstance;
+	var channelTooltipInstance;
 	var saveButtonElement;
 
 	// Helper functions
@@ -272,10 +274,15 @@
 
 		if (accessToken) {
 			var tokenField = document.getElementById("twitch_oath_token");
-			tokenField.value = 'oauth:' + encodeURIComponent(accessToken);
+			tokenField.value = 'oauth:' + decodeURIComponent(accessToken);
 		}
 
-		saveButtonElement = document.getElementById("saveButton")
+		saveButtonElement = document.getElementById("saveButton");
+
+		var tooltipButton = document.querySelector('.tooltipped');
+		channelTooltipInstance = M.Tooltip.init(tooltipButton, {
+			html: "Make sure to add your channelname here. When you've filled it in, also make sure that you've hit the enter button and hit the save button afterwards."
+		});
 
 		var chipContainer = document.querySelector('.chips');
 		channelChipsInstance = M.Chips.init(chipContainer, {
