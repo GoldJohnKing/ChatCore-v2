@@ -129,7 +129,6 @@ namespace ChatCore.Services
 				if (responseJson.HasKey("twitch_oauth_token"))
 				{
 					var token = responseJson["twitch_oauth_token"].Value;
-					_logger.LogInformation(token);
 					if (!token.StartsWith("oauth:"))
 					{
 						token = !string.IsNullOrWhiteSpace(token) ? $"oauth:{token}" : string.Empty;
@@ -137,8 +136,6 @@ namespace ChatCore.Services
 
 					if (_authManager.Credentials.Twitch_OAuthToken != token)
 					{
-						_logger.LogInformation($"Saving token: {token}");
-
 						_authManager.Credentials.Twitch_OAuthToken = token;
 						authChanged = true;
 					}
@@ -153,8 +150,6 @@ namespace ChatCore.Services
 					    (channelsFromResponse.Count != _authManager.Credentials.Twitch_Channels.Count ||
 					    channelsFromResponse.Any(name => !_authManager.Credentials.Twitch_Channels.Contains(name))))
 					{
-						_logger.LogInformation($"Saving twitch channels: {string.Join(", ", channelsFromResponse)}");
-
 						_authManager.Credentials.Twitch_Channels.Clear();
 						_authManager.Credentials.Twitch_Channels.AddRange(channelsFromResponse);
 
@@ -164,7 +159,6 @@ namespace ChatCore.Services
 					responseJson.Remove("twitch_channels");
 				}
 
-				_logger.LogInformation($"Auth changed: {authChanged}");
 				if (authChanged)
 				{
 					_authManager.Save();

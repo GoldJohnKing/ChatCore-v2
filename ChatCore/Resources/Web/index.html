@@ -198,13 +198,9 @@
 		saveButtonElement.classList.add("disabled")
 
 		for (var key in data) {
-			console.log(key);
-
 			var element = document.getElementById(key);
-			console.log(element);
 
 			if (element === null) {
-				console.log("skipping because not element not found")
 				continue;
 			}
 
@@ -212,18 +208,12 @@
 				switch (element.type) {
 					case "checkbox":
 						data[key] = element.checked;
-						console.log("Found value: " + element.checked)
 						break;
 					case "password":
 					case "text":
 						data[key] = element.value;
-						console.log("Found value: " + element.value)
 						break;
-					default:
-						console.log("unhandled input type")
 				}
-			} else {
-				console.log("skipping because not an input element")
 			}
 		}
 
@@ -231,27 +221,27 @@
 			return channelTag.tag;
 		});
 
-		console.log(data);
-
-		var request = new XMLHttpRequest();   // new HttpRequest instance
+		// new HttpRequest instance
+		var request = new XMLHttpRequest();
 		request.open("POST", "/submit");
 		request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-		request.onabort = function (ev) {
+		request.onabort = function () {
 			M.toast({html: "Something went wrong, try again later."})
 		};
-		request.onerror = function (ev) {
+		request.onerror = function () {
 			M.toast({html: "Something went wrong trying to save the settings. Make sure Beat Saber is still running."})
 		};
-		request.onload = function (ev) {
+		request.onload = function () {
 			M.toast({html: "Settings have been saved successfully."})
 		};
-		request.onloadend = function (ev) {
+		request.onloadend = function () {
 			saveButtonElement.classList.remove("disabled")
 			saveButtonElement.enabled = true;
 		};
 		request.send(JSON.stringify(data));
 	}
 
+	// Data will be injected here by the backend
 	var data = {};
 
 	// your page initialization code here
@@ -262,18 +252,13 @@
 			var element = document.getElementById(key);
 
 			if (element == null) {
-				console.log("skipping")
 				continue;
 			}
 
 			if (typeof value === "string") {
-				console.log("Setting string")
 				element.value = value;
 			} else if (typeof value === "boolean") {
-				console.log("Setting bool")
 				element.checked = value;
-			} else {
-				console.log("No type match")
 			}
 		}
 
@@ -304,14 +289,10 @@
 			secondaryPlaceholder: "Add channel",
 			limit: 10,
 			onChipAdd: function (container, newlyAddedChannelChip) {
-				console.log(container);
-				console.log(newlyAddedChannelChip);
-
 				var rawChannelNameTagEntry = decodeURIComponent(newlyAddedChannelChip.firstChild.data);
 				var channelName = extractTwitchChannelName(rawChannelNameTagEntry);
 
 				var channelTagIndex = Array.prototype.slice.call(container[0].children).indexOf(newlyAddedChannelChip);
-				console.log(channelTagIndex);
 
 				if (!channelName) {
 					channelChipsInstance.deleteChip(channelTagIndex);
