@@ -119,7 +119,7 @@ namespace ChatCore
                 logger.Log(LogLevel.Information, "Supposedly started WebLoginProvider");
                 if (settings.LaunchWebAppOnStartup)
                 {
-	                _serviceProvider.GetService<IDefaultBrowserLauncherService>().Launch($"http://localhost:{_serviceProvider.GetService<MainSettingsProvider>().WebAppPort}");
+	                _serviceProvider.GetService<IDefaultBrowserLauncherService>().Launch($"http://localhost:{MainSettingsProvider.WEB_APP_PORT}");
                 }
 
                 return _instance;
@@ -198,7 +198,7 @@ namespace ChatCore
                     throw new ChatCoreNotInitializedException("Make sure to call ChatCoreInstance.Create() to initialize ChatCore!");
                 }
 
-                _serviceProvider.GetService<IDefaultBrowserLauncherService>().Launch($"http://localhost:{_serviceProvider.GetService<MainSettingsProvider>().WebAppPort}");
+                _serviceProvider.GetService<IDefaultBrowserLauncherService>().Launch($"http://localhost:{MainSettingsProvider.WEB_APP_PORT}");
             }
         }
     }
