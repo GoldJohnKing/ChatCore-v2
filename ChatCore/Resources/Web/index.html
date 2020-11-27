@@ -234,7 +234,7 @@
 			M.toast({html: "Something went wrong, try again later."})
 		};
 		request.onerror = function () {
-			M.toast({html: "Something went wrong trying to save the settings. Make sure Beat Saber is still running."})
+			M.toast({html: "Something went wrong while trying to save the settings. Make sure Beat Saber is still running."})
 		};
 		request.onload = function () {
 			M.toast({html: "Settings have been saved successfully."})
@@ -284,7 +284,7 @@
 
 		var tooltipButton = document.querySelector('.tooltipped');
 		channelTooltipInstance = M.Tooltip.init(tooltipButton, {
-			html: "Make sure to add your channelname here. When you've filled it in, also make sure that you've hit the enter button and hit the save button afterwards."
+			html: "Make sure to add your channelname here! When you have filled it in, make sure to hit enter and the save button afterwards."
 		});
 
 		var chipContainer = document.querySelector('.chips');
