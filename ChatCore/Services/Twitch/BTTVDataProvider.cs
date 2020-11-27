@@ -31,7 +31,7 @@ namespace ChatCore.Services.Twitch
 			{
 				_logger.LogDebug($"Requesting BTTV {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : $" for channel {category}")}.");
 				using var msg = new HttpRequestMessage(HttpMethod.Get, isGlobal ? "https://api.betterttv.net/2/emotes" : $"https://api.betterttv.net/2/channels/{category}");
-				msg.Headers.Add("User-Agent", $"ChatCore/{Assembly.GetExecutingAssembly().GetName().Version}");
+				msg.Headers.Add("User-Agent", $"ChatCore/{ChatCoreInstance.Version.ToString(3)}");
 				var resp = await _httpClient.SendAsync(msg);
 				if (!resp.IsSuccessStatusCode)
 				{
