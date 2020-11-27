@@ -1,20 +1,20 @@
 ﻿using ChatCore.Config;
 using ChatCore.Interfaces;
-using System.Collections.Generic;
 using System.IO;
+using ChatCore.Utilities;
 
 namespace ChatCore.Services
 {
     public class MainSettingsProvider
     {
+	    internal const int WEB_APP_PORT = 8338;
+
         [ConfigSection("WebApp")]
         [HtmlIgnore]
         [ConfigMeta(Comment = "Set to true to disable the webapp entirely.")]
         public bool DisableWebApp = false;
         [ConfigMeta(Comment = "Whether or not to launch the webapp in your default browser when ChatCore is started.")]
         public bool LaunchWebAppOnStartup = true;
-        [ConfigMeta(Comment = "The port the webapp will run on.")]
-        public int WebAppPort = 8338;
 
         [ConfigSection("Global")]
         [ConfigMeta(Comment = "When enabled, emojis will be parsed.")]
@@ -50,12 +50,12 @@ namespace ChatCore.Services
             _configSerializer.Save(this, Path.Combine(_pathProvider.GetDataPath(), "settings.ini"));
         }
 
-        public Dictionary<string, string> GetSettingsAsHtml()
+        public JSONObject GetSettingsAsJson()
         {
-            return _configSerializer.GetSettingsAsHtml(this);
+	        return _configSerializer.GetSettingsAsJson(this);
         }
 
-        public void SetFromDictionary(Dictionary<string, string> postData)
+        public void SetFromDictionary(JSONObject postData)
         {
             _configSerializer.SetFromDictionary(this, postData);
         }

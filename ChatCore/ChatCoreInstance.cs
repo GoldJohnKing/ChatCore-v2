@@ -21,8 +21,11 @@ namespace ChatCore
 
         private static ChatCoreInstance? _instance;
         private static ServiceProvider? _serviceProvider;
+        private static Version? _version;
 
         private ChatCoreInstance() { }
+
+        internal static Version Version => _version ??= typeof(ChatCoreInstance).Assembly.GetName().Version;
 
         public event Action<CustomLogLevel, string, string>? OnLogReceived;
 
@@ -107,16 +110,16 @@ namespace ChatCore
                 var settings = _serviceProvider.GetService<MainSettingsProvider>();
                 if (settings.DisableWebApp)
                 {
-	                logger.Log(LogLevel.Information, $"WebLoginProvider disabled...");
+	                logger.Log(LogLevel.Information, "WebLoginProvider disabled...");
 	                return _instance;
                 }
 
-                logger.Log(LogLevel.Information, $"Attempting to start WebLoginProvider");
+                logger.Log(LogLevel.Information, "Attempting to start WebLoginProvider");
                 _serviceProvider.GetService<IWebLoginProvider>().Start();
-                logger.Log(LogLevel.Information, $"Supposedly started WebLoginProvider");
+                logger.Log(LogLevel.Information, "Supposedly started WebLoginProvider");
                 if (settings.LaunchWebAppOnStartup)
                 {
-	                _serviceProvider.GetService<IDefaultBrowserLauncherService>().Launch($"http://localhost:{_serviceProvider.GetService<MainSettingsProvider>().WebAppPort}");
+	                _serviceProvider.GetService<IDefaultBrowserLauncherService>().Launch($"http://localhost:{MainSettingsProvider.WEB_APP_PORT}");
                 }
 
                 return _instance;
@@ -195,7 +198,7 @@ namespace ChatCore
                     throw new ChatCoreNotInitializedException("Make sure to call ChatCoreInstance.Create() to initialize ChatCore!");
                 }
 
-                _serviceProvider.GetService<IDefaultBrowserLauncherService>().Launch($"http://localhost:{_serviceProvider.GetService<MainSettingsProvider>().WebAppPort}");
+                _serviceProvider.GetService<IDefaultBrowserLauncherService>().Launch($"http://localhost:{MainSettingsProvider.WEB_APP_PORT}");
             }
         }
     }
