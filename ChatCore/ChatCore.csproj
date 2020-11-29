@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-		<Version>2.1.1</Version>
+		<Version>2.1.2</Version>
 		<LangVersion>9</LangVersion>
 		<Nullable>enable</Nullable>
 		<NoWarn>1591</NoWarn>
