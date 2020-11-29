@@ -276,7 +276,7 @@
 		history.pushState({}, "ChatCore Settings", location.origin)
 
 		if (accessToken) {
-			var tokenField = document.getElementById("twitch_oath_token");
+			var tokenField = document.getElementById("twitch_oauth_token");
 			tokenField.value = 'oauth:' + decodeURIComponent(accessToken);
 		}
 
