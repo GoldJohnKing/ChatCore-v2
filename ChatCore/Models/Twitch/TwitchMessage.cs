@@ -43,7 +43,7 @@ namespace ChatCore.Models.Twitch
             if (obj.TryGetKey(nameof(Emotes), out var emotes))
             {
                 var emoteList = new List<IChatEmote>();
-                if (emotes.AsArray is not null)
+                if (emotes.AsArray != null)
                 {
 	                foreach (var emote in emotes.AsArray)
 	                {

@@ -11,14 +11,13 @@ namespace ChatCore.Config
 {
 	public class ObjectSerializer
 	{
-		private static readonly Regex ConfigRegex =
-			new(
+		private static readonly Regex ConfigRegex = new Regex(
 				@"(?<Section>\[[a-zA-Z0-9\s]+\])|(?<Name>[^=\/\/#\s]+)\s*=[\t\p{Zs}]*(?<Value>"".+""|({(?:[^{}]|(?<Array>{)|(?<-Array>}))+(?(Array)(?!))})|\S+)?[\t\p{Zs}]*((\/{2,2}|[#])(?<Comment>.+)?)?",
 				RegexOptions.Compiled | RegexOptions.Multiline);
 
-		private static readonly ConcurrentDictionary<Type, Func<FieldInfo, string, object>> ConvertFromString = new();
-		private static readonly ConcurrentDictionary<Type, Func<FieldInfo, object, string>> ConvertToString = new();
-		private readonly ConcurrentDictionary<string, string> _comments = new();
+		private static readonly ConcurrentDictionary<Type, Func<FieldInfo, string, object>> ConvertFromString = new ConcurrentDictionary<Type, Func<FieldInfo, string, object>>();
+		private static readonly ConcurrentDictionary<Type, Func<FieldInfo, object, string>> ConvertToString = new ConcurrentDictionary<Type, Func<FieldInfo, object, string>>();
+		private readonly ConcurrentDictionary<string, string> _comments = new ConcurrentDictionary<string, string>();
 
 		private static void InitTypeHandlers()
 		{
@@ -342,7 +341,7 @@ namespace ChatCore.Config
 		/// <returns></returns>
 		public JSONObject GetSettingsAsJson(object obj)
 		{
-			JSONObject jsonObject = new();
+			JSONObject jsonObject = new JSONObject();
 			foreach (var fieldInfo in obj.GetType().GetFields())
 			{
 				if (fieldInfo.GetCustomAttribute(typeof(HtmlIgnore)) != null)

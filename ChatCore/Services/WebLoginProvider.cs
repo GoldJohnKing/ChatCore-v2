@@ -22,7 +22,7 @@ namespace ChatCore.Services
 		private CancellationTokenSource? _cancellationToken;
 		private static string? _pageData;
 
-		private readonly SemaphoreSlim _requestLock = new(1, 1);
+		private readonly SemaphoreSlim _requestLock = new SemaphoreSlim(1, 1);
 
 		public WebLoginProvider(ILogger<WebLoginProvider> logger, IUserAuthProvider authManager, MainSettingsProvider settings)
 		{

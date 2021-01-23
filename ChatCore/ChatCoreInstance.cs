@@ -46,7 +46,7 @@ namespace ChatCore
         {
             lock (CreateLock)
             {
-	            if (_instance is not null)
+	            if (_instance != null)
 	            {
 		            return _instance;
 	            }

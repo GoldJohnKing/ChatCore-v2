@@ -48,7 +48,7 @@ namespace ChatCore.Services.Twitch
 
 				var count = 0;
 				var emoteArray = json["emotes"].AsArray;
-				if (emoteArray is not null)
+				if (emoteArray != null)
 				{
 					foreach (JSONObject o in emoteArray)
 					{
