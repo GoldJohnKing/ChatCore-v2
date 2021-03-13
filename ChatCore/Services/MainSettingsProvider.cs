@@ -1,4 +1,4 @@
-﻿using ChatCore.Config;
+using ChatCore.Config;
 using ChatCore.Interfaces;
 using System.IO;
 using ChatCore.Utilities;
@@ -32,7 +32,19 @@ namespace ChatCore.Services
         [ConfigMeta(Comment = "When enabled, Twitch cheermotes will be parsed.")]
         public bool ParseCheermotes = true;
 
-        private readonly IPathProvider _pathProvider;
+		[ConfigSection("Bilibili")]
+		public bool Danmuku = true;
+		public bool Popularity = false;
+		public bool Gift = false;
+		public bool Guard = false;
+		public bool Welcome = false;
+		public bool Anchor = false;
+		public bool Global = false;
+		public bool Blacklist = false;
+		public bool RoomInfo = false;
+		public bool Junk = false;
+
+		private readonly IPathProvider _pathProvider;
         private readonly ObjectSerializer _configSerializer;
 
         public MainSettingsProvider(IPathProvider pathProvider)

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using ChatCore.Interfaces;
 using ChatCore.Services.Twitch;
 using System.Collections.Generic;
@@ -7,6 +7,7 @@ using System.Text;
 using System.Linq;
 using ChatCore.Models.Twitch;
 using ChatCore.Utilities;
+using ChatCore.Services.BiliBili;
 
 namespace ChatCore.Services
 {
@@ -18,15 +19,17 @@ namespace ChatCore.Services
 	    private readonly ILogger _logger;
 	    private readonly IList<IChatService> _streamingServices;
 	    private readonly TwitchService _twitchService;
-	    private readonly object _invokeLock = new object();
+		private readonly BiliBiliService _bilibiliService;
+		private readonly object _invokeLock = new object();
 
-	    public string DisplayName { get; }
+		public string DisplayName { get; }
 
 	    public ChatServiceMultiplexer(ILogger<ChatServiceMultiplexer> logger, IList<IChatService> streamingServices)
         {
             _logger = logger;
             _streamingServices = streamingServices;
             _twitchService = (TwitchService)streamingServices.First(s => s is TwitchService);
+            _bilibiliService = (BiliBiliService)streamingServices.First(s => s is BiliBiliService);
 
             var displayNameBuilder = new StringBuilder();
             foreach (var service in _streamingServices)
@@ -127,5 +130,10 @@ namespace ChatCore.Services
         {
             return _twitchService;
         }
+
+		public BiliBiliService GetBiliBiliService()
+		{
+			return _bilibiliService;
+		}
     }
 }
