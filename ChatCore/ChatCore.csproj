@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
@@ -22,11 +22,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="ilmerge" Version="3.0.41"/>
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0"/>
-		<PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.0"/>
-		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.0"/>
-		<PackageReference Include="Microsoft.Extensions.Options" Version="3.1.0"/>
+		<PackageReference Include="ilmerge" Version="3.0.41" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="3.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -41,19 +41,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Resources\Web\index.html"/>
+		<EmbeddedResource Include="Resources\Web\index.html" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="internalize_excludes.txt"/>
+		<None Remove="internalize_excludes.txt" />
 	</ItemGroup>
 
 	<Target Name="ILMerge" AfterTargets="Build">
-		<Exec Command="cd &quot;$(OutDir)&quot;&#xD;&#xA;&quot;$(ILMergeConsolePath)&quot; /xmldocs /targetplatform:v4 /ndebug /allowDup /internalize:&quot;$(ProjectDir)internalize_excludes.txt&quot; /wildcards /out:&quot;$(TargetFileName)&quot; *.dll"/>
+		<Exec Command="cd &quot;$(OutDir)&quot;&#xD;&#xA;&quot;$(ILMergeConsolePath)&quot; /xmldocs /targetplatform:v4 /ndebug /allowDup /internalize:&quot;$(ProjectDir)internalize_excludes.txt&quot; /wildcards /out:&quot;$(TargetFileName)&quot; *.dll" />
 	</Target>
 
 	<Target Name="PostBuild" AfterTargets="ILMerge" Condition="Exists('$(BeatSaberDir)')">
-		<Exec Command="copy /Y &quot;$(OutDir)$(TargetFileName)&quot; &quot;$(BeatSaberDir)\Libs&quot;"/>
+		<Exec Command="copy /Y &quot;$(OutDir)$(TargetFileName)&quot; &quot;$(BeatSaberDir)\Libs&quot;" />
 	</Target>
 
 </Project>
