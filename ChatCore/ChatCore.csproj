@@ -4,8 +4,8 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-		<Version>2.0.0</Version>
-		<LangVersion>9</LangVersion>
+		<Version>2.1.2</Version>
+		<LangVersion>8</LangVersion>
 		<Nullable>enable</Nullable>
 		<NoWarn>1591</NoWarn>
 		<OutDir>$(ProjectDir)bin\$(Configuration)</OutDir>
@@ -49,11 +49,11 @@
 	</ItemGroup>
 
 	<Target Name="ILMerge" AfterTargets="Build">
-		<Exec Command="cd &quot;$(OutDir)&quot;&#xD;&#xA;&quot;$(ILMergeConsolePath)&quot; /xmldocs /targetplatform:v4 /ndebug /allowDup /internalize:&quot;$(ProjectDir)internalize_excludes.txt&quot; /wildcards /out:&quot;$(TargetFileName)&quot; *.dll" />
+		<Exec Command="cd &quot;$(OutDir)&quot;&#xD;&#xA;&quot;$(ILMergeConsolePath)&quot; /xmldocs /targetplatform:v4 /ndebug /allowDup /internalize:&quot;$(ProjectDir)internalize_excludes.txt&quot; /wildcards /out:&quot;$(TargetFileName)&quot; *.dll"/>
 	</Target>
 
 	<Target Name="PostBuild" AfterTargets="ILMerge" Condition="Exists('$(BeatSaberDir)')">
-		<Exec Command="copy /Y &quot;$(OutDir)$(TargetFileName)&quot; &quot;$(BeatSaberDir)\Libs&quot;" />
+		<Copy SourceFiles="$(OutDir)$(TargetFileName)" DestinationFiles="$(BeatSaberDir)\Libs\$(TargetFileName)"/>
 	</Target>
 
 </Project>

@@ -31,7 +31,7 @@ namespace ChatCore.Models.Twitch
             if (obj.TryGetKey(nameof(Badges), out var badges))
             {
                 var badgeList = new List<IChatBadge>();
-                if (badges.AsArray is not null)
+                if (badges.AsArray != null)
                 {
 	                foreach (var badge in badges.AsArray)
 	                {

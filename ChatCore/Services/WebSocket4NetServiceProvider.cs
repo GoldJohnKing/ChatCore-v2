@@ -47,7 +47,7 @@ namespace ChatCore.Services
                     Dispose();
                 }
 
-                if (_client is not null)
+                if (_client != null)
                 {
 	                return;
                 }

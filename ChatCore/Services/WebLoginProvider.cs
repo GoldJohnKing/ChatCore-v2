@@ -1,167 +1,190 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using ChatCore.Interfaces;
 using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
+using ChatCore.Utilities;
 
 namespace ChatCore.Services
 {
-    public class WebLoginProvider : IWebLoginProvider
-    {
-	    private readonly ILogger _logger;
-	    private readonly IUserAuthProvider _authManager;
-	    private readonly MainSettingsProvider _settings;
+	public class WebLoginProvider : IWebLoginProvider
+	{
+		private readonly ILogger _logger;
+		private readonly IUserAuthProvider _authManager;
+		private readonly MainSettingsProvider _settings;
 
-	    private HttpListener? _listener;
-	    private CancellationTokenSource? _cancellationToken;
-	    private static string? _pageData;
+		private HttpListener? _listener;
+		private CancellationTokenSource? _cancellationToken;
+		private static string? _pageData;
 
-	    private readonly SemaphoreSlim _requestLock = new SemaphoreSlim(1, 1);
+		private readonly SemaphoreSlim _requestLock = new SemaphoreSlim(1, 1);
 
-	    public WebLoginProvider(ILogger<WebLoginProvider> logger, IUserAuthProvider authManager, MainSettingsProvider settings)
-        {
-            _logger = logger;
-            _authManager = authManager;
-            _settings = settings;
-        }
+		public WebLoginProvider(ILogger<WebLoginProvider> logger, IUserAuthProvider authManager, MainSettingsProvider settings)
+		{
+			_logger = logger;
+			_authManager = authManager;
+			_settings = settings;
+		}
 
-	    public void Start()
-        {
-            if (_pageData == null)
-            {
-	            using var reader = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("ChatCore.Resources.Web.index.html")!);
-	            _pageData = reader.ReadToEnd();
-	            //_logger.LogInformation($"PageData: {pageData}");
-            }
+		public void Start()
+		{
+			if (_pageData == null)
+			{
+				using var reader = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("ChatCore.Resources.Web.index.html")!);
+				_pageData = reader.ReadToEnd();
+			}
 
-            if (_listener != null)
-            {
-	            return;
-            }
+			if (_listener != null)
+			{
+				return;
+			}
 
-            _cancellationToken = new CancellationTokenSource();
-            _listener = new HttpListener();
-            _listener.Prefixes.Add($"http://localhost:{_settings.WebAppPort}/");
-            Task.Run(() =>
-            {
-	            _listener.Start();
-	            _listener.BeginGetContext(OnContext, null);
-            });
-        }
+			_cancellationToken = new CancellationTokenSource();
+			_listener = new HttpListener {Prefixes = {$"http://localhost:{MainSettingsProvider.WEB_APP_PORT}/"}};
+			_listener.Start();
 
-        private async void OnContext(IAsyncResult res)
-        {
-            var ctx = _listener!.EndGetContext(res);
-            _listener.BeginGetContext(OnContext, null);
+			_logger.Log(LogLevel.Information, $"Listening on {string.Join(", ", _listener.Prefixes)}");
 
-            _logger.LogWarning("Request received");
+			Task.Run(async () =>
+			{
+				while (true)
+				{
+					try
+					{
+						_logger.LogInformation("Waiting for incoming request...");
+						var httpListenerContext = await _listener.GetContextAsync().ConfigureAwait(false);
+						_logger.LogWarning("Request received");
+						await OnContext(httpListenerContext).ConfigureAwait(false);
+					}
+					catch (Exception e)
+					{
+						_logger.LogError(e, "WebLoginProvider errored.");
+					}
+				}
 
-            await _requestLock.WaitAsync();
-            try
-            {
-                var req = ctx.Request;
-                var resp = ctx.Response;
+				// ReSharper disable once FunctionNeverReturns
+			}).ConfigureAwait(false);
+		}
 
-                if (req.HttpMethod == "POST" && req.Url.AbsolutePath == "/submit")
-                {
-                    using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
-                    {
-                        var postStr = await reader.ReadToEndAsync();
-                        var twitchChannels = new List<string>();
+		private async Task OnContext(HttpListenerContext ctx)
+		{
+			await _requestLock.WaitAsync();
+			try
+			{
+				var request = ctx.Request;
+				var response = ctx.Response;
 
-                        var postDict = new Dictionary<string, string>();
-                        foreach (var postData in postStr.Split('&'))
-                        {
-                            try
-                            {
-                                var split = postData.Split('=');
-                                postDict[split[0]] = split[1];
+				if (request.HttpMethod == "POST" && request.Url.AbsolutePath == "/submit")
+				{
+					await Submit(request, response).ConfigureAwait(false);
+				}
+				else
+				{
+					var settingsJson = _settings.GetSettingsAsJson();
+					settingsJson["twitch_oauth_token"] = new JSONString(_authManager.Credentials.Twitch_OAuthToken);
+					settingsJson["twitch_channels"] = new JSONArray(_authManager.Credentials.Twitch_Channels);
 
-                                switch (split[0])
-                                {
-                                    case "twitch_oauthtoken":
-                                        var twitchOauthToken = HttpUtility.UrlDecode(split[1]);
-                                        _authManager.Credentials.Twitch_OAuthToken = twitchOauthToken.StartsWith("oauth:") ? twitchOauthToken : !string.IsNullOrEmpty(twitchOauthToken) ? $"oauth:{twitchOauthToken}" : "";
-                                        break;
-                                    case "twitch_channel":
-                                        var twitchChannel = split[1].ToLower();
-                                        if (!string.IsNullOrWhiteSpace(twitchChannel) && !_authManager.Credentials.Twitch_Channels.Contains(twitchChannel))
-                                        {
-                                            _authManager.Credentials.Twitch_Channels.Add(twitchChannel);
-                                        }
-                                        _logger.LogInformation($"TwitchChannel: {twitchChannel}");
-                                        twitchChannels.Add(twitchChannel);
-                                        break;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger.LogError(ex, "An exception occurred in OnLoginDataUpdated callback");
-                            }
-                        }
-                        foreach (var channel in _authManager.Credentials.Twitch_Channels.ToArray())
-                        {
-                            // Remove any channels that weren't present in the post data
-                            if (!twitchChannels.Contains(channel))
-                            {
-                                _authManager.Credentials.Twitch_Channels.Remove(channel);
-                            }
-                        }
+					var pageBuilder = new StringBuilder(_pageData);
+					pageBuilder.Replace("{libVersion}", ChatCoreInstance.Version.ToString(3));
+					pageBuilder.Replace("var data = {};", $"var data = {settingsJson};");
 
-                        _authManager.Save();
-                        _settings.SetFromDictionary(postDict);
-                        _settings.Save();
-                    }
-                    resp.Redirect(req.UrlReferrer.OriginalString);
-                    resp.Close();
-                    return;
-                }
+					var data = Encoding.UTF8.GetBytes(pageBuilder.ToString());
+					response.ContentType = "text/html";
+					response.ContentEncoding = Encoding.UTF8;
+					response.ContentLength64 = data.LongLength;
+					await response.OutputStream.WriteAsync(data, 0, data.Length);
+				}
 
-                var pageBuilder = new StringBuilder(_pageData);
-                var twitchChannelHtmlString = new StringBuilder();
-                for (var i = 0; i < _authManager.Credentials.Twitch_Channels.Count; i++)
-                {
-                    var channel = _authManager.Credentials.Twitch_Channels[i];
-                    twitchChannelHtmlString.Append($"<span id=\"twitch_channel_{i}\" class=\"chip \"><div style=\"overflow: hidden;text-overflow: ellipsis;\">{channel}</div><input type=\"text\" class=\"form-input\" name=\"twitch_channel\" style=\"display: none; \" value=\"{channel}\" /><button type=\"button\" onclick=\"removeTwitchChannel('twitch_channel_{i}')\" class=\"btn btn-clear\" aria-label=\"Close\" role=\"button\"></button></span>");
-                }
+				response.Close();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Exception occurred during webapp request.");
+			}
+			finally
+			{
+				_requestLock.Release();
+			}
+		}
 
-                var sectionHtml = _settings.GetSettingsAsHtml();
-                pageBuilder.Replace("{WebAppSettingsHTML}", sectionHtml["WebApp"]);
-                pageBuilder.Replace("{GlobalSettingsHTML}", sectionHtml["Global"]);
-                pageBuilder.Replace("{TwitchSettingsHTML}", sectionHtml["Twitch"]);
-                pageBuilder.Replace("{TwitchChannelHtml}", twitchChannelHtmlString.ToString());
-                pageBuilder.Replace("{TwitchOAuthToken}", _authManager.Credentials.Twitch_OAuthToken);
+		private async Task Submit(HttpListenerRequest request, HttpListenerResponse response)
+		{
+			try
+			{
+				using var reader = new StreamReader(request.InputStream, request.ContentEncoding);
+				var postStr = await reader.ReadToEndAsync().ConfigureAwait(false);
 
-                var data = Encoding.UTF8.GetBytes(pageBuilder.ToString());
-                resp.ContentType = "text/html";
-                resp.ContentEncoding = Encoding.UTF8;
-                resp.ContentLength64 = data.LongLength;
-                await resp.OutputStream.WriteAsync(data, 0, data.Length);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Exception occurred during webapp request.");
-            }
-            finally
-            {
-                _requestLock.Release();
-            }
-        }
-        public void Stop()
-        {
-	        if (_cancellationToken is null)
-	        {
-		        return;
-	        }
+				var responseJson = JSON.Parse(postStr) as JSONObject;
+				if (responseJson == null)
+				{
+					return;
+				}
 
-	        _cancellationToken.Cancel();
-	        _logger.LogInformation("Stopped");
-        }
-    }
+				var authChanged = false;
+				if (responseJson.HasKey("twitch_oauth_token"))
+				{
+					var token = responseJson["twitch_oauth_token"].Value;
+					if (!token.StartsWith("oauth:"))
+					{
+						token = !string.IsNullOrWhiteSpace(token) ? $"oauth:{token}" : string.Empty;
+					}
+
+					if (_authManager.Credentials.Twitch_OAuthToken != token)
+					{
+						_authManager.Credentials.Twitch_OAuthToken = token;
+						authChanged = true;
+					}
+
+					responseJson.Remove("twitch_oauth_token");
+				}
+
+				if (responseJson.HasKey("twitch_channels"))
+				{
+					var channelsFromResponse = responseJson["twitch_channels"].AsArray?.Children.Select(channelName => channelName.Value).ToList();
+					if (channelsFromResponse != null &&
+					    (channelsFromResponse.Count != _authManager.Credentials.Twitch_Channels.Count ||
+					    channelsFromResponse.Any(name => !_authManager.Credentials.Twitch_Channels.Contains(name))))
+					{
+						_authManager.Credentials.Twitch_Channels.Clear();
+						_authManager.Credentials.Twitch_Channels.AddRange(channelsFromResponse);
+
+						authChanged = true;
+					}
+
+					responseJson.Remove("twitch_channels");
+				}
+
+				if (authChanged)
+				{
+					_authManager.Save();
+				}
+
+				_settings.SetFromDictionary(responseJson);
+				_settings.Save();
+
+				response.StatusCode = 204;
+			}
+			catch
+			{
+				response.StatusCode = 500;
+			}
+		}
+
+		public void Stop()
+		{
+			if (_cancellationToken is null)
+			{
+				return;
+			}
+
+			_listener?.Stop();
+			_cancellationToken.Cancel();
+			_logger.LogInformation("Stopped");
+		}
+	}
 }
