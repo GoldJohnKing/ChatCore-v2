@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using ChatCore.Interfaces;
 using System;
 using System.Reflection;
@@ -29,8 +29,9 @@ namespace ChatCore.Services
         public event Action? OnClose;
         public event Action? OnError;
         public event Action<Assembly, string>? OnMessageReceived;
+		public event Action<Assembly, byte[]>? OnDataRecevied;
 
-        public WebSocket4NetServiceProvider(ILogger<WebSocket4NetServiceProvider> logger)
+		public WebSocket4NetServiceProvider(ILogger<WebSocket4NetServiceProvider> logger)
         {
 	        _logger = logger;
 
@@ -64,6 +65,7 @@ namespace ChatCore.Services
 		                _client.Closed += _client_Closed;
 		                _client.Error += _client_Error;
 		                _client.MessageReceived += _client_MessageReceived;
+						_client.DataReceived += _client_DataReceived;
 		                _startTime = DateTime.UtcNow;
 
 		                await _client.OpenAsync();
@@ -82,9 +84,16 @@ namespace ChatCore.Services
             }
         }
 
-        private void _client_MessageReceived(object sender, MessageReceivedEventArgs e)
+		private void _client_DataReceived(object sender, DataReceivedEventArgs e)
+		{
+			_logger.LogDebug($"Message received from {_uri}");
+			OnDataRecevied?.Invoke(null!, e.Data);
+		}
+
+		private void _client_MessageReceived(object sender, MessageReceivedEventArgs e)
         {
             _logger.LogDebug($"Message received from {_uri}: {e.Message}");
+			
             OnMessageReceived?.Invoke(null!, e.Message);
         }
 
@@ -123,7 +132,8 @@ namespace ChatCore.Services
 	            _client.Closed -= _client_Closed;
 	            _client.Error -= _client_Error;
 	            _client.MessageReceived -= _client_MessageReceived;
-	            _client.Dispose();
+				_client.DataReceived -= _client_DataReceived;
+				_client.Dispose();
 	            _client = null;
             }
 
@@ -176,7 +186,29 @@ namespace ChatCore.Services
             }
         }
 
-        public void Dispose()
+		public void SendMessage(byte[] bytes)
+		{
+			try
+			{
+				if (IsConnected)
+				{
+#if DEBUG
+					_logger.LogDebug($"Sending bytes"); // Only log this in debug builds, since it can potentially contain sensitive auth data
+#endif
+					_client!.Send(bytes, 0, bytes.Length);
+				}
+				else
+				{
+					_logger.LogDebug("WebSocket not connected, can't send bytes!");
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, $"An exception occurred while trying to send message to {_uri}");
+			}
+		}
+
+		public void Dispose()
         {
 	        if (_client == null)
 	        {

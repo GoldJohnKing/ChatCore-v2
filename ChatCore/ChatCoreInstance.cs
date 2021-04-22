@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ChatCore.Exceptions;
 using ChatCore.Interfaces;
@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Net.Http;
 using ChatCore.Config;
 using ChatCore.Logging;
+using ChatCore.Services.BiliBili;
 
 namespace ChatCore
 {
@@ -71,6 +72,8 @@ namespace ChatCore
 	                .AddSingleton<TwitchDataProvider>()
 	                .AddSingleton<TwitchCheermoteProvider>()
 	                .AddSingleton<TwitchBadgeProvider>()
+					.AddSingleton<BiliBiliService>()
+					.AddSingleton<BiliBiliServiceManager>()
 	                .AddSingleton<BTTVDataProvider>()
 	                .AddSingleton<FFZDataProvider>()
 	                .AddSingleton<IChatService>(x =>
@@ -78,7 +81,8 @@ namespace ChatCore
 			                x.GetService<ILogger<ChatServiceMultiplexer>>(),
 			                new List<IChatService>
 			                {
-				                x.GetService<TwitchService>()
+				                x.GetService<TwitchService>(),
+								x.GetService<BiliBiliService>()
 			                }
 		                )
 	                )
@@ -88,7 +92,8 @@ namespace ChatCore
 			                x.GetService<IChatService>(),
 			                new List<IChatServiceManager>
 			                {
-				                x.GetService<TwitchServiceManager>()
+				                x.GetService<TwitchServiceManager>(),
+								x.GetService<BiliBiliServiceManager>()
 			                }
 		                )
 	                )
@@ -139,10 +144,10 @@ namespace ChatCore
                     throw new ChatCoreNotInitializedException("Make sure to call ChatCoreInstance.Create() to initialize ChatCore!");
                 }
 
-                var services = _serviceProvider.GetService<IChatServiceManager>();
-                services.Start(Assembly.GetCallingAssembly());
-                return (ChatServiceMultiplexer) services.GetService();
-            }
+				var services = _serviceProvider.GetService<IChatServiceManager>();
+				services.Start(Assembly.GetCallingAssembly());
+				return (ChatServiceMultiplexer)services.GetService();
+			}
         }
 
         /// <summary>
@@ -152,8 +157,11 @@ namespace ChatCore
         {
             lock (_runLock)
             {
-                _serviceProvider.GetService<IChatServiceManager>().Stop(Assembly.GetCallingAssembly());
-            }
+				lock (_runLock)
+				{
+					_serviceProvider.GetService<IChatServiceManager>().Stop(Assembly.GetCallingAssembly());
+				}
+			}
         }
 
         /// <summary>

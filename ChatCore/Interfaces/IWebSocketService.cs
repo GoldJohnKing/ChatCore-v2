@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Reflection;
+using WebSocket4Net;
 
 namespace ChatCore.Interfaces
 {
@@ -13,9 +14,11 @@ namespace ChatCore.Interfaces
         event Action OnClose;
         event Action OnError;
         event Action<Assembly, string> OnMessageReceived;
+		event Action<Assembly, byte[]> OnDataRecevied;
 
         void Connect(string uri, bool forceReconnect = false);
         void Disconnect();
         void SendMessage(string message);
-    }
+		void SendMessage(byte[] bytes);
+	}
 }

@@ -3,10 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ChatCore.Interfaces;
 using ChatCore.Models;
+using ChatCore.Models.BiliBili;
 using ChatCore.Models.Twitch;
 using ChatCore.Utilities;
 using Microsoft.Extensions.Logging;
@@ -34,14 +36,19 @@ namespace ChatCore.Services.BiliBili
 	    private int _currentMessageCount;
 	    private DateTime _lastResetTime = DateTime.UtcNow;
 	    private readonly ConcurrentQueue<KeyValuePair<Assembly, string>> _textMessageQueue = new ConcurrentQueue<KeyValuePair<Assembly, string>>();
+		// ToDo : Can Change Settings
+		private string _roomID = "145277";
+		private string _userID = "1438695377";
 
-	    private string UserName => string.IsNullOrEmpty(_authManager.Credentials.Twitch_OAuthToken) ? _anonUsername : "@";
-	    private string OAuthToken => string.IsNullOrEmpty(_authManager.Credentials.Twitch_OAuthToken) ? string.Empty : _authManager.Credentials.Twitch_OAuthToken;
+		private System.Timers.Timer packetTimer;
 
-	    public ReadOnlyDictionary<string, IChatChannel> Channels { get; }
+		//private string UserName => string.IsNullOrEmpty(_authManager.Credentials.Twitch_OAuthToken) ? _anonUsername : "@";
+		//private string OAuthToken => string.IsNullOrEmpty(_authManager.Credentials.Twitch_OAuthToken) ? string.Empty : _authManager.Credentials.Twitch_OAuthToken;
+		//roomid: number, { address = 'wss://broadcastlv.chat.bilibili.com/sub', protover = 2, key, agent }: { address?: string, protover?: 1 | 2, key?: string, agent?: Agent } = {}
+		public ReadOnlyDictionary<string, IChatChannel> Channels { get; }
         public TwitchUser? LoggedInUser { get; internal set; }
 
-        public string DisplayName { get; } = "Twitch";
+        public string DisplayName { get; } = "BiliBili Live";
 
         public event Action<IChatService, string> OnRawMessageReceived
         {
@@ -49,13 +56,12 @@ namespace ChatCore.Services.BiliBili
             remove => _rawMessageReceivedCallbacks.RemoveAction(Assembly.GetCallingAssembly(), value);
         }
 
-        public BiliBiliService(ILogger<BiliBiliService> logger, TwitchMessageParser messageParser, TwitchDataProvider twitchDataProvider, IWebSocketService websocketService, IUserAuthProvider authManager, Random rand)
+        public BiliBiliService(ILogger<BiliBiliService> logger, IWebSocketService websocketService, Random rand)
         {
 	        _logger = logger;
-            _messageParser = messageParser;
-            _dataProvider = twitchDataProvider;
+            
             _websocketService = websocketService;
-            _authManager = authManager;
+            
 
             _rawMessageReceivedCallbacks = new ConcurrentDictionary<Assembly, Action<IChatService, string>>();
             _channels = new ConcurrentDictionary<string, IChatChannel>();
@@ -66,14 +72,57 @@ namespace ChatCore.Services.BiliBili
 
             Channels = new ReadOnlyDictionary<string, IChatChannel>(_channels);
 
-            _authManager.OnCredentialsUpdated += _authManager_OnCredentialsUpdated;
             _websocketService.OnOpen += _websocketService_OnOpen;
             _websocketService.OnClose += _websocketService_OnClose;
             _websocketService.OnError += _websocketService_OnError;
             _websocketService.OnMessageReceived += _websocketService_OnMessageReceived;
+			_websocketService.OnDataRecevied += _websocketService_OnDataRecevied;
+
+			packetTimer = new System.Timers.Timer(1000 * 30);
+			packetTimer.Elapsed += PacketTimer_Elapsed;
         }
 
-        private void _authManager_OnCredentialsUpdated(LoginCredentials credentials)
+		private void _websocketService_OnDataRecevied(Assembly arg1, byte[] arg2)
+		{
+			_logger.LogInformation("Get bytes packet!");
+			//var buffer = new byte[arg2.Length];
+			// Receive the greeting ack notify, then a HeartBeat timer should be setup.
+			foreach (var message in DanmakuMessage.ParsePackets(arg2))
+			{
+				if (message.Operation == BiliBiliPacket.DanmakuOperation.GreetingAck)
+				{
+					_logger.LogInformation("return GreetingAck");
+					this.StartHeartBeat();
+				}
+				else
+				{
+					_logger.LogInformation("not GreetingAck");
+					_logger.LogInformation($"{message.Body}");
+					try
+					{
+						_rawMessageReceivedCallbacks?.InvokeAll(arg1, this, message.Body);
+						var bmessage = new BiliBiliChatMessage(message.Body);
+						if (!string.IsNullOrEmpty(bmessage.Message))
+						{
+							TextMessageReceivedCallbacks?.InvokeAll(arg1, this, bmessage);
+						}
+					}
+					catch (Exception r)
+					{
+						_logger.LogError($"{r}");
+					}
+				}
+			}
+		}
+
+		private void StartHeartBeat()
+		{
+			this.packetTimer.Start();
+		}
+
+		private void PacketTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) => this.SendHeartBeatPacket();
+
+		private void _authManager_OnCredentialsUpdated(LoginCredentials credentials)
         {
             if (_isStarted)
             {
@@ -87,15 +136,17 @@ namespace ChatCore.Services.BiliBili
             {
                 Stop();
             }
-            lock (_initLock)
-            {
-                if (!_isStarted)
-                {
-                    _isStarted = true;
-                    _websocketService.Connect("wss://irc-ws.chat.twitch.tv:443", forceReconnect);
-                    Task.Run(ProcessQueuedMessages);
-                }
-            }
+			lock (_initLock)
+			{
+				if (!_isStarted)
+				{
+					_logger.LogInformation($"BiliBili Start");
+					_isStarted = true;
+					_websocketService.Connect("wss://broadcastlv.chat.bilibili.com:443/sub", forceReconnect);
+					Task.Run(ProcessQueuedMessages);
+					_logger.LogInformation("BiliBili Connected");
+				}
+			}
         }
 
         internal void Stop()
@@ -106,14 +157,14 @@ namespace ChatCore.Services.BiliBili
 	            {
 		            return;
 	            }
-
+				packetTimer?.Stop();
 	            _isStarted = false;
-	            _channels.Clear();
+	            _channels?.Clear();
 
 	            LoggedInUser = null;
 	            _loggedInUsername = null;
 
-	            _websocketService.Disconnect();
+	            _websocketService?.Disconnect();
             }
         }
 
@@ -122,118 +173,120 @@ namespace ChatCore.Services.BiliBili
             lock (_messageReceivedLock)
             {
                 //_logger.LogInformation("RawMessage: " + rawMessage);
+				
                 _rawMessageReceivedCallbacks?.InvokeAll(assembly, this, rawMessage);
-                if (_messageParser.ParseRawMessage(rawMessage, _channels, LoggedInUser, out var parsedMessages))
-                {
-                    foreach (var chatMessage in parsedMessages)
-                    {
-	                    var twitchMessage = (TwitchMessage)chatMessage;
-	                    if(assembly != null)
-                        {
-                            twitchMessage.Sender = LoggedInUser;
-                        }
+				TextMessageReceivedCallbacks?.InvokeAll(assembly, this, new BiliBiliChatMessage(rawMessage), _logger);
+                //if (_messageParser.ParseRawMessage(rawMessage, _channels, LoggedInUser, out var parsedMessages))
+                //{
+                //    foreach (var chatMessage in parsedMessages)
+                //    {
+	               //     var twitchMessage = (TwitchMessage)chatMessage;
+	               //     if(assembly != null)
+                //        {
+                //            twitchMessage.Sender = LoggedInUser;
+                //        }
 
-                        var twitchChannel = (twitchMessage.Channel as TwitchChannel);
-                        if (twitchChannel!.Roomstate == null)
-                        {
-                            twitchChannel.Roomstate = _channels.TryGetValue(twitchMessage.Channel.Id, out var channel) ? (channel as TwitchChannel)?.Roomstate : new TwitchRoomstate();
-                        }
+                //        var twitchChannel = (twitchMessage.Channel as TwitchChannel);
+                //        if (twitchChannel!.Roomstate == null)
+                //        {
+                //            twitchChannel.Roomstate = _channels.TryGetValue(twitchMessage.Channel.Id, out var channel) ? (channel as TwitchChannel)?.Roomstate : new TwitchRoomstate();
+                //        }
 
-                        switch (twitchMessage.Type)
-                        {
-                            case "PING":
-                                SendRawMessage("PONG :tmi.twitch.tv");
-                                continue;
-                            case "376":  // successful login
-                                _dataProvider.TryRequestGlobalResources();
-                                _loggedInUsername = twitchMessage.Channel.Id;
-                                // This isn't a typo, when you first sign in your username is in the channel id.
-                                _logger.LogInformation($"Logged into Twitch as {_loggedInUsername}");
-                                _websocketService.ReconnectDelay = 500;
-                                LoginCallbacks?.InvokeAll(assembly!, this, _logger);
-                                foreach (var channel in _authManager.Credentials.Twitch_Channels)
-                                {
-                                    JoinChannel(channel);
-                                }
-                                continue;
-                            case "NOTICE":
-                                switch (twitchMessage.Message)
-                                {
-                                    case "Login authentication failed":
-                                    case "Invalid NICK":
-                                        _websocketService.Disconnect();
-                                        break;
-                                }
-                                goto case "PRIVMSG";
-                            case "USERNOTICE":
-                            case "PRIVMSG":
-                                TextMessageReceivedCallbacks?.InvokeAll(assembly!, this, twitchMessage, _logger);
-                                continue;
-                            case "JOIN":
-                                //_logger.LogInformation($"{twitchMessage.Sender.Name} JOINED {twitchMessage.Channel.Id}. LoggedInuser: {LoggedInUser.Name}");
-                                if (twitchMessage.Sender.UserName == _loggedInUsername)
-                                {
-                                    if (!_channels.ContainsKey(twitchMessage.Channel.Id))
-                                    {
-                                        _channels[twitchMessage.Channel.Id] = twitchMessage.Channel.AsTwitchChannel()!;
-                                        _logger.LogInformation($"Added channel {twitchMessage.Channel.Id} to the channel list.");
-                                        JoinRoomCallbacks?.InvokeAll(assembly!, this, twitchMessage.Channel, _logger);
-                                    }
-                                }
-                                continue;
-                            case "PART":
-                                //_logger.LogInformation($"{twitchMessage.Sender.Name} PARTED {twitchMessage.Channel.Id}. LoggedInuser: {LoggedInUser.Name}");
-                                if (twitchMessage.Sender.UserName == _loggedInUsername)
-                                {
-                                    if (_channels.TryRemove(twitchMessage.Channel.Id, out var channel))
-                                    {
-                                        _dataProvider.TryReleaseChannelResources(twitchMessage.Channel);
-                                        _logger.LogInformation($"Removed channel {channel.Id} from the channel list.");
-                                        LeaveRoomCallbacks?.InvokeAll(assembly!, this, twitchMessage.Channel, _logger);
-                                    }
-                                }
-                                continue;
-                            case "ROOMSTATE":
-                                _channels[twitchMessage.Channel.Id] = twitchMessage.Channel;
-                                _dataProvider.TryRequestChannelResources(twitchMessage.Channel.AsTwitchChannel()!, resources =>
-                                {
-                                    ChannelResourceDataCached.InvokeAll(assembly!, this, twitchMessage.Channel, resources);
-                                });
-                                RoomStateUpdatedCallbacks?.InvokeAll(assembly!, this, twitchMessage.Channel, _logger);
-                                continue;
-                            case "USERSTATE":
-                            case "GLOBALUSERSTATE":
-                                LoggedInUser = twitchMessage.Sender!.AsTwitchUser()!;
-                                if(string.IsNullOrEmpty(LoggedInUser.DisplayName))
-                                {
-                                    LoggedInUser.DisplayName = _loggedInUsername;
-                                }
-                                continue;
-                            case "CLEARCHAT":
-                                twitchMessage.Metadata.TryGetValue("target-user-id", out var targetUser);
-                                ChatClearedCallbacks?.InvokeAll(assembly!, this, targetUser, _logger);
-                                continue;
-                            case "CLEARMSG":
-                                if (twitchMessage.Metadata.TryGetValue("target-msg-id", out var targetMessage))
-                                {
-                                    MessageClearedCallbacks?.InvokeAll(assembly!, this, targetMessage, _logger);
-                                }
-                                continue;
-                            //case "MODE":
-                            //case "NAMES":
-                            //case "HOSTTARGET":
-                            //case "RECONNECT":
-                            //    _logger.LogInformation($"No handler exists for type {twitchMessage.Type}. {rawMessage}");
-                            //    continue;
-                        }
-                    }
-                }
+                //        switch (twitchMessage.Type)
+                //        {
+                //            case "PING":
+                //                SendRawMessage("PONG :tmi.twitch.tv");
+                //                continue;
+                //            case "376":  // successful login
+                //                _dataProvider.TryRequestGlobalResources();
+                //                _loggedInUsername = twitchMessage.Channel.Id;
+                //                // This isn't a typo, when you first sign in your username is in the channel id.
+                //                _logger.LogInformation($"Logged into Twitch as {_loggedInUsername}");
+                //                _websocketService.ReconnectDelay = 500;
+                //                LoginCallbacks?.InvokeAll(assembly!, this, _logger);
+                //                foreach (var channel in _authManager.Credentials.Twitch_Channels)
+                //                {
+                //                    JoinChannel(channel);
+                //                }
+                //                continue;
+                //            case "NOTICE":
+                //                switch (twitchMessage.Message)
+                //                {
+                //                    case "Login authentication failed":
+                //                    case "Invalid NICK":
+                //                        _websocketService.Disconnect();
+                //                        break;
+                //                }
+                //                goto case "PRIVMSG";
+                //            case "USERNOTICE":
+                //            case "PRIVMSG":
+                //                TextMessageReceivedCallbacks?.InvokeAll(assembly!, this, twitchMessage, _logger);
+                //                continue;
+                //            case "JOIN":
+                //                //_logger.LogInformation($"{twitchMessage.Sender.Name} JOINED {twitchMessage.Channel.Id}. LoggedInuser: {LoggedInUser.Name}");
+                //                if (twitchMessage.Sender.UserName == _loggedInUsername)
+                //                {
+                //                    if (!_channels.ContainsKey(twitchMessage.Channel.Id))
+                //                    {
+                //                        _channels[twitchMessage.Channel.Id] = twitchMessage.Channel.AsTwitchChannel()!;
+                //                        _logger.LogInformation($"Added channel {twitchMessage.Channel.Id} to the channel list.");
+                //                        JoinRoomCallbacks?.InvokeAll(assembly!, this, twitchMessage.Channel, _logger);
+                //                    }
+                //                }
+                //                continue;
+                //            case "PART":
+                //                //_logger.LogInformation($"{twitchMessage.Sender.Name} PARTED {twitchMessage.Channel.Id}. LoggedInuser: {LoggedInUser.Name}");
+                //                if (twitchMessage.Sender.UserName == _loggedInUsername)
+                //                {
+                //                    if (_channels.TryRemove(twitchMessage.Channel.Id, out var channel))
+                //                    {
+                //                        _dataProvider.TryReleaseChannelResources(twitchMessage.Channel);
+                //                        _logger.LogInformation($"Removed channel {channel.Id} from the channel list.");
+                //                        LeaveRoomCallbacks?.InvokeAll(assembly!, this, twitchMessage.Channel, _logger);
+                //                    }
+                //                }
+                //                continue;
+                //            case "ROOMSTATE":
+                //                _channels[twitchMessage.Channel.Id] = twitchMessage.Channel;
+                //                _dataProvider.TryRequestChannelResources(twitchMessage.Channel.AsTwitchChannel()!, resources =>
+                //                {
+                //                    ChannelResourceDataCached.InvokeAll(assembly!, this, twitchMessage.Channel, resources);
+                //                });
+                //                RoomStateUpdatedCallbacks?.InvokeAll(assembly!, this, twitchMessage.Channel, _logger);
+                //                continue;
+                //            case "USERSTATE":
+                //            case "GLOBALUSERSTATE":
+                //                LoggedInUser = twitchMessage.Sender!.AsTwitchUser()!;
+                //                if(string.IsNullOrEmpty(LoggedInUser.DisplayName))
+                //                {
+                //                    LoggedInUser.DisplayName = _loggedInUsername;
+                //                }
+                //                continue;
+                //            case "CLEARCHAT":
+                //                twitchMessage.Metadata.TryGetValue("target-user-id", out var targetUser);
+                //                ChatClearedCallbacks?.InvokeAll(assembly!, this, targetUser, _logger);
+                //                continue;
+                //            case "CLEARMSG":
+                //                if (twitchMessage.Metadata.TryGetValue("target-msg-id", out var targetMessage))
+                //                {
+                //                    MessageClearedCallbacks?.InvokeAll(assembly!, this, targetMessage, _logger);
+                //                }
+                //                continue;
+                //            //case "MODE":
+                //            //case "NAMES":
+                //            //case "HOSTTARGET":
+                //            //case "RECONNECT":
+                //            //    _logger.LogInformation($"No handler exists for type {twitchMessage.Type}. {rawMessage}");
+                //            //    continue;
+                //        }
+                //    }
+                //}
             }
         }
 
         private void _websocketService_OnClose()
         {
-            _logger.LogInformation("Twitch connection closed");
+            _logger.LogInformation("BiliBili live connection closed");
         }
 
         private void _websocketService_OnError()
@@ -243,26 +296,26 @@ namespace ChatCore.Services.BiliBili
 
         private void _websocketService_OnOpen()
         {
-            _logger.LogInformation("Twitch connection opened");
-            _websocketService.SendMessage("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership");
-            TryLogin();
+            _logger.LogInformation("BiliBili live connection opened");
+			this.SendGreetingPacket();
+            //TryLogin();
         }
 
-        private void TryLogin()
-        {
-            _logger.LogInformation("Trying to login!");
-            if (!string.IsNullOrEmpty(OAuthToken))
-            {
-                _websocketService.SendMessage($"PASS {OAuthToken}");
-            }
-            _websocketService.SendMessage($"NICK {UserName}");
-        }
+        //private void TryLogin()
+        //{
+        //    _logger.LogInformation("Trying to login!");
+        //    if (!string.IsNullOrEmpty(OAuthToken))
+        //    {
+        //        _websocketService.SendMessage($"PASS {OAuthToken}");
+        //    }
+        //    _websocketService.SendMessage($"NICK {UserName}");
+        //}
 
         private void SendRawMessage(Assembly assembly, string rawMessage, bool forwardToSharedClients = false)
         {
             if (_websocketService.IsConnected)
             {
-                _websocketService.SendMessage(rawMessage);
+                //_websocketService.SendMessage(rawMessage);
                 if (forwardToSharedClients)
                 {
                     _websocketService_OnMessageReceived(assembly, rawMessage);
@@ -317,7 +370,7 @@ namespace ChatCore.Services.BiliBili
 
         internal void SendTextMessage(Assembly assembly, string message, string channel)
         {
-            _textMessageQueue.Enqueue(new KeyValuePair<Assembly, string>(assembly, $"@id={Guid.NewGuid().ToString()} PRIVMSG #{channel} :{message}"));
+            //_textMessageQueue.Enqueue(new KeyValuePair<Assembly, string>(assembly, $"@id={Guid.NewGuid().ToString()} PRIVMSG #{channel} :{message}"));
         }
 
         public void SendTextMessage(string message, string channel)
@@ -327,7 +380,7 @@ namespace ChatCore.Services.BiliBili
 
         public void SendTextMessage(string message, IChatChannel channel)
         {
-            if (channel is TwitchChannel)
+            if (channel is BiliBiliChatChannel)
             {
                 SendTextMessage(Assembly.GetCallingAssembly(), message, channel.Id);
             }
@@ -348,5 +401,29 @@ namespace ChatCore.Services.BiliBili
         {
             SendRawMessage(Assembly.GetCallingAssembly(), $"PART #{channel.ToLower()}");
         }
-    }
+
+		private void SendGreetingPacket()
+		{
+			if (ulong.TryParse(_userID, out var userID) && ulong.TryParse(_roomID, out var roomID))
+			{
+				_logger.LogInformation("Send Greeting packet.");
+				var packet = BiliBiliPacket.CreateGreetingPacket(userID, roomID);
+				this._websocketService.SendMessage(packet.PacketBuffer);
+			}
+		}
+
+		private void SendHeartBeatPacket()
+		{
+			if (!_websocketService.IsConnected)
+			{
+				return;
+			}
+
+			if (int.TryParse(_userID, out var userID) && int.TryParse(_roomID, out var roomID))
+			{
+				var packet = BiliBiliPacket.CreateHeartBeatPacket(userID, roomID);
+				this._websocketService.SendMessage(packet.PacketBuffer);
+			}
+		}
+	}
 }

@@ -1,6 +1,7 @@
 using ChatCore.Interfaces;
 using System.Collections.Generic;
 using ChatCore.Utilities;
+using System;
 
 namespace ChatCore.Models.BiliBili
 {
@@ -12,31 +13,35 @@ namespace ChatCore.Models.BiliBili
         public string Color { get; internal set; } = null!;
         public bool IsBroadcaster { get; internal set; }
         public bool IsModerator { get; internal set; }
-        public IChatBadge[] Badges { get; internal set; } = new IChatBadge[0];
+		public IChatBadge[] Badges { get; internal set; } = Array.Empty<IChatBadge>();
 
         public BiliBiliChatUser() { }
         public BiliBiliChatUser(string json)
         {
-            var obj = JSON.Parse(json);
-            if (obj.TryGetKey(nameof(Id), out var id)) { Id = id.Value; }
-            if (obj.TryGetKey(nameof(UserName), out var userName)) { UserName = userName.Value; }
-            if (obj.TryGetKey(nameof(DisplayName), out var displayName)) { DisplayName = displayName.Value; }
-            if (obj.TryGetKey(nameof(Color), out var color)) { Color = color.Value; }
-            if (obj.TryGetKey(nameof(IsBroadcaster), out var isBroadcaster)) { IsBroadcaster = isBroadcaster.AsBool; }
-            if (obj.TryGetKey(nameof(IsModerator), out var isModerator)) { IsModerator = isModerator.AsBool; }
-            if (obj.TryGetKey(nameof(Badges), out var badges))
-            {
-                var badgeList = new List<IChatBadge>();
-                if (badges.AsArray is not null)
-                {
-	                foreach (var badge in badges.AsArray)
-	                {
-		                badgeList.Add(new UnknownChatBadge(badge.Value.ToString()));
-	                }
-                }
+            var info = JSON.Parse(json).AsArray;
+			if (info == null)
+			{
+				return;
+			}
+			Id = info[2][0].Value;
+			UserName = info[2][1];
+			DisplayName = info[2][1];
+			this.Color = string.IsNullOrEmpty(info[2][7].Value) ? info[2][7].Value : "#FFFFFF";
+			if (info.TryGetKey(nameof(IsBroadcaster), out var isBroadcaster)) { IsBroadcaster = isBroadcaster.AsBool; }
+            if (info.TryGetKey(nameof(IsModerator), out var isModerator)) { IsModerator = isModerator.AsBool; }
+            //if (info.TryGetKey(nameof(Badges), out var badges))
+            //{
+            //    var badgeList = new List<IChatBadge>();
+            //    if (badges.AsArray is not null)
+            //    {
+	           //     foreach (var badge in badges.AsArray)
+	           //     {
+		          //      badgeList.Add(new UnknownChatBadge(badge.Value.ToString()));
+	           //     }
+            //    }
 
-                Badges = badgeList.ToArray();
-            }
+            //    Badges = badgeList.ToArray();
+            //}
         }
         public JSONObject ToJson()
         {
