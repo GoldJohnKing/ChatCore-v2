@@ -1,12 +1,11 @@
-using ChatCore.Interfaces;
-using ChatCore.Models;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Threading.Tasks;
+using ChatCore.Interfaces;
+using ChatCore.Models;
 using ChatCore.Utilities;
-using System.Reflection;
+using Microsoft.Extensions.Logging;
 
 namespace ChatCore.Services.Twitch
 {
@@ -54,7 +53,7 @@ namespace ChatCore.Services.Twitch
 					{
 						var uri = $"https://cdn.betterttv.net/emote/{o["id"].Value}/3x";
 						var identifier = isGlobal ? o["code"].Value : $"{category}_{o["code"].Value}";
-						Resources.TryAdd(identifier, new ChatResourceData() {Uri = uri, IsAnimated = o["imageType"].Value == "gif", Type = isGlobal ? "BTTVGlobalEmote" : "BTTVChannelEmote"});
+						Resources.TryAdd(identifier, new ChatResourceData() { Uri = uri, IsAnimated = o["imageType"].Value == "gif", Type = isGlobal ? "BTTVGlobalEmote" : "BTTVChannelEmote" });
 						count++;
 					}
 				}

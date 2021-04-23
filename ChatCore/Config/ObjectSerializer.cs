@@ -341,7 +341,7 @@ namespace ChatCore.Config
 		/// <returns></returns>
 		public JSONObject GetSettingsAsJson(object obj)
 		{
-			JSONObject jsonObject = new JSONObject();
+			var jsonObject = new JSONObject();
 			foreach (var fieldInfo in obj.GetType().GetFields())
 			{
 				if (fieldInfo.GetCustomAttribute(typeof(HtmlIgnore)) != null)

@@ -706,14 +706,14 @@ namespace ChatCore.Utilities
 									token.Append('\f');
 									break;
 								case 'u':
-								{
-									var s = aJson.Substring(i + 1, 4);
-									token.Append((char)int.Parse(
-										s,
-										NumberStyles.AllowHexSpecifier));
-									i += 4;
-									break;
-								}
+									{
+										var s = aJson.Substring(i + 1, 4);
+										token.Append((char)int.Parse(
+											s,
+											NumberStyles.AllowHexSpecifier));
+										i += 4;
+										break;
+									}
 								default:
 									token.Append(c);
 									break;
@@ -851,7 +851,7 @@ namespace ChatCore.Utilities
 
 		public override JSONNode Clone()
 		{
-			var node = new JSONArray {_mList = {Capacity = _mList.Capacity}};
+			var node = new JSONArray { _mList = { Capacity = _mList.Capacity } };
 			foreach (var n in _mList)
 			{
 				if (n != null)
@@ -1282,11 +1282,11 @@ namespace ChatCore.Utilities
 		private static bool IsNumeric(object value)
 		{
 			return value is int || value is uint
-			                    || value is float || value is double
-			                    || value is decimal
-			                    || value is long || value is ulong
-			                    || value is short || value is ushort
-			                    || value is sbyte || value is byte;
+								|| value is float || value is double
+								|| value is decimal
+								|| value is long || value is ulong
+								|| value is short || value is ushort
+								|| value is sbyte || value is byte;
 		}
 
 		public override bool Equals(object? obj)

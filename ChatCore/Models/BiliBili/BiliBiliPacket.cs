@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ChatCore.Utilities;
@@ -22,7 +21,7 @@ namespace ChatCore.Models.BiliBili
 			var data = Encoding.UTF8.GetBytes(value);
 			var packetLen = 16 + data.Length;
 			var header = new byte[] { 0, 0, 0, 0, 0, 16, 0, 1, 0, 0, 0, (byte)operation, 0, 0, 0, 1 };
-			this.WriteInt(header, 0, 4, packetLen);
+			WriteInt(header, 0, 4, packetLen);
 			return header.Concat(data).ToArray();
 		}
 
@@ -59,12 +58,12 @@ namespace ChatCore.Models.BiliBili
 			//var packetBuffer = DataView.MergeBytes(new List<byte[]> {
 			//	headerBytes, bodyBuffer
 			//});
-			this.PacketBuffer = this.Encorde(json.ToString(), operation);
+			PacketBuffer = Encorde(json.ToString(), operation);
 		}
 
 		private BiliBiliPacket(DanmakuOperation operation, string json)
 		{
-			this.PacketBuffer = this.Encorde(json, operation);
+			PacketBuffer = Encorde(json, operation);
 		}
 
 		/// <summary>

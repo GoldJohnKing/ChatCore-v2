@@ -1,11 +1,11 @@
-﻿using ChatCore.Interfaces;
-using ChatCore.Models;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Threading.Tasks;
+using ChatCore.Interfaces;
+using ChatCore.Models;
 using ChatCore.Utilities;
+using Microsoft.Extensions.Logging;
 
 namespace ChatCore.Services.Twitch
 {
@@ -51,7 +51,7 @@ namespace ChatCore.Services.Twitch
 					var urls = o["urls"].AsObject!;
 					var uri = urls[urls.Count - 1].Value;
 					var identifier = isGlobal ? o["name"].Value : $"{category}_{o["name"].Value}";
-					Resources[identifier] = new ChatResourceData {Uri = uri, IsAnimated = false, Type = isGlobal ? "FFZGlobalEmote" : "FFZChannelEmote"};
+					Resources[identifier] = new ChatResourceData { Uri = uri, IsAnimated = false, Type = isGlobal ? "FFZGlobalEmote" : "FFZChannelEmote" };
 					count++;
 				}
 

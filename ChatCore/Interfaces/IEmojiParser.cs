@@ -2,8 +2,8 @@
 
 namespace ChatCore.Interfaces
 {
-    public interface IEmojiParser
-    {
-        List<IChatEmote> FindEmojis(string str);
-    }
+	public interface IEmojiParser
+	{
+		List<IChatEmote> FindEmojis(string str);
+	}
 }

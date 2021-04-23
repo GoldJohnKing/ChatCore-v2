@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-using ChatCore.Interfaces;
 using System;
 using System.IO;
 using System.Linq;
@@ -8,7 +6,9 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ChatCore.Interfaces;
 using ChatCore.Utilities;
+using Microsoft.Extensions.Logging;
 
 namespace ChatCore.Services
 {
@@ -45,7 +45,7 @@ namespace ChatCore.Services
 			}
 
 			_cancellationToken = new CancellationTokenSource();
-			_listener = new HttpListener {Prefixes = {$"http://localhost:{MainSettingsProvider.WEB_APP_PORT}/"}};
+			_listener = new HttpListener { Prefixes = { $"http://localhost:{MainSettingsProvider.WEB_APP_PORT}/" } };
 			_listener.Start();
 
 			_logger.Log(LogLevel.Information, $"Listening on {string.Join(", ", _listener.Prefixes)}");
@@ -147,8 +147,8 @@ namespace ChatCore.Services
 				{
 					var channelsFromResponse = responseJson["twitch_channels"].AsArray?.Children.Select(channelName => channelName.Value).ToList();
 					if (channelsFromResponse != null &&
-					    (channelsFromResponse.Count != _authManager.Credentials.Twitch_Channels.Count ||
-					    channelsFromResponse.Any(name => !_authManager.Credentials.Twitch_Channels.Contains(name))))
+						(channelsFromResponse.Count != _authManager.Credentials.Twitch_Channels.Count ||
+						channelsFromResponse.Any(name => !_authManager.Credentials.Twitch_Channels.Contains(name))))
 					{
 						_authManager.Credentials.Twitch_Channels.Clear();
 						_authManager.Credentials.Twitch_Channels.AddRange(channelsFromResponse);

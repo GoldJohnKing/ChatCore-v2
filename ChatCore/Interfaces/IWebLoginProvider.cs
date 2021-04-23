@@ -1,8 +1,8 @@
 ﻿namespace ChatCore.Interfaces
 {
-    public interface IWebLoginProvider
-    {
-        void Start();
-        void Stop();
-    }
+	public interface IWebLoginProvider
+	{
+		void Start();
+		void Stop();
+	}
 }

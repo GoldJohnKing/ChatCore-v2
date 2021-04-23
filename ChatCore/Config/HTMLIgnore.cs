@@ -2,8 +2,8 @@
 
 namespace ChatCore.Config
 {
-    [AttributeUsage(AttributeTargets.Field)]
-    public class HtmlIgnore : Attribute
-    {
-    }
+	[AttributeUsage(AttributeTargets.Field)]
+	public class HtmlIgnore : Attribute
+	{
+	}
 }

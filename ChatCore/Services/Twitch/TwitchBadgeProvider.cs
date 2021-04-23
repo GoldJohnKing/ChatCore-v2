@@ -1,11 +1,11 @@
-﻿using ChatCore.Interfaces;
-using ChatCore.Models;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Threading.Tasks;
+using ChatCore.Interfaces;
+using ChatCore.Models;
 using ChatCore.Utilities;
+using Microsoft.Extensions.Logging;
 
 namespace ChatCore.Services.Twitch
 {
@@ -55,7 +55,7 @@ namespace ChatCore.Services.Twitch
 						var uri = version.Value.AsObject!["image_url_4x"].Value;
 						//_logger.LogInformation($"Global Badge: {finalName}, URI: {uri}");
 						var identifier = isGlobal ? finalName : $"{category}_{finalName}";
-						Resources[identifier] = new ChatResourceData() {Uri = uri, IsAnimated = false, Type = isGlobal ? "TwitchGlobalBadge" : "TwitchChannelBadge"};
+						Resources[identifier] = new ChatResourceData() { Uri = uri, IsAnimated = false, Type = isGlobal ? "TwitchGlobalBadge" : "TwitchChannelBadge" };
 						count++;
 					}
 				}

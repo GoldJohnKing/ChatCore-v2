@@ -1,7 +1,7 @@
 ﻿namespace ChatCore.Interfaces
 {
-    public interface IDefaultBrowserLauncherService
-    {
-        void Launch(string uri);
-    }
+	public interface IDefaultBrowserLauncherService
+	{
+		void Launch(string uri);
+	}
 }
