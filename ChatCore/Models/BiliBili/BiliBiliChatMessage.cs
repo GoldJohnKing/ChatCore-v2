@@ -112,11 +112,11 @@ namespace ChatCore.Models.BiliBili
 
 				if (string.IsNullOrEmpty(data["combo_num"].Value))
 				{
-					b.Message = "【礼物】" + data["uname"].Value + data["action"].Value + data["num"].Value + "个" + data["giftName"].Value;
+					b.Message = data["action"].Value + data["num"].Value + "个" + data["giftName"].Value;
 				}
 				else
 				{
-					b.Message = "【礼物】" + data["uname"].Value + data["action"].Value + data["num"].Value + "个" + data["giftName"].Value + " x" + data["combo_num"].Value;
+					b.Message = data["action"].Value + data["num"].Value + "个" + data["giftName"].Value + " x" + data["combo_num"].Value;
 				}
 				b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
 			});
@@ -139,7 +139,7 @@ namespace ChatCore.Models.BiliBili
 				info[2][3][0] = new JSONNumber(data["medal_info"]["medal_level"].AsInt);
 				info[2][3][1] = new JSONNumber(data["medal_info"]["medal_name"].Value);
 
-				b.Message = "感谢" + b.Username + data["action"].Value + "的" + (data["gift_num"].AsInt == 0 ? 1 : data["gift_num"].AsInt) + "个" + data["gift_name"].Value + " x" + data["combo_num"].Value;
+				b.Message = data["action"].Value + (data["gift_num"].AsInt == 0 ? 1 : data["gift_num"].AsInt) + "个" + data["gift_name"].Value + " x" + data["combo_num"].Value;
 				b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
 			});
 			comands.Add("COMBO_SEND", (b, danmuku) => {
@@ -161,7 +161,7 @@ namespace ChatCore.Models.BiliBili
 				info[2][3][0] = new JSONNumber(data["medal_info"]["medal_level"].AsInt);
 				info[2][3][1] = new JSONNumber(data["medal_info"]["medal_name"].Value);
 
-				b.Message = "感谢" + b.Username + data["action"].Value + "的" + (data["gift_num"].AsInt == 0 ? 1 : data["gift_num"].AsInt) + "个" + data["gift_name"].Value + " x" + data["combo_num"];
+				b.Message = data["action"].Value + (data["gift_num"].AsInt == 0 ? 1 : data["gift_num"].AsInt) + "个" + data["gift_name"].Value + " x" + data["combo_num"];
 				b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
 			});
 			comands.Add("SUPER_CHAT_MESSAGE", (b, danmuku) => {
