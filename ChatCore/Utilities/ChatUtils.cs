@@ -1,8 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using ChatCore.Interfaces;
 using ChatCore.Models.Twitch;
+using ChatCore.Models.BiliBili;
 using ChatCore.Services.Twitch;
+using ChatCore.Services.BiliBili;
 
 namespace ChatCore.Utilities
 {
@@ -28,6 +30,11 @@ namespace ChatCore.Utilities
 		public static TwitchUser? AsTwitchUser(this IChatUser user)
 		{
 			return user as TwitchUser;
+		}
+
+		public static BiliBiliChatUser? AsBilibiliUser(this IChatUser user)
+		{
+			return user as BiliBiliChatUser;
 		}
 
 		public static TwitchBadge? AsTwitchBadge(this IChatBadge badge)
