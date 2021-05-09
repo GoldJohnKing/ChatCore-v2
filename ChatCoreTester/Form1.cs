@@ -5,6 +5,7 @@ using ChatCore;
 using ChatCore.Interfaces;
 using ChatCore.Models.Twitch;
 using ChatCore.Services;
+using ChatCore.Services.BiliBili;
 using ChatCore.Services.Twitch;
 
 namespace ChatCoreTester
@@ -13,6 +14,7 @@ namespace ChatCoreTester
     {
         private readonly ChatServiceMultiplexer _streamingService;
         private TwitchService _twitchService;
+		private BiliBiliService _biliBiliService;
         public Form1()
         {
             InitializeComponent();

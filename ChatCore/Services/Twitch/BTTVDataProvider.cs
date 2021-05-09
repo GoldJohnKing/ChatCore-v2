@@ -1,11 +1,11 @@
-﻿using ChatCore.Interfaces;
-using ChatCore.Models;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Threading.Tasks;
+using ChatCore.Interfaces;
+using ChatCore.Models;
 using ChatCore.Utilities;
+using Microsoft.Extensions.Logging;
 
 namespace ChatCore.Services.Twitch
 {
@@ -30,6 +30,7 @@ namespace ChatCore.Services.Twitch
 			{
 				_logger.LogDebug($"Requesting BTTV {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : $" for channel {category}")}.");
 				using var msg = new HttpRequestMessage(HttpMethod.Get, isGlobal ? "https://api.betterttv.net/2/emotes" : $"https://api.betterttv.net/2/channels/{category}");
+				msg.Headers.Add("User-Agent", $"ChatCore/{ChatCoreInstance.Version.ToString(3)}");
 				var resp = await _httpClient.SendAsync(msg);
 				if (!resp.IsSuccessStatusCode)
 				{
@@ -46,13 +47,13 @@ namespace ChatCore.Services.Twitch
 
 				var count = 0;
 				var emoteArray = json["emotes"].AsArray;
-				if (emoteArray is not null)
+				if (emoteArray != null)
 				{
 					foreach (JSONObject o in emoteArray)
 					{
 						var uri = $"https://cdn.betterttv.net/emote/{o["id"].Value}/3x";
 						var identifier = isGlobal ? o["code"].Value : $"{category}_{o["code"].Value}";
-						Resources.TryAdd(identifier, new ChatResourceData() {Uri = uri, IsAnimated = o["imageType"].Value == "gif", Type = isGlobal ? "BTTVGlobalEmote" : "BTTVChannelEmote"});
+						Resources.TryAdd(identifier, new ChatResourceData() { Uri = uri, IsAnimated = o["imageType"].Value == "gif", Type = isGlobal ? "BTTVGlobalEmote" : "BTTVChannelEmote" });
 						count++;
 					}
 				}

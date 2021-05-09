@@ -1,15 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-		<Version>2.0.0</Version>
+		<Version>2.1.2</Version>
 		<LangVersion>9</LangVersion>
 		<Nullable>enable</Nullable>
 		<NoWarn>1591</NoWarn>
 		<OutDir>$(ProjectDir)bin\$(Configuration)</OutDir>
 		<DocumentationFile>$(OutDir)\ChatCore.xml</DocumentationFile>
+		<GameDirPath>S:\Game\SteamLibrary\steamapps\common\Beat Saber</GameDirPath>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -22,11 +23,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="ilmerge" Version="3.0.41"/>
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0"/>
-		<PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.0"/>
-		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.0"/>
-		<PackageReference Include="Microsoft.Extensions.Options" Version="3.1.0"/>
+		<PackageReference Include="ilmerge" Version="3.0.41" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="3.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -41,19 +42,33 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Resources\Web\index.html"/>
+		<EmbeddedResource Include="Resources\Web\index.html" />
+		<EmbeddedResource Include="Resources\Web\Statics\Css\default.css" />
+		<EmbeddedResource Include="Resources\Web\Statics\Css\Material+Icons.css" />
+		<EmbeddedResource Include="Resources\Web\Statics\Css\materialize.min.css" />
+		<EmbeddedResource Include="Resources\Web\Statics\Fonts\flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2" />
+		<EmbeddedResource Include="Resources\Web\Statics\Js\default.js" />
+		<EmbeddedResource Include="Resources\Web\Statics\Js\jquery-3.5.1.min.js" />
+		<EmbeddedResource Include="Resources\Web\Statics\Js\materialize.min.js" />
+		<EmbeddedResource Include="Resources\Web\Statics\Lang\en.json" />
+		<EmbeddedResource Include="Resources\Web\Statics\Lang\zh.json" />
+		<EmbeddedResource Include="Resources\Web\Statics\Lang\ja.json" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="internalize_excludes.txt"/>
+		<None Remove="internalize_excludes.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Properties\" />
 	</ItemGroup>
 
 	<Target Name="ILMerge" AfterTargets="Build">
-		<Exec Command="cd &quot;$(OutDir)&quot;&#xD;&#xA;&quot;$(ILMergeConsolePath)&quot; /xmldocs /targetplatform:v4 /ndebug /allowDup /internalize:&quot;$(ProjectDir)internalize_excludes.txt&quot; /wildcards /out:&quot;$(TargetFileName)&quot; *.dll"/>
+		<Exec Command="cd &quot;$(OutDir)&quot;&#xD;&#xA;&quot;$(ILMergeConsolePath)&quot; /xmldocs /targetplatform:v4 /ndebug /allowDup /internalize:&quot;$(ProjectDir)internalize_excludes.txt&quot; /wildcards /out:&quot;$(TargetFileName)&quot; *.dll" />
 	</Target>
 
-	<Target Name="PostBuild" AfterTargets="ILMerge" Condition="Exists('$(BeatSaberDir)')">
-		<Exec Command="copy /Y &quot;$(OutDir)$(TargetFileName)&quot; &quot;$(BeatSaberDir)\Libs&quot;"/>
+	<Target Name="PostBuild" AfterTargets="ILMerge" Condition="Exists('$(GameDirPath)')">
+		<Copy SourceFiles="$(OutDir)$(TargetFileName)" DestinationFiles="$(GameDirPath)\Libs\$(TargetFileName)" />
 	</Target>
 
 </Project>
