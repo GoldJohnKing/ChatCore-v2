@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,32 +19,30 @@ namespace ChatCore.Services.BiliBili
 	{
 		private readonly ConcurrentDictionary<Assembly, Action<IChatService, string>> _rawMessageReceivedCallbacks;
 		private readonly ConcurrentDictionary<string, IChatChannel> _channels;
+		private static HttpClient httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
+		private static readonly string BilibiliChannelInfoApi = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=";
 
 		private readonly ILogger _logger;
 		//private readonly TwitchMessageParser _messageParser;
 		//private readonly TwitchDataProvider _dataProvider;
 		private readonly IWebSocketService _websocketService;
-		private readonly IUserAuthProvider _authManager;
+		private readonly MainSettingsProvider _settings;
 
 		private readonly object _messageReceivedLock;
 		private readonly object _initLock;
 
-		private readonly string _anonUsername;
-		private string? _loggedInUsername;
 		private bool _isStarted;
 
 		private int _currentMessageCount;
 		private DateTime _lastResetTime = DateTime.UtcNow;
 		private readonly ConcurrentQueue<KeyValuePair<Assembly, string>> _textMessageQueue = new ConcurrentQueue<KeyValuePair<Assembly, string>>();
 		// ToDo : Can Change Settings
-		private readonly string _roomID = "287083";
-		private readonly string _userID = "1438695377";
+		private int _roomID = 0;
+		private int _userID = 0;
+		private int _randomUid = 0;
 
 		private readonly System.Timers.Timer packetTimer;
 
-		//private string UserName => string.IsNullOrEmpty(_authManager.Credentials.Twitch_OAuthToken) ? _anonUsername : "@";
-		//private string OAuthToken => string.IsNullOrEmpty(_authManager.Credentials.Twitch_OAuthToken) ? string.Empty : _authManager.Credentials.Twitch_OAuthToken;
-		//roomid: number, { address = 'wss://broadcastlv.chat.bilibili.com/sub', protover = 2, key, agent }: { address?: string, protover?: 1 | 2, key?: string, agent?: Agent } = {}
 		public ReadOnlyDictionary<string, IChatChannel> Channels { get; }
 		public TwitchUser? LoggedInUser { get; internal set; }
 
@@ -55,19 +54,19 @@ namespace ChatCore.Services.BiliBili
 			remove => _rawMessageReceivedCallbacks.RemoveAction(Assembly.GetCallingAssembly(), value);
 		}
 
-		public BiliBiliService(ILogger<BiliBiliService> logger, IWebSocketService websocketService, Random rand)
+		public BiliBiliService(ILogger<BiliBiliService> logger, IWebSocketService websocketService, MainSettingsProvider settings, Random rand)
 		{
 			_logger = logger;
-
+			_settings = settings;
 			_websocketService = websocketService;
-
 
 			_rawMessageReceivedCallbacks = new ConcurrentDictionary<Assembly, Action<IChatService, string>>();
 			_channels = new ConcurrentDictionary<string, IChatChannel>();
 			_messageReceivedLock = new object();
 			_initLock = new object();
+			_roomID = _settings.bilibili_room_id;
 
-			_anonUsername = $"justinfan{rand.Next(10000, 1000000)}".ToLower();
+			_randomUid = rand.Next(10000, 1000000);
 
 			Channels = new ReadOnlyDictionary<string, IChatChannel>(_channels);
 
@@ -83,25 +82,27 @@ namespace ChatCore.Services.BiliBili
 
 		private void _websocketService_OnDataRecevied(Assembly arg1, byte[] arg2)
 		{
-			_logger.LogInformation("Get bytes packet!");
+			/*_logger.LogInformation("Get bytes packet!");*/
 			//var buffer = new byte[arg2.Length];
 			// Receive the greeting ack notify, then a HeartBeat timer should be setup.
 			foreach (var message in DanmakuMessage.ParsePackets(arg2))
 			{
+				/*_logger.LogInformation("Operation: " + message.Operation.ToString());*/
 				if (message.Operation == BiliBiliPacket.DanmakuOperation.GreetingAck)
 				{
-					_logger.LogInformation("return GreetingAck");
+					_logger.LogInformation("BiliBili Connected");
 					StartHeartBeat();
-				}
-				else
+				} else if (message.Operation == BiliBiliPacket.DanmakuOperation.HeartBeatAck)
 				{
-					_logger.LogInformation("not GreetingAck");
-					_logger.LogInformation($"{message.Body}");
+					/*_logger.LogInformation($"Popularity: {message.Body}");*/
+				} else if (message.Operation == BiliBiliPacket.DanmakuOperation.ChatMessage) {
+					/*_logger.LogInformation($"Body: {message.Body}");*/
 					try
 					{
 						_rawMessageReceivedCallbacks?.InvokeAll(arg1, this, message.Body);
-						var bmessage = new BiliBiliChatMessage(message.Body);
-						if (!string.IsNullOrEmpty(bmessage.Message) || !int.TryParse(bmessage.Message, out _))
+						var bmessage = new BiliBiliChatMessage(message.Body, _settings.bilibili_room_id);
+						BanDetection(bmessage);
+						if (bmessage.MessageType != "banned" && ShowDanmuku(bmessage.MessageType) && (!string.IsNullOrEmpty(bmessage.Message) || !int.TryParse(bmessage.Message, out _)))
 						{
 							TextMessageReceivedCallbacks?.InvokeAll(arg1, this, bmessage);
 						}
@@ -110,6 +111,11 @@ namespace ChatCore.Services.BiliBili
 					{
 						_logger.LogError($"{r}");
 					}
+				} else if (message.Operation == BiliBiliPacket.DanmakuOperation.StopRoom) {
+
+				}  else
+				{
+					_logger.LogInformation($"Unknown Msg(Body: {message.Body})");
 				}
 			}
 		}
@@ -119,17 +125,24 @@ namespace ChatCore.Services.BiliBili
 			packetTimer.Start();
 		}
 
+		private async void GetChannelConfigAsync(int roomID) {
+			try
+			{
+				var NewChannelInfo = JSONNode.Parse(await httpClient.GetStringAsync(BilibiliChannelInfoApi + roomID));
+				if (NewChannelInfo["data"]["room_info"]["room_id"] != string.Empty)
+				{
+					_userID = int.Parse(NewChannelInfo["data"]["room_info"]["uid"]);
+					_roomID = int.Parse(NewChannelInfo["data"]["room_info"]["room_id"]);
+					_settings.bilibili_room_id = _roomID;
+					_settings.Save();
+				}
+			}
+			catch { }
+		}
+
 		private void PacketTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
 		{
 			SendHeartBeatPacket();
-		}
-
-		private void _authManager_OnCredentialsUpdated(LoginCredentials credentials)
-		{
-			if (_isStarted)
-			{
-				Start(true);
-			}
 		}
 
 		internal void Start(bool forceReconnect = false)
@@ -143,10 +156,14 @@ namespace ChatCore.Services.BiliBili
 				if (!_isStarted)
 				{
 					_logger.LogInformation($"BiliBili Start");
-					_isStarted = true;
-					_websocketService.Connect("wss://broadcastlv.chat.bilibili.com:443/sub", forceReconnect);
-					Task.Run(ProcessQueuedMessages);
-					_logger.LogInformation("BiliBili Connected");
+					GetChannelConfigAsync(_roomID);
+					Task.Run(() => {
+						Thread.Sleep(1000);
+						_isStarted = true;
+						_websocketService.Connect("wss://broadcastlv.chat.bilibili.com:443/sub", forceReconnect);
+						Task.Run(ProcessQueuedMessages);
+						//_logger.LogInformation("BiliBili Connected");
+					});
 				}
 			}
 		}
@@ -163,9 +180,6 @@ namespace ChatCore.Services.BiliBili
 				_isStarted = false;
 				_channels?.Clear();
 
-				LoggedInUser = null;
-				_loggedInUsername = null;
-
 				_websocketService?.Disconnect();
 			}
 		}
@@ -177,112 +191,7 @@ namespace ChatCore.Services.BiliBili
 				//_logger.LogInformation("RawMessage: " + rawMessage);
 
 				_rawMessageReceivedCallbacks?.InvokeAll(assembly, this, rawMessage);
-				TextMessageReceivedCallbacks?.InvokeAll(assembly, this, new BiliBiliChatMessage(rawMessage), _logger);
-				//if (_messageParser.ParseRawMessage(rawMessage, _channels, LoggedInUser, out var parsedMessages))
-				//{
-				//    foreach (var chatMessage in parsedMessages)
-				//    {
-				//     var twitchMessage = (TwitchMessage)chatMessage;
-				//     if(assembly != null)
-				//        {
-				//            twitchMessage.Sender = LoggedInUser;
-				//        }
-
-				//        var twitchChannel = (twitchMessage.Channel as TwitchChannel);
-				//        if (twitchChannel!.Roomstate == null)
-				//        {
-				//            twitchChannel.Roomstate = _channels.TryGetValue(twitchMessage.Channel.Id, out var channel) ? (channel as TwitchChannel)?.Roomstate : new TwitchRoomstate();
-				//        }
-
-				//        switch (twitchMessage.Type)
-				//        {
-				//            case "PING":
-				//                SendRawMessage("PONG :tmi.twitch.tv");
-				//                continue;
-				//            case "376":  // successful login
-				//                _dataProvider.TryRequestGlobalResources();
-				//                _loggedInUsername = twitchMessage.Channel.Id;
-				//                // This isn't a typo, when you first sign in your username is in the channel id.
-				//                _logger.LogInformation($"Logged into Twitch as {_loggedInUsername}");
-				//                _websocketService.ReconnectDelay = 500;
-				//                LoginCallbacks?.InvokeAll(assembly!, this, _logger);
-				//                foreach (var channel in _authManager.Credentials.Twitch_Channels)
-				//                {
-				//                    JoinChannel(channel);
-				//                }
-				//                continue;
-				//            case "NOTICE":
-				//                switch (twitchMessage.Message)
-				//                {
-				//                    case "Login authentication failed":
-				//                    case "Invalid NICK":
-				//                        _websocketService.Disconnect();
-				//                        break;
-				//                }
-				//                goto case "PRIVMSG";
-				//            case "USERNOTICE":
-				//            case "PRIVMSG":
-				//                TextMessageReceivedCallbacks?.InvokeAll(assembly!, this, twitchMessage, _logger);
-				//                continue;
-				//            case "JOIN":
-				//                //_logger.LogInformation($"{twitchMessage.Sender.Name} JOINED {twitchMessage.Channel.Id}. LoggedInuser: {LoggedInUser.Name}");
-				//                if (twitchMessage.Sender.UserName == _loggedInUsername)
-				//                {
-				//                    if (!_channels.ContainsKey(twitchMessage.Channel.Id))
-				//                    {
-				//                        _channels[twitchMessage.Channel.Id] = twitchMessage.Channel.AsTwitchChannel()!;
-				//                        _logger.LogInformation($"Added channel {twitchMessage.Channel.Id} to the channel list.");
-				//                        JoinRoomCallbacks?.InvokeAll(assembly!, this, twitchMessage.Channel, _logger);
-				//                    }
-				//                }
-				//                continue;
-				//            case "PART":
-				//                //_logger.LogInformation($"{twitchMessage.Sender.Name} PARTED {twitchMessage.Channel.Id}. LoggedInuser: {LoggedInUser.Name}");
-				//                if (twitchMessage.Sender.UserName == _loggedInUsername)
-				//                {
-				//                    if (_channels.TryRemove(twitchMessage.Channel.Id, out var channel))
-				//                    {
-				//                        _dataProvider.TryReleaseChannelResources(twitchMessage.Channel);
-				//                        _logger.LogInformation($"Removed channel {channel.Id} from the channel list.");
-				//                        LeaveRoomCallbacks?.InvokeAll(assembly!, this, twitchMessage.Channel, _logger);
-				//                    }
-				//                }
-				//                continue;
-				//            case "ROOMSTATE":
-				//                _channels[twitchMessage.Channel.Id] = twitchMessage.Channel;
-				//                _dataProvider.TryRequestChannelResources(twitchMessage.Channel.AsTwitchChannel()!, resources =>
-				//                {
-				//                    ChannelResourceDataCached.InvokeAll(assembly!, this, twitchMessage.Channel, resources);
-				//                });
-				//                RoomStateUpdatedCallbacks?.InvokeAll(assembly!, this, twitchMessage.Channel, _logger);
-				//                continue;
-				//            case "USERSTATE":
-				//            case "GLOBALUSERSTATE":
-				//                LoggedInUser = twitchMessage.Sender!.AsTwitchUser()!;
-				//                if(string.IsNullOrEmpty(LoggedInUser.DisplayName))
-				//                {
-				//                    LoggedInUser.DisplayName = _loggedInUsername;
-				//                }
-				//                continue;
-				//            case "CLEARCHAT":
-				//                twitchMessage.Metadata.TryGetValue("target-user-id", out var targetUser);
-				//                ChatClearedCallbacks?.InvokeAll(assembly!, this, targetUser, _logger);
-				//                continue;
-				//            case "CLEARMSG":
-				//                if (twitchMessage.Metadata.TryGetValue("target-msg-id", out var targetMessage))
-				//                {
-				//                    MessageClearedCallbacks?.InvokeAll(assembly!, this, targetMessage, _logger);
-				//                }
-				//                continue;
-				//            //case "MODE":
-				//            //case "NAMES":
-				//            //case "HOSTTARGET":
-				//            //case "RECONNECT":
-				//            //    _logger.LogInformation($"No handler exists for type {twitchMessage.Type}. {rawMessage}");
-				//            //    continue;
-				//        }
-				//    }
-				//}
+				TextMessageReceivedCallbacks?.InvokeAll(assembly, this, new BiliBiliChatMessage(rawMessage, _settings.bilibili_room_id), _logger);
 			}
 		}
 
@@ -293,25 +202,14 @@ namespace ChatCore.Services.BiliBili
 
 		private void _websocketService_OnError()
 		{
-			_logger.LogError("An error occurred in Twitch connection");
+			_logger.LogError("An error occurred in Bilibili connection");
 		}
 
 		private void _websocketService_OnOpen()
 		{
 			_logger.LogInformation("BiliBili live connection opened");
 			SendGreetingPacket();
-			//TryLogin();
 		}
-
-		//private void TryLogin()
-		//{
-		//    _logger.LogInformation("Trying to login!");
-		//    if (!string.IsNullOrEmpty(OAuthToken))
-		//    {
-		//        _websocketService.SendMessage($"PASS {OAuthToken}");
-		//    }
-		//    _websocketService.SendMessage($"NICK {UserName}");
-		//}
 
 		private void SendRawMessage(Assembly assembly, string rawMessage, bool forwardToSharedClients = false)
 		{
@@ -364,21 +262,21 @@ namespace ChatCore.Services.BiliBili
 		/// Whether or not the message should also be sent to other clients in the assembly that implement StreamCore, or only to the Twitch server.<br/>
 		/// This should only be set to true if the Twitch server would rebroadcast this message to other external clients as a response to the message.
 		/// </param>
-		public void SendRawMessage(string rawMessage, bool forwardToSharedClients = false)
+		/*public void SendRawMessage(string rawMessage, bool forwardToSharedClients = false)
 		{
 			// TODO: rate limit sends to Twitch service
 			SendRawMessage(Assembly.GetCallingAssembly(), rawMessage, forwardToSharedClients);
-		}
+		}*/
 
 		internal void SendTextMessage(Assembly assembly, string message, string channel)
 		{
 			//_textMessageQueue.Enqueue(new KeyValuePair<Assembly, string>(assembly, $"@id={Guid.NewGuid().ToString()} PRIVMSG #{channel} :{message}"));
 		}
 
-		public void SendTextMessage(string message, string channel)
+		/*public void SendTextMessage(string message, string channel)
 		{
 			SendTextMessage(Assembly.GetCallingAssembly(), message, channel);
-		}
+		}*/
 
 		public void SendTextMessage(string message, IChatChannel channel)
 		{
@@ -388,7 +286,7 @@ namespace ChatCore.Services.BiliBili
 			}
 		}
 
-		public void SendCommand(string command, string channel)
+		/*public void SendCommand(string command, string channel)
 		{
 			SendRawMessage(Assembly.GetCallingAssembly(), $"PRIVMSG #{channel} :/{command}");
 		}
@@ -402,16 +300,13 @@ namespace ChatCore.Services.BiliBili
 		public void PartChannel(string channel)
 		{
 			SendRawMessage(Assembly.GetCallingAssembly(), $"PART #{channel.ToLower()}");
-		}
+		}*/
 
 		private void SendGreetingPacket()
 		{
-			if (ulong.TryParse(_userID, out var userID) && ulong.TryParse(_roomID, out var roomID))
-			{
-				_logger.LogInformation("Send Greeting packet.");
-				var packet = BiliBiliPacket.CreateGreetingPacket(userID, roomID);
-				_websocketService.SendMessage(packet.PacketBuffer);
-			}
+			_logger.LogInformation("Send Greeting packet.");
+			var packet = BiliBiliPacket.CreateGreetingPacket(_randomUid, _roomID);
+			_websocketService.SendMessage(packet.PacketBuffer);
 		}
 
 		private void SendHeartBeatPacket()
@@ -421,11 +316,118 @@ namespace ChatCore.Services.BiliBili
 				return;
 			}
 
-			if (int.TryParse(_userID, out var userID) && int.TryParse(_roomID, out var roomID))
+			var packet = BiliBiliPacket.CreateHeartBeatPacket();
+			_websocketService.SendMessage(packet.PacketBuffer);
+		}
+
+		private void BanDetection(BiliBiliChatMessage msg) {
+			if (BanListDetect(msg.Uid.ToString(), "uid") || BanListDetect(msg.Username, "username") || BanListDetect(msg.Content, "content"))
 			{
-				var packet = BiliBiliPacket.CreateHeartBeatPacket(userID, roomID);
-				_websocketService.SendMessage(packet.PacketBuffer);
+				Console.WriteLine("Ban!");
+				msg.BanMessage();
 			}
+		}
+
+		private bool BanListDetect(string value, string mode)
+		{
+			switch (mode)
+			{
+				case "username":
+					//Console.WriteLine($"Username: {value}");
+					JSONArray usernameArray = JSON.Parse(_settings.bilibili_block_list_username).AsArray!;
+					foreach (var username in usernameArray)
+					{
+						if (value.Contains(username.Value))
+						{
+							return true;
+						}
+					}
+					return false;
+				case "uid":
+					//Console.WriteLine($"UID: {value}");
+					JSONArray uidArray = JSON.Parse(_settings.bilibili_block_list_uid).AsArray!;
+					foreach (var uid in uidArray)
+					{
+						if (int.Parse(value) == int.Parse(uid.Value))
+						{
+							return true;
+						}
+					}
+					return false;
+				case "content":
+					//Console.WriteLine($"Content: {value}");
+					JSONArray keywordArray = JSON.Parse(_settings.bilibili_block_list_keyword).AsArray!;
+					foreach (var keywords in keywordArray)
+					{
+						if (value.Contains(keywords.Value))
+						{
+							return true;
+						}
+					}
+					return false;
+				default:
+					return false;
+			}
+		}
+
+		private bool ShowDanmuku(string type) {
+			var result = false;
+			string[] danmuku = { "danmuku" };
+			string[] sc = { "super_chat", "super_chat_japanese" };
+			string[] gift = { "gift" };
+			string[] gift_combo = { "combo_end", "combo_send" };
+			string[] welcome = { "welcome" };
+			string[] share = { "share" };
+			string[] follow = { "follow" };
+			string[] special_follow = { "special_follow" };
+			string[] matual_follow = { "matual_follow" };
+			string[] welcome_guard = { "welcome_guard" };
+			string[] effect = { "effect" };
+			string[] anchor = { "anchor_lot_start", "anchor_lot_checkstatus", "anchor_lot_end", "anchor_lot" };
+			string[] raffle = { "raffle_start" };
+			string[] new_guard = { "new_guard" };
+			string[] new_guard_msg = { "new_guard_msg" };
+			string[] guard_msg = { "guard_msg" };
+			string[] guard_lottery_msg = { "guard_lottery_msg" };
+			string[] blocklist = { "blocklist" };
+			string[] room_change = { "room_change" };
+			string[] room_perparing = { "room_perparing" };
+			string[] room_live = { "room_live" };
+			string[] global = { "global" };
+			string[] junk = { "junk", "unkown", "banned" };
+			string[] system = { "warning", "cut_off" };
+
+			if (
+				(Array.Exists(danmuku, el => el == type) && _settings.danmuku_danmuku) ||
+				(Array.Exists(sc, el => el == type) && _settings.danmuku_superchat) ||
+				(Array.Exists(gift, el => el == type) && _settings.danmuku_gift) ||
+				(Array.Exists(gift_combo, el => el == type) && _settings.danmuku_gift_combo) ||
+				(Array.Exists(welcome, el => el == type) && _settings.danmuku_interaction_enter) ||
+				(Array.Exists(share, el => el == type) && _settings.danmuku_interaction_share) ||
+				(Array.Exists(follow, el => el == type) && _settings.danmuku_interaction_follow) ||
+				(Array.Exists(special_follow, el => el == type) && _settings.danmuku_interaction_special_follow) ||
+				(Array.Exists(matual_follow, el => el == type) && _settings.danmuku_interaction_mutual_follow) ||
+				(Array.Exists(welcome_guard, el => el == type) && _settings.danmuku_interaction_guard_enter) ||
+				(Array.Exists(effect, el => el == type) && _settings.danmuku_interaction_effect) ||
+				(Array.Exists(anchor, el => el == type) && _settings.danmuku_interaction_anchor) ||
+				(Array.Exists(raffle, el => el == type) && _settings.danmuku_interaction_raffle) ||
+				(Array.Exists(new_guard, el => el == type) && _settings.danmuku_new_guard) ||
+				(Array.Exists(new_guard_msg, el => el == type) && _settings.danmuku_new_guard_msg) ||
+				(Array.Exists(guard_msg, el => el == type) && _settings.danmuku_guard_msg) ||
+				(Array.Exists(guard_lottery_msg, el => el == type) && _settings.danmuku_guard_lottery) ||
+				(Array.Exists(blocklist, el => el == type) && _settings.danmuku_notification_block_list) ||
+				(Array.Exists(room_change, el => el == type) && _settings.danmuku_notification_room_info_change) ||
+				(Array.Exists(room_perparing, el => el == type) && _settings.danmuku_notification_room_prepare) ||
+				(Array.Exists(room_live, el => el == type) && _settings.danmuku_notification_room_online) ||
+				(Array.Exists(global, el => el == type) && _settings.danmuku_notification_boardcast) ||
+				(Array.Exists(junk, el => el == type) && _settings.danmuku_notification_junk) ||
+				(Array.Exists(system, el => el == type))
+				)
+			{
+				result = true;
+			}
+
+			return result;
 		}
 	}
 }

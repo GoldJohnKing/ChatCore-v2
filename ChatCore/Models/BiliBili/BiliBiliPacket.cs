@@ -16,7 +16,7 @@ namespace ChatCore.Models.BiliBili
 
 		public byte[] PacketBuffer { get; private set; }
 
-		private byte[] Encorde(string value, DanmakuOperation operation)
+		private byte[] Encoder(string value, DanmakuOperation operation)
 		{
 			var data = Encoding.UTF8.GetBytes(value);
 			var packetLen = 16 + data.Length;
@@ -25,7 +25,7 @@ namespace ChatCore.Models.BiliBili
 			return header.Concat(data).ToArray();
 		}
 
-		private byte[] Decorde(string value, DanmakuOperation operation)
+		private byte[] Decoder(string value, DanmakuOperation operation)
 		{
 			return null;
 		}
@@ -58,12 +58,12 @@ namespace ChatCore.Models.BiliBili
 			//var packetBuffer = DataView.MergeBytes(new List<byte[]> {
 			//	headerBytes, bodyBuffer
 			//});
-			PacketBuffer = Encorde(json.ToString(), operation);
+			PacketBuffer = Encoder(json.ToString(), operation);
 		}
 
 		private BiliBiliPacket(DanmakuOperation operation, string json)
 		{
-			PacketBuffer = Encorde(json, operation);
+			PacketBuffer = Encoder(json, operation);
 		}
 
 		/// <summary>
@@ -72,14 +72,14 @@ namespace ChatCore.Models.BiliBili
 		/// <param name="uid"></param>
 		/// <param name="roomId"></param>
 		/// <returns></returns>
-		public static BiliBiliPacket CreateGreetingPacket(ulong uid, ulong roomId)
+		public static BiliBiliPacket CreateGreetingPacket(int uid, int roomId)
 		{
 			var json = new JSONObject();
 			//json["clientver"] = "1.6.3";
 			//json["platform"] = "web";
 			//json["protover"] = new JSONNumber(1);
 			json["roomid"] = new JSONNumber(roomId);
-			//json["uid"] = new JSONNumber(uid);
+			json["uid"] = new JSONNumber(uid);
 			//json["type"] = new JSONNumber(2);
 
 			return new BiliBiliPacket(DanmakuOperation.GreetingReq, json);
@@ -88,10 +88,8 @@ namespace ChatCore.Models.BiliBili
 		/// <summary>
 		/// Create HeartBeat Packet..
 		/// </summary>
-		/// <param name="uid"></param>
-		/// <param name="roomId"></param>
 		/// <returns></returns>
-		public static BiliBiliPacket CreateHeartBeatPacket(int uid, int roomId)
+		public static BiliBiliPacket CreateHeartBeatPacket()
 		{
 			return new BiliBiliPacket(DanmakuOperation.HeartBeatReq, "");
 		}
@@ -111,7 +109,10 @@ namespace ChatCore.Models.BiliBili
 			GreetingReq = 7,
 
 			// Server has got the Greeting packet successfully.
-			GreetingAck = 8
+			GreetingAck = 8,
+
+			// Room ids stops live message from Server
+			StopRoom = 1398034256
 		}
 	}
 }

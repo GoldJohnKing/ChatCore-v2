@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using ChatCore.Interfaces;
+using ChatCore.Services;
 using ChatCore.Utilities;
 
 namespace ChatCore.Models.BiliBili
@@ -12,10 +14,12 @@ namespace ChatCore.Models.BiliBili
 		public string Color { get; internal set; } = "#FFFFFF";
 		public bool IsBroadcaster { get; internal set; }
 		public bool IsModerator { get; internal set; }
-		public IChatBadge[] Badges { get; internal set; } = Array.Empty<IChatBadge>();
+		public bool IsFan { get; internal set; }
+		public IChatBadge[] Badges { get; internal set; } = new IChatBadge[0];
+		public int GuardLevel { get; internal set; } = 0;
 
 		public BiliBiliChatUser() { }
-		public BiliBiliChatUser(JSONNode info)
+		public BiliBiliChatUser(JSONNode info, int _room_id)
 		{
 			var infos = info.AsArray;
 			if (infos == null)
@@ -31,23 +35,37 @@ namespace ChatCore.Models.BiliBili
 			UserName = userData[1].Value;
 			DisplayName = userData[1].Value;
 			Color = !string.IsNullOrEmpty(userData[7].Value) ? userData[7].Value : "#FFFFFF";
-			if (info.TryGetKey(nameof(IsBroadcaster), out var isBroadcaster))
-			{ IsBroadcaster = isBroadcaster.AsBool; }
-			if (info.TryGetKey(nameof(IsModerator), out var isModerator))
-			{ IsModerator = isModerator.AsBool; }
-			//if (info.TryGetKey(nameof(Badges), out var badges))
-			//{
-			//    var badgeList = new List<IChatBadge>();
-			//    if (badges.AsArray is not null)
-			//    {
-			//     foreach (var badge in badges.AsArray)
-			//     {
-			//      badgeList.Add(new UnknownChatBadge(badge.Value.ToString()));
-			//     }
-			//    }
+			IsModerator = userData[2].AsInt == 1;
+			IsBroadcaster = userData[0].AsInt == _room_id;
+			if (infos[3].AsArray!.Count > 0)
+			{
+				IsFan = (infos[3].AsArray!)[3] == _room_id;
+			}
+			var badgeList = new List<IChatBadge>();
+			if (!string.IsNullOrEmpty(infos[3][1].Value))
+			{
+				badgeList.Add(new BiliBiliChatBadge("{\"Name\":\"" + infos[3][1].Value + "\",\"Level\":" + infos[3][0].AsInt + ",\"Guard\":" + infos[7].AsInt + "}"));
+			}
+			Badges = badgeList.ToArray();
+			GuardLevel = infos[7].AsInt;
 
-			//    Badges = badgeList.ToArray();
-			//}
+			if (IsFan)
+			{
+				DisplayName = "[Lv "+ (infos[3].AsArray!)[0] + "]" + DisplayName;
+			}
+
+			if (GuardLevel > 0)
+			{
+				DisplayName = "[" + (GuardLevel == 3 ? "舰长" : (GuardLevel == 2 ? "提督" : "总督")) + "]" + DisplayName;
+			}
+
+			if (IsBroadcaster)
+			{
+				DisplayName = "[主播]" + DisplayName;
+			} else if (IsModerator)
+			{
+				DisplayName = "[房管]" + DisplayName;
+			}
 		}
 		public JSONObject ToJson()
 		{
@@ -64,6 +82,7 @@ namespace ChatCore.Models.BiliBili
 				badges.Add(badge.ToJson());
 			}
 			obj.Add(nameof(Badges), badges);
+			obj.Add(nameof(GuardLevel), new JSONNumber(GuardLevel));
 			return obj;
 		}
 	}

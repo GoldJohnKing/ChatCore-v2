@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -408,9 +408,13 @@ namespace ChatCore.Config
 				{
 					fieldInfo.SetValue(obj, kvp.Value.AsBool);
 				}
+				else if (fieldType == typeof(int))
+				{
+					fieldInfo.SetValue(obj, kvp.Value.AsInt);
+				}
 				else if (fieldType == typeof(string))
 				{
-					fieldInfo.SetValue(obj, kvp.Value);
+					fieldInfo.SetValue(obj, kvp.Value.Value);
 				}
 				else if (fieldType == typeof(Enum))
 				{
