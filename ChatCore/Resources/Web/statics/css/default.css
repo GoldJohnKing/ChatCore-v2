@@ -1,0 +1,45 @@
+.nav-wrapper {
+	padding-left: 16px;
+	padding-right: 16px;
+}
+
+.nav-wrapper > li {
+	padding-left: 16px;
+	padding-right: 16px;
+}
+
+nav .brand-logo {
+	position: relative !important;
+}
+
+@media only screen and (max-width: 992px) {
+	nav .brand-logo {
+		left: auto !important;
+		-webkit-transform: translateX(0) !important;
+		transform: translateX(0) !important;
+	}
+}
+
+.dropdown-content {
+	width: auto !important;
+}
+
+.twitch-header {
+	background-color: #6441A4;
+}
+
+.twitch-button {
+	background-color: #6441A4;
+}
+
+.bilibili-header {
+	background-color: #fb7299;
+}
+
+.bilibili-button {
+	background-color: #fb7299;
+}
+
+a.btn-floating.pulse.cyan.tooltipped {
+	margin-left: 10px;
+}

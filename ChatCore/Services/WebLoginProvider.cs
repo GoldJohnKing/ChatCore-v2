@@ -73,6 +73,7 @@ namespace ChatCore.Services
 
 		private async Task OnContext(HttpListenerContext ctx)
 		{
+			string[] resource_file_list = { "/Statics/Css/default.css", "/Statics/Css/Material+Icons.css", "/Statics/Css/materialize.min.css", "/Statics/Fonts/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2", "/Statics/Js/default.js", "/Statics/Js/materialize.min.js", "/Statics/Js/jquery-3.5.1.min.js", "/Statics/Lang/en.json", "/Statics/Lang/zh.json", "/Statics/Lang/ja.json" };
 			await _requestLock.WaitAsync();
 			try
 			{
@@ -82,6 +83,35 @@ namespace ChatCore.Services
 				if (request.HttpMethod == "POST" && request.Url.AbsolutePath == "/submit")
 				{
 					await Submit(request, response).ConfigureAwait(false);
+				} else if (request.HttpMethod == "GET" && Array.IndexOf(resource_file_list, request.Url.AbsolutePath) > -1)
+				{
+					// Load resources
+					response.StatusCode = 200;
+					var Ext = Path.GetExtension(request.Url.AbsolutePath);
+					if (Ext == ".html")
+					{
+						response.ContentType = "text/html";
+					}
+					else if (Ext == ".css")
+					{
+						response.ContentType = "text/css";
+					}
+					else if (Ext == ".js")
+					{
+						response.ContentType = "application/javascript";
+					}
+					else if (Ext == ".json")
+					{
+						response.ContentType = "application/json";
+					}
+					else if (Ext == ".woff2")
+					{
+						response.ContentType = "font/woff2";
+					}
+
+					Console.WriteLine("Trying to get resource: " + "ChatCore.Resources.Web" + request.Url.AbsolutePath.Replace("/", "."));
+					var buffer = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("ChatCore.Resources.Web" + request.Url.AbsolutePath.Replace("/", "."))!);
+					buffer.BaseStream.CopyTo(response.OutputStream);
 				}
 				else
 				{
@@ -163,7 +193,6 @@ namespace ChatCore.Services
 				{
 					_authManager.Save();
 				}
-
 				_settings.SetFromDictionary(responseJson);
 				_settings.Save();
 
