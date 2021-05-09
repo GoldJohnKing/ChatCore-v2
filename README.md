@@ -1,3 +1,17 @@
+# 聊天核心 ChatCore
+
+聊天核心 ChatCore是用.NET Standard 2.0编写的共享聊天客户端库。该项目的主要目的是减少多程序对同一个聊天服务进行交互的开销（这对于游戏中有多个模块需要聊天服务来说非常有用）。
+
+# 基本设置 (节奏光剑mod用户)
+
+1. 从[这里](https://github.com/baoziii/ChatCore-v2)下载最新的压缩包并解压到游戏根目录
+2. 在安装了任何调用聊天核心的mod以后，设置项网页将会在启动游戏后在你的默认浏览器中打开。你可以在里面配置你的Twitch和Bilibili设置项。
+
+
+# 项目基本设置 (面向开发者)
+
+[这里](https://github.com/baoziii/ChatCore-v2/tree/master/ChatCoreTester)包含了一个测试器。你可以查看示例来了解如何使用聊天核心ChatCore服务。
+
 # ChatCore
 ChatCore is a shared chat client library written in .NET Standard 2.0. The main objective behind this project is to reduce overhead in situations where multiple assemblies may want to interact with the same chat services (this is most useful with game modifications that have several significant chat integrations).
 
