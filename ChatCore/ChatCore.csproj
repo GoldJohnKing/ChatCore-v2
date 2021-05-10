@@ -4,13 +4,14 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-		<Version>2.1.2</Version>
+		<Version>2.1.2-b1</Version>
 		<LangVersion>9</LangVersion>
 		<Nullable>enable</Nullable>
 		<NoWarn>1591</NoWarn>
 		<OutDir>$(ProjectDir)bin\$(Configuration)</OutDir>
 		<DocumentationFile>$(OutDir)\ChatCore.xml</DocumentationFile>
 		<GameDirPath>S:\Game\SteamLibrary\steamapps\common\Beat Saber</GameDirPath>
+		<AssemblyVersion>2.1.2.1</AssemblyVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
