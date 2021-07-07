@@ -41,10 +41,8 @@ namespace ChatCore.Models.BiliBili
 		/// <summary>
 		/// Constructor of DanmakuPacket.
 		/// </summary>
-		/// <param name="version"></param>
 		/// <param name="operation"></param>
-		/// <param name="sequence"></param>
-		/// <param name="body"></param>
+		/// <param name="json"></param>
 		private BiliBiliPacket(DanmakuOperation operation, JSONObject json)
 		{
 			//var headerBytes = new byte[HeaderLength];

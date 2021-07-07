@@ -83,6 +83,8 @@ namespace ChatCore.Services
 		public bool danmuku_notification_boardcast = false;
 		[ConfigMeta(Comment = "When enabled, Junk Msg will be parsed.")]
 		public bool danmuku_notification_junk = false;
+		[ConfigMeta(Comment = "When enabled, PK Msg will be parsed.")]
+		public bool danmuku_notification_pk = false;
 		[ConfigMeta(Comment = "User with keyword in the list in their username will be blocked.")]
 		public string bilibili_block_list_username = "[]";
 		[ConfigMeta(Comment = "User with UID will be blocked.")]

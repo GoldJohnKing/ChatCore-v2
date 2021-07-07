@@ -43,7 +43,7 @@ namespace ChatCore.Models.BiliBili
 			IsHighlighted = false;
 			IsPing = false;
 			obj["room_id"] = new JSONNumber(_room_id);
-			
+
 			CreateMessage(JSON.Parse(json));
 		}
 		public JSONObject ToJson()
@@ -70,26 +70,40 @@ namespace ChatCore.Models.BiliBili
 		private static void CreateCommands()
 		{
 			comands.Add("DANMU_MSG", (b, danmuku) => {
-				b.MessageType = "danmuku";
 				var info = danmuku["info"].AsArray!;
-				b.Uid = info[2][0].AsInt;
-				b.Username = info[2][1].Value;
-				b.Content = info[1].Value.ToString();
+				if (int.Parse(info[0][9].Value) > 0)
+				{
+					b.MessageType = "ignore";
+				}
+				else
+				{
+					b.MessageType = "danmuku";
+                    b.Uid = info[2][0].AsInt;
+                    b.Username = info[2][1].Value;
+                    b.Content = info[1].Value.ToString();
 
-				b.Message = info[1].Value;
-				b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
-				//b.Channel = new BiliBiliChatChannel(danmuku);
+                    b.Message = info[1].Value;
+                    b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
+                    //b.Channel = new BiliBiliChatChannel(danmuku);
+				}
 			});
 			comands.Add("DANMU_MSG:4:0:2:2:2:0", (b, danmuku) => {
-				b.MessageType = "danmuku";
 				var info = danmuku["info"].AsArray!;
-				b.Uid = info[2][0].AsInt;
-				b.Username = info[2][1].Value;
-				b.Content = info[1].Value.ToString();
+				if (int.Parse(info[0][9].Value) > 0)
+				{
+					b.MessageType = "ignore";
+				}
+				else
+				{
+					b.MessageType = "danmuku";
+					b.Uid = info[2][0].AsInt;
+					b.Username = info[2][1].Value;
+					b.Content = info[1].Value.ToString();
 
-				b.Message = info[1].Value;
-				b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
-				//b.Channel = new BiliBiliChatChannel(danmuku);
+					b.Message = info[1].Value;
+					b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
+					//b.Channel = new BiliBiliChatChannel(danmuku);
+				}
 			});
 			comands.Add("SEND_GIFT", (b, danmuku) => {
 				b.MessageType = "gift";
@@ -110,14 +124,14 @@ namespace ChatCore.Models.BiliBili
 				info[2][3][0] = new JSONNumber(data["medal_info"]["medal_level"].AsInt);
 				info[2][3][1] = new JSONNumber(data["medal_info"]["medal_name"].Value);
 
-				if (string.IsNullOrEmpty(data["combo_num"].Value))
-				{
+				/*if (string.IsNullOrEmpty(data["combo_num"].Value))
+				{*/
 					b.Message = data["action"].Value + data["num"].Value + "个" + data["giftName"].Value;
-				}
+				/*}
 				else
 				{
 					b.Message = data["action"].Value + data["num"].Value + "个" + data["giftName"].Value + " x" + data["combo_num"].Value;
-				}
+				}*/
 				b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
 			});
 			comands.Add("COMBO_END", (b, danmuku) => {
@@ -250,7 +264,7 @@ namespace ChatCore.Models.BiliBili
 						b.Message = "【暂不支持该消息】";
 						break;
 				}
-				
+
 			});
 			comands.Add("WELCOME_GUARD", (b, danmuku) => {
 				b.MessageType = "welcome_guard";
@@ -307,14 +321,61 @@ namespace ChatCore.Models.BiliBili
 				var data = danmuku["data"].AsObject!;
 				b.IsSystemMessage = true;
 
-				b.Message = "【关注】粉丝数" + data["fans"].Value.ToString();
+				b.Message = "【关注】粉丝数" + data["fans"].Value;
 			});
-			comands.Add("NOTICE_MSG", (b, danmuku) => {
-				b.MessageType = "junk";
+			comands.Add("ONLINE_RANK_COUNT", (b, danmuku) => {
+				b.MessageType = "global";
 				var data = danmuku["data"].AsObject!;
 				b.IsSystemMessage = true;
 
-				b.Message = "【喇叭】" + data["msg_common"].Value;
+				b.Message = "【高能榜】人数: " + data["count"].Value;
+			});
+			comands.Add("ONLINE_RANK_V2", (b, danmuku) => {
+				b.MessageType = "global";
+				var data = danmuku["data"].AsObject!;
+				var online_rank_list = data["list"].AsArray!;
+
+				b.IsSystemMessage = true;
+
+				b.Message = "【高能榜】";
+				for (var i = 0; i < online_rank_list.Count; i++) {
+					b.Message += "#" + online_rank_list[i]["rank"].Value + " " + online_rank_list[i]["uname"].Value + "(贡献值: " + online_rank_list[i]["score"].Value + ")";
+				}
+			});
+			comands.Add("ONLINE_RANK_TOP3", (b, danmuku) => {
+				b.MessageType = "global";
+				var data = danmuku["data"].AsObject!;
+				b.IsSystemMessage = true;
+
+				b.Message = "【高能榜】" + data["list"][0]["msg"].Value.Replace("<%", "").Replace("%>", "");
+			});
+			comands.Add("ROOM_REAL_TIME_MESSAGE_UPDATE", (b, danmuku) => {
+				b.MessageType = "global";
+				var data = danmuku["data"].AsObject!;
+				b.IsSystemMessage = true;
+
+				b.Message = "【关注】粉丝数:" + data["fans"].Value.ToString();
+			});
+			comands.Add("NOTICE_MSG", (b, danmuku) => {
+				switch (danmuku["id"].Value.ToString()) {
+					case "207":
+						//上舰跑马灯 msg_type=3
+						b.MessageType = "guard_msg";
+						b.Message = "【上舰】" + danmuku["msg_self"].Value.Replace("<%", "").Replace("%>", "");
+						break;
+					case "277":
+						// 大乱斗连胜 msg_type=9
+						b.MessageType = "pk_notice";
+						b.Message = danmuku["msg_self"].Value.Replace("<%", "").Replace("%>", "");
+						break;
+					default:
+						b.MessageType = "junk";
+						var data = danmuku["data"].AsObject!;
+						b.Message = "【喇叭】" + data["msg_common"].Value;
+						break;
+				}
+
+				b.IsSystemMessage = true;
 			});
 			comands.Add("ANCHOR_LOT_START", (b, danmuku) => {
 				b.MessageType = "anchor_lot_start";
@@ -444,6 +505,53 @@ namespace ChatCore.Models.BiliBili
 				b.IsSystemMessage = true;
 
 				b.Message = "以下房间停止直播：" + data["room_id_list"].AsArray!.ToString();
+			});
+			comands.Add("PK_BATTLE_PRE", (b, danmuku) => {
+				b.MessageType = "ignore";
+				b.IsSystemMessage = true;
+			});
+			comands.Add("PK_BATTLE_PRE_NEW", (b, danmuku) => {
+				b.MessageType = "pk_pre";
+				var data = danmuku["data"].AsObject!;
+				b.IsSystemMessage = true;
+
+				b.Message = "【大乱斗】距离与" + data["uname"].Value + "的PK还有" + data["pre_timer"].Value + "秒";
+			});
+			comands.Add("PK_BATTLE_START", (b, danmuku) => {
+				b.MessageType = "ignore";
+				b.IsSystemMessage = true;
+			});
+			comands.Add("PK_BATTLE_START_NEW", (b, danmuku) => {
+				b.MessageType = "pk_start";
+				var data = danmuku["data"].AsObject!;
+				b.IsSystemMessage = true;
+
+				b.Message = "【大乱斗】距离结束还有" + (int.Parse(data["pk_frozen_time"].Value) - int.Parse(data["pk_start_time"].Value)) + "秒";
+			});
+			comands.Add("PK_BATTLE_SETTLE", (b, danmuku) => {
+				b.MessageType = "pk_end";
+				var data = danmuku["data"].AsObject!;
+				b.IsSystemMessage = true;
+
+				switch (data["result_type"].Value.ToString()) {
+					case "-1":
+						b.Message = "【大乱斗】这场大乱斗输掉啦~";
+						break;
+					case "1":
+						b.Message = "【大乱斗】这场大乱斗平局啦~";
+						break;
+					case "2":
+						b.Message = "【大乱斗】这场大乱斗获胜啦~";
+						break;
+				}
+				b.Message = "【大乱斗】距离结束还有" + (int.Parse(data["pk_frozen_time"].Value) - int.Parse(data["pk_start_time"].Value)) + "秒";
+			});
+			comands.Add("COMMON_NOTICE_DANMAKU", (b, danmuku) => {
+				b.MessageType = "common_notice";
+				var data = danmuku["data"].AsObject!;
+				b.IsSystemMessage = true;
+
+				b.Message = data["content_segments"][0]["text"].Value;
 			});
 
 			/*comands.Add("GIFT_TOP", (b, danmuku) => {

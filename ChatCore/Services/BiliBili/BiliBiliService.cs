@@ -254,20 +254,6 @@ namespace ChatCore.Services.BiliBili
 			}
 		}
 
-		/// <summary>
-		/// Sends a raw message to the Twitch server
-		/// </summary>
-		/// <param name="rawMessage">The raw message to send.</param>
-		/// <param name="forwardToSharedClients">
-		/// Whether or not the message should also be sent to other clients in the assembly that implement StreamCore, or only to the Twitch server.<br/>
-		/// This should only be set to true if the Twitch server would rebroadcast this message to other external clients as a response to the message.
-		/// </param>
-		/*public void SendRawMessage(string rawMessage, bool forwardToSharedClients = false)
-		{
-			// TODO: rate limit sends to Twitch service
-			SendRawMessage(Assembly.GetCallingAssembly(), rawMessage, forwardToSharedClients);
-		}*/
-
 		internal void SendTextMessage(Assembly assembly, string message, string channel)
 		{
 			//_textMessageQueue.Enqueue(new KeyValuePair<Assembly, string>(assembly, $"@id={Guid.NewGuid().ToString()} PRIVMSG #{channel} :{message}"));
@@ -396,6 +382,7 @@ namespace ChatCore.Services.BiliBili
 			string[] global = { "global" };
 			string[] junk = { "junk", "unkown", "banned" };
 			string[] system = { "warning", "cut_off" };
+			string[] pk = {"pk_pre", "pk_start", "pk_end", "common_notice"};
 
 			if (
 				(Array.Exists(danmuku, el => el == type) && _settings.danmuku_danmuku) ||
@@ -421,6 +408,7 @@ namespace ChatCore.Services.BiliBili
 				(Array.Exists(room_live, el => el == type) && _settings.danmuku_notification_room_online) ||
 				(Array.Exists(global, el => el == type) && _settings.danmuku_notification_boardcast) ||
 				(Array.Exists(junk, el => el == type) && _settings.danmuku_notification_junk) ||
+				(Array.Exists(pk, el => el == type) && _settings.danmuku_notification_pk) ||
 				(Array.Exists(system, el => el == type))
 				)
 			{

@@ -370,6 +370,15 @@
 										<div class="row">
 											<div class="switch">
 												<label>
+													<input id="danmuku_notification_pk" name="danmuku_notification_pk" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-notification-pk">PK</span>
+												</label>
+											</div>
+										</div>
+										<div class="row">
+											<div class="switch">
+												<label>
 													<input id="danmuku_notification_junk" name="danmuku_notification_junk" type="checkbox" form="settings-form">
 													<span class="lever"></span>
 													<span id="bilibili-settings-danmuku-notification-junk">Junk (includes Banned Msg)</span>
@@ -495,7 +504,7 @@
 					continue;
 				}
 
-	
+
 
 				if (element.tagName.toLowerCase() === "input") {
 					switch (element.type) {
@@ -576,7 +585,7 @@
 					}
 					continue;
 				}
-				
+
 				if (typeof value === "string" || typeof value === "number") {
 					element.value = value;
 				} else if (typeof value === "boolean") {
