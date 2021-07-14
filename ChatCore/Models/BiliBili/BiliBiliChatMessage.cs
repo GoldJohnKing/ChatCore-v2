@@ -24,6 +24,7 @@ namespace ChatCore.Models.BiliBili
 		public IChatEmote[] Emotes { get; internal set; } = Array.Empty<IChatEmote>();
 		public ReadOnlyDictionary<string, string> Metadata { get; internal set; } = new ReadOnlyDictionary<string, string>(new Dictionary<string, string>());
 		public string MessageType { get; private set; } = "";
+		public Dictionary<string, dynamic> extra { get; internal set; } = new Dictionary<string, dynamic>();
 		private static readonly Dictionary<string, Action<BiliBiliChatMessage, JSONNode>> comands = new Dictionary<string, Action<BiliBiliChatMessage, JSONNode>>();
 
 		static BiliBiliChatMessage()
@@ -321,7 +322,7 @@ namespace ChatCore.Models.BiliBili
 				var data = danmuku["data"].AsObject!;
 				b.IsSystemMessage = true;
 
-				b.Message = "【关注】粉丝数" + data["fans"].Value;
+				b.Message = "【粉丝数】" + data["fans"].Value;
 			});
 			comands.Add("ONLINE_RANK_COUNT", (b, danmuku) => {
 				b.MessageType = "global";
@@ -348,13 +349,6 @@ namespace ChatCore.Models.BiliBili
 				b.IsSystemMessage = true;
 
 				b.Message = "【高能榜】" + data["list"][0]["msg"].Value.Replace("<%", "").Replace("%>", "");
-			});
-			comands.Add("ROOM_REAL_TIME_MESSAGE_UPDATE", (b, danmuku) => {
-				b.MessageType = "global";
-				var data = danmuku["data"].AsObject!;
-				b.IsSystemMessage = true;
-
-				b.Message = "【关注】粉丝数:" + data["fans"].Value.ToString();
 			});
 			comands.Add("NOTICE_MSG", (b, danmuku) => {
 				switch (danmuku["id"].Value.ToString()) {
@@ -514,6 +508,8 @@ namespace ChatCore.Models.BiliBili
 				b.MessageType = "pk_pre";
 				var data = danmuku["data"].AsObject!;
 				b.IsSystemMessage = true;
+				b.extra.Add("timer", int.Parse(data["pre_timer"].Value));
+				b.extra.Add("uname", data["uname"].Value);
 
 				b.Message = "【大乱斗】距离与" + data["uname"].Value + "的PK还有" + data["pre_timer"].Value + "秒";
 			});
@@ -525,6 +521,7 @@ namespace ChatCore.Models.BiliBili
 				b.MessageType = "pk_start";
 				var data = danmuku["data"].AsObject!;
 				b.IsSystemMessage = true;
+				b.extra.Add("timer", int.Parse(data["pk_frozen_time"].Value) - int.Parse(data["pk_start_time"].Value));
 
 				b.Message = "【大乱斗】距离结束还有" + (int.Parse(data["pk_frozen_time"].Value) - int.Parse(data["pk_start_time"].Value)) + "秒";
 			});
@@ -544,7 +541,6 @@ namespace ChatCore.Models.BiliBili
 						b.Message = "【大乱斗】这场大乱斗获胜啦~";
 						break;
 				}
-				b.Message = "【大乱斗】距离结束还有" + (int.Parse(data["pk_frozen_time"].Value) - int.Parse(data["pk_start_time"].Value)) + "秒";
 			});
 			comands.Add("COMMON_NOTICE_DANMAKU", (b, danmuku) => {
 				b.MessageType = "common_notice";
@@ -575,6 +571,10 @@ namespace ChatCore.Models.BiliBili
 
 		public void BanMessage() {
 			MessageType = "banned";
+		}
+
+		public void UpdateContent(string content) {
+			Message = content;
 		}
 	}
 }

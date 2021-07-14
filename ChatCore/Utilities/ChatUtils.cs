@@ -22,6 +22,11 @@ namespace ChatCore.Utilities
 			return msg as TwitchMessage;
 		}
 
+		public static BiliBiliChatMessage? AsBiliBiliMessage(this IChatMessage msg)
+		{
+			return msg as BiliBiliChatMessage;
+		}
+
 		public static TwitchChannel? AsTwitchChannel(this IChatChannel channel)
 		{
 			return channel as TwitchChannel;

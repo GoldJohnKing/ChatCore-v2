@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using ChatCore.Interfaces;
 using ChatCore.Models;
 using ChatCore.Models.BiliBili;
-using ChatCore.Models.Twitch;
 using ChatCore.Utilities;
 using Microsoft.Extensions.Logging;
 
@@ -36,7 +35,8 @@ namespace ChatCore.Services.BiliBili
 		private int _currentMessageCount;
 		private DateTime _lastResetTime = DateTime.UtcNow;
 		private readonly ConcurrentQueue<KeyValuePair<Assembly, string>> _textMessageQueue = new ConcurrentQueue<KeyValuePair<Assembly, string>>();
-		// ToDo : Can Change Settings
+
+		public BiliBiliChatUser? LoggedInUser { get; internal set; }
 		private int _roomID = 0;
 		private int _userID = 0;
 		private int _randomUid = 0;
@@ -44,7 +44,6 @@ namespace ChatCore.Services.BiliBili
 		private readonly System.Timers.Timer packetTimer;
 
 		public ReadOnlyDictionary<string, IChatChannel> Channels { get; }
-		public TwitchUser? LoggedInUser { get; internal set; }
 
 		public string DisplayName { get; } = "BiliBili Live";
 
@@ -90,12 +89,15 @@ namespace ChatCore.Services.BiliBili
 				/*_logger.LogInformation("Operation: " + message.Operation.ToString());*/
 				if (message.Operation == BiliBiliPacket.DanmakuOperation.GreetingAck)
 				{
+					/*Console.WriteLine("BiliBili Connected");*/
 					_logger.LogInformation("BiliBili Connected");
 					StartHeartBeat();
 				} else if (message.Operation == BiliBiliPacket.DanmakuOperation.HeartBeatAck)
 				{
+					/*Console.WriteLine($"Popularity: {message.Body}");*/
 					/*_logger.LogInformation($"Popularity: {message.Body}");*/
 				} else if (message.Operation == BiliBiliPacket.DanmakuOperation.ChatMessage) {
+					/*Console.WriteLine($"Body: {message.Body}");*/
 					/*_logger.LogInformation($"Body: {message.Body}");*/
 					try
 					{
@@ -135,6 +137,14 @@ namespace ChatCore.Services.BiliBili
 					_roomID = int.Parse(NewChannelInfo["data"]["room_info"]["room_id"]);
 					_settings.bilibili_room_id = _roomID;
 					_settings.Save();
+					LoggedInUser = new BiliBiliChatUser();
+					LoggedInUser.Id = _userID.ToString();
+					LoggedInUser.UserName = NewChannelInfo["data"]["anchor_info"]["base_info"]["uname"]!;
+					LoggedInUser.DisplayName = LoggedInUser.UserName;
+					LoggedInUser.Color = "#FF0000";
+					LoggedInUser.IsBroadcaster = true;
+					LoggedInUser.IsModerator = true;
+					LoggedInUser.IsFan = true;
 				}
 			}
 			catch { }
@@ -179,6 +189,7 @@ namespace ChatCore.Services.BiliBili
 				packetTimer?.Stop();
 				_isStarted = false;
 				_channels?.Clear();
+				LoggedInUser = null;
 
 				_websocketService?.Disconnect();
 			}
@@ -253,6 +264,20 @@ namespace ChatCore.Services.BiliBili
 				Thread.Sleep(10);
 			}
 		}
+
+		/// <summary>
+		/// Sends a raw message to the Twitch server
+		/// </summary>
+		/// <param name="rawMessage">The raw message to send.</param>
+		/// <param name="forwardToSharedClients">
+		/// Whether or not the message should also be sent to other clients in the assembly that implement StreamCore, or only to the Twitch server.<br/>
+		/// This should only be set to true if the Twitch server would rebroadcast this message to other external clients as a response to the message.
+		/// </param>
+		/*public void SendRawMessage(string rawMessage, bool forwardToSharedClients = false)
+		{
+			// TODO: rate limit sends to Twitch service
+			SendRawMessage(Assembly.GetCallingAssembly(), rawMessage, forwardToSharedClients);
+		}*/
 
 		internal void SendTextMessage(Assembly assembly, string message, string channel)
 		{
