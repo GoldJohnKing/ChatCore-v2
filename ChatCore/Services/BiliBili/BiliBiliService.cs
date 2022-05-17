@@ -20,6 +20,7 @@ namespace ChatCore.Services.BiliBili
 		private readonly ConcurrentDictionary<string, IChatChannel> _channels;
 		private static HttpClient httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
 		private static readonly string BilibiliChannelInfoApi = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=";
+		private static readonly string BilibiliGiftRoomInfoApi = "https://api.live.bilibili.com/xlive/web-room/v1/giftPanel/giftConfig?platform=pc&room_id=";
 
 		private readonly ILogger _logger;
 		//private readonly TwitchMessageParser _messageParser;
@@ -44,6 +45,11 @@ namespace ChatCore.Services.BiliBili
 		private readonly System.Timers.Timer packetTimer;
 
 		public ReadOnlyDictionary<string, IChatChannel> Channels { get; }
+
+		public static Dictionary<string, dynamic> bilibiliGiftInfo { get; internal set; } = new Dictionary<string, dynamic>();
+		public static Dictionary<string, dynamic> bilibiliGiftCoinType { get; internal set; } = new Dictionary<string, dynamic>();
+		public static Dictionary<string, dynamic> bilibiliGiftPrice { get; internal set; } = new Dictionary<string, dynamic>();
+		public static Dictionary<string, dynamic> bilibiliGiftName { get; internal set; } = new Dictionary<string, dynamic>();
 
 		public string DisplayName { get; } = "BiliBili Live";
 
@@ -150,6 +156,27 @@ namespace ChatCore.Services.BiliBili
 			catch { }
 		}
 
+		private async void GetChannelGiftRoomInfoAsync(int roomID)
+		{
+			try
+			{
+				var NewGiftInfo = JSONNode.Parse(await httpClient.GetStringAsync(BilibiliGiftRoomInfoApi + roomID));
+				if (NewGiftInfo["code"].AsInt == 0)
+				{
+					var giftList = NewGiftInfo["data"]["list"].AsArray!;
+					foreach (JSONObject gift in giftList)
+					{
+						var gift_id = gift["id"].ToString();
+						bilibiliGiftCoinType[gift_id] = gift["coin_type"];
+						bilibiliGiftInfo[gift_id] = (gift["gif"].IsNull) ? gift["img_basic"] : gift["gif"];
+						bilibiliGiftPrice[gift_id] = gift["price"].AsInt / 1000;
+						bilibiliGiftName[gift_id] = gift["name"];
+					}
+				}
+			}
+			catch { }
+		}
+
 		private void PacketTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
 		{
 			SendHeartBeatPacket();
@@ -167,6 +194,7 @@ namespace ChatCore.Services.BiliBili
 				{
 					_logger.LogInformation($"BiliBili Start");
 					GetChannelConfigAsync(_roomID);
+					GetChannelGiftRoomInfoAsync(_roomID);
 					Task.Run(() => {
 						Thread.Sleep(1000);
 						_isStarted = true;
@@ -383,7 +411,7 @@ namespace ChatCore.Services.BiliBili
 
 		private bool ShowDanmuku(string type) {
 			var result = false;
-			string[] danmuku = { "danmuku" };
+			string[] danmuku = { "danmuku", "danmuku_motion" };
 			string[] sc = { "super_chat", "super_chat_japanese" };
 			string[] gift = { "gift" };
 			string[] gift_combo = { "combo_end", "combo_send" };

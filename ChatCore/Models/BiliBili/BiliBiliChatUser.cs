@@ -44,7 +44,7 @@ namespace ChatCore.Models.BiliBili
 			var badgeList = new List<IChatBadge>();
 			if (!string.IsNullOrEmpty(infos[3][1].Value))
 			{
-				badgeList.Add(new BiliBiliChatBadge("{\"Name\":\"" + infos[3][1].Value + "\",\"Level\":" + infos[3][0].AsInt + ",\"Guard\":" + infos[7].AsInt + "}"));
+				badgeList.Add(new BiliBiliChatBadge("{\"Name\":\"" + infos[3][1].Value + "\",\"Level\":" + infos[3][0].AsInt + ",\"Guard\":" + infos[3][10].AsInt + ",\"Color\":" + infos[3][4].AsInt + "}"));
 			}
 			Badges = badgeList.ToArray();
 			GuardLevel = infos[7].AsInt;
