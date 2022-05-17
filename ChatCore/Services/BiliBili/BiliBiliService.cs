@@ -50,6 +50,7 @@ namespace ChatCore.Services.BiliBili
 		public static Dictionary<string, dynamic> bilibiliGiftCoinType { get; internal set; } = new Dictionary<string, dynamic>();
 		public static Dictionary<string, dynamic> bilibiliGiftPrice { get; internal set; } = new Dictionary<string, dynamic>();
 		public static Dictionary<string, dynamic> bilibiliGiftName { get; internal set; } = new Dictionary<string, dynamic>();
+		public static Dictionary<string, dynamic> bilibiliuserInfo { get; set; } = new Dictionary<string, dynamic>();
 
 		public string DisplayName { get; } = "BiliBili Live";
 

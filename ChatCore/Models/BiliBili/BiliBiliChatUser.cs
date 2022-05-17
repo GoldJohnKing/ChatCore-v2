@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
 using ChatCore.Interfaces;
 using ChatCore.Services;
+using ChatCore.Services.BiliBili;
 using ChatCore.Utilities;
 
 namespace ChatCore.Models.BiliBili
@@ -17,6 +20,9 @@ namespace ChatCore.Models.BiliBili
 		public bool IsFan { get; internal set; }
 		public IChatBadge[] Badges { get; internal set; } = new IChatBadge[0];
 		public int GuardLevel { get; internal set; } = 0;
+
+		private static HttpClient httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
+		private static readonly string BilibiliUserInfoApi = "https://api.bilibili.com/x/space/acc/info?mid=";
 
 		public BiliBiliChatUser() { }
 		public BiliBiliChatUser(JSONNode info, int _room_id)
@@ -84,6 +90,31 @@ namespace ChatCore.Models.BiliBili
 			obj.Add(nameof(Badges), badges);
 			obj.Add(nameof(GuardLevel), new JSONNumber(GuardLevel));
 			return obj;
+		}
+		public async Task<string> GetUserInfoAsync(int uid)
+		{
+			if (!BiliBiliService.bilibiliuserInfo.ContainsKey(uid.ToString()))
+			{
+				try
+				{
+					var NewUserInfo = JSONNode.Parse(await httpClient.GetStringAsync(BilibiliUserInfoApi + uid));
+					if (NewUserInfo["code"].AsInt == 0)
+					{
+						var avatar_img = NewUserInfo["data"]["face"].IsNull ? "" : NewUserInfo["data"]["face"].Value.ToString();
+						BiliBiliService.bilibiliuserInfo.Add(uid.ToString(), avatar_img);
+						return avatar_img;
+					}
+				}
+				catch
+				{
+					return "";
+				}
+			}
+			else
+			{
+				return BiliBiliService.bilibiliuserInfo[uid.ToString()];
+			}
+			return "";
 		}
 	}
 }
