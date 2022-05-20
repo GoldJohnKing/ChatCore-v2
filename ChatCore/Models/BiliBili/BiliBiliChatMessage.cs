@@ -560,6 +560,11 @@ namespace ChatCore.Models.BiliBili
 				b.IsHighlighted = true;
 
 				b.Message = "感谢 " + b.Username + " 成为 " + data["gift_name"].Value + " 加入舰队~";
+				b.extra.Add("gift_name", data["gift_name"].Value);
+				b.extra.Add("num", "1");
+				b.extra.Add("gift_img", BiliBiliService.bilibiliGiftInfo[data["gift_name"].Value.ToString()]);
+				b.extra.Add("price", BiliBiliService.bilibiliGiftPrice[data["gift_name"].Value.ToString()]);
+				;
 			});
 			comands.Add("USER_TOAST_MSG", (b, danmuku) => {
 				b.MessageType = "new_guard_msg";
@@ -571,6 +576,12 @@ namespace ChatCore.Models.BiliBili
 				b.IsHighlighted = true;
 
 				b.Message = b.Username + " 开通了 " + data["num"].Value + "个" + data["unit"] + "的" + data["role_name"] + " 进入舰队啦";
+				b.extra.Add("role_name", data["role_name"].Value);
+				b.extra.Add("num", data["role_name"].Value.ToString());
+				b.extra.Add("unit", data["unit"].Value.ToString());
+				b.extra.Add("gift_img", BiliBiliService.bilibiliGiftInfo[data["role_name"].Value.ToString()]);
+				b.extra.Add("price", BiliBiliService.bilibiliGiftPrice[data["role_name"].Value.ToString()]); 
+
 			});
 			comands.Add("GUARD_MSG", (b, danmuku) => {
 				var data = danmuku["data"].AsObject!;
