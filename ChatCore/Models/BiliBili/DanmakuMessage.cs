@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
-using static ChatCore.Models.BiliBili.BiliBiliPacket;
+using static ChatCore.Models.Bilibili.BilibiliPacket;
 
-namespace ChatCore.Models.BiliBili
+namespace ChatCore.Models.Bilibili
 {
 	public class DanmakuMessage
 	{
@@ -13,16 +13,16 @@ namespace ChatCore.Models.BiliBili
 		public int Version { get; private set; }
 		public DanmakuOperation Operation { get; private set; }
 		public int Sequence { get; private set; }
-		public string Body { get; private set; }
-		public byte[] Buffer { get; private set; }
+		public string Body { get; private set; } = string.Empty;
+		public byte[] Buffer { get; private set; } = new byte[0];
 
 		public static IEnumerable<DanmakuMessage> ParsePackets(byte[] buffer)
 		{
 			var packetLength = DataView.GetInt32(buffer);
-			var headerLength = DataView.GetInt16(buffer, HeaderOffset);
-			var version = DataView.GetInt16(buffer, VersionOffset);
-			var operation = DataView.GetInt32(buffer, OperationOffset);
-			var sequence = DataView.GetInt32(buffer, SequenceOffset);
+			var headerLength = DataView.GetInt16(buffer, HEADEROFFSET);
+			var version = DataView.GetInt16(buffer, VERSIONOFFSET);
+			var operation = DataView.GetInt32(buffer, OPERATIONOFFSET);
+			var sequence = DataView.GetInt32(buffer, SEQUENCEOFFSET);
 			var offset = 0;
 
 			if (operation == 5)
@@ -43,10 +43,10 @@ namespace ChatCore.Models.BiliBili
 					while (offset < decomp.Length)
 					{
 						var packetLength1 = DataView.GetInt32(decomp, offset);
-						var headerLength1 = DataView.GetInt16(decomp, HeaderOffset + offset);
-						var version1 = DataView.GetInt16(decomp, VersionOffset + offset);
-						var operation1 = DataView.GetInt32(decomp, OperationOffset + offset);
-						var sequence1 = DataView.GetInt32(decomp, SequenceOffset + offset);
+						var headerLength1 = DataView.GetInt16(decomp, HEADEROFFSET + offset);
+						var version1 = DataView.GetInt16(decomp, VERSIONOFFSET + offset);
+						var operation1 = DataView.GetInt32(decomp, OPERATIONOFFSET + offset);
+						var sequence1 = DataView.GetInt32(decomp, SEQUENCEOFFSET + offset);
 
 						var newData = (byte[])decomp.Clone();
 						DataView.ByteSlice(ref newData, offset + headerLength1, offset + packetLength1);
@@ -72,10 +72,10 @@ namespace ChatCore.Models.BiliBili
 					while (offset < buffer.Length)
 					{
 						var packetLength1 = DataView.GetInt32(buffer, offset);
-						var headerLength1 = DataView.GetInt16(buffer, HeaderOffset + offset);
-						var version1 = DataView.GetInt16(buffer, VersionOffset + offset);
-						var operation1 = DataView.GetInt32(buffer, OperationOffset + offset);
-						var sequence1 = DataView.GetInt32(buffer, SequenceOffset + offset);
+						var headerLength1 = DataView.GetInt16(buffer, HEADEROFFSET + offset);
+						var version1 = DataView.GetInt16(buffer, VERSIONOFFSET + offset);
+						var operation1 = DataView.GetInt32(buffer, OPERATIONOFFSET + offset);
+						var sequence1 = DataView.GetInt32(buffer, SEQUENCEOFFSET + offset);
 
 						var data = (byte[])buffer.Clone();
 						DataView.ByteSlice(ref data, offset + headerLength1, offset + packetLength1);
@@ -106,7 +106,7 @@ namespace ChatCore.Models.BiliBili
 					Version = version,
 					Operation = (DanmakuOperation)operation,
 					Sequence = sequence,
-					Body = DataView.GetInt32(buffer, BiliBiliPacket.HeaderLength).ToString(),
+					Body = DataView.GetInt32(buffer, BilibiliPacket.HEADERLENGTH).ToString(),
 					Buffer = buffer
 				};
 			}

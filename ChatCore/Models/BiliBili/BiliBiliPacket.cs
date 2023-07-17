@@ -3,16 +3,16 @@ using System.Linq;
 using System.Text;
 using ChatCore.Utilities;
 
-namespace ChatCore.Models.BiliBili
+namespace ChatCore.Models.Bilibili
 {
-	public class BiliBiliPacket
+	public class BilibiliPacket
 	{
-		public const int HeaderLength = 16;
-		public const int PacketOffset = 0;
-		public const int HeaderOffset = 4;
-		public const int VersionOffset = 6;
-		public const int OperationOffset = 8;
-		public const int SequenceOffset = 12;
+		public const int HEADERLENGTH = 16;
+		public const int PACKETOFFSET = 0;
+		public const int HEADEROFFSET = 4;
+		public const int VERSIONOFFSET = 6;
+		public const int OPERATIONOFFSET = 8;
+		public const int SEQUENCEOFFSET = 12;
 
 		public byte[] PacketBuffer { get; private set; }
 
@@ -27,7 +27,7 @@ namespace ChatCore.Models.BiliBili
 
 		private byte[] Decoder(string value, DanmakuOperation operation)
 		{
-			return null;
+			return new byte[0];
 		}
 
 		private void WriteInt(byte[] buffer, int start, int length, int value)
@@ -43,7 +43,7 @@ namespace ChatCore.Models.BiliBili
 		/// </summary>
 		/// <param name="operation"></param>
 		/// <param name="json"></param>
-		private BiliBiliPacket(DanmakuOperation operation, JSONObject json)
+		private BilibiliPacket(DanmakuOperation operation, JSONObject json)
 		{
 			//var headerBytes = new byte[HeaderLength];
 			//var bodyBuffer = Encoding.UTF8.GetBytes(json.ToString());
@@ -59,7 +59,7 @@ namespace ChatCore.Models.BiliBili
 			PacketBuffer = Encoder(json.ToString(), operation);
 		}
 
-		private BiliBiliPacket(DanmakuOperation operation, string json)
+		private BilibiliPacket(DanmakuOperation operation, string json)
 		{
 			PacketBuffer = Encoder(json, operation);
 		}
@@ -70,7 +70,7 @@ namespace ChatCore.Models.BiliBili
 		/// <param name="uid"></param>
 		/// <param name="roomId"></param>
 		/// <returns></returns>
-		public static BiliBiliPacket CreateGreetingPacket(int uid, int roomId)
+		public static BilibiliPacket CreateGreetingPacket(int uid, int roomId)
 		{
 			var json = new JSONObject();
 			//json["clientver"] = "1.6.3";
@@ -80,16 +80,16 @@ namespace ChatCore.Models.BiliBili
 			json["uid"] = new JSONNumber(uid);
 			//json["type"] = new JSONNumber(2);
 
-			return new BiliBiliPacket(DanmakuOperation.GreetingReq, json);
+			return new BilibiliPacket(DanmakuOperation.GreetingReq, json);
 		}
 
 		/// <summary>
 		/// Create HeartBeat Packet..
 		/// </summary>
 		/// <returns></returns>
-		public static BiliBiliPacket CreateHeartBeatPacket()
+		public static BilibiliPacket CreateHeartBeatPacket()
 		{
-			return new BiliBiliPacket(DanmakuOperation.HeartBeatReq, "");
+			return new BilibiliPacket(DanmakuOperation.HeartBeatReq, "");
 		}
 
 		public enum DanmakuOperation

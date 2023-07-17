@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using ChatCore.Config;
 using ChatCore.Interfaces;
@@ -15,12 +16,19 @@ namespace ChatCore.Services
 		public string? TwitchOAuthToken { get; set; }
 	}
 
+	internal class OldChatCoreConfig_2_1_3
+	{
+		[ConfigSection("Bilibili")]
+		[ConfigMeta(Comment = "When value is postive number, Bilibili Live Danmuku will be listened.")]
+		public int bilibili_room_id = 0;
+	}
+
 	public class UserAuthProvider : IUserAuthProvider
 	{
-		private readonly string _credentialsPath;
+		private readonly string _credentialsPath, _oldConfigPath_2_1_3;
 		private readonly ObjectSerializer _credentialSerializer;
 
-		public event Action<LoginCredentials>? OnCredentialsUpdated;
+		public event Action<LoginCredentials>? OnTwitchCredentialsUpdated, OnBilibiliCredentialsUpdated;
 
 		public LoginCredentials Credentials { get; } = new LoginCredentials();
 
@@ -29,11 +37,13 @@ namespace ChatCore.Services
 
 		public UserAuthProvider(ILogger<UserAuthProvider> logger, IPathProvider pathProvider)
 		{
+			_oldConfigPath_2_1_3 = Path.Combine(pathProvider.GetDataPath(), "settings.ini.bak");
+
 			_credentialsPath = Path.Combine(pathProvider.GetDataPath(), "auth.ini");
 			_credentialSerializer = new ObjectSerializer();
 			_credentialSerializer.Load(Credentials, _credentialsPath);
 
-			Task.Delay(1000).ContinueWith(_ =>
+			Task.Delay(500).ContinueWith(_ =>
 			{
 				if (!string.IsNullOrEmpty(OldConfigPath) && File.Exists(OldConfigPath))
 				{
@@ -74,15 +84,36 @@ namespace ChatCore.Services
 						logger.LogWarning(ex, "An exception occurred while trying to yeet old StreamCore config!");
 					}
 				}
+
+				if (File.Exists(_oldConfigPath_2_1_3))
+				{
+					var old = new OldChatCoreConfig_2_1_3();
+					_credentialSerializer.Load(old, _oldConfigPath_2_1_3);
+					if (old.bilibili_room_id > 0)
+					{
+						Credentials.Bilibili_room_id = old.bilibili_room_id;
+						SaveBilibili(true);
+						logger.LogInformation($"Pulled in Bilibili room info from ChatCore 2.1.3 config.");
+					}
+				}
 			});
 		}
 
-		public void Save(bool callback = true)
+		public void SaveTwitch(bool callback = true)
 		{
 			_credentialSerializer.Save(Credentials, _credentialsPath);
 			if (callback)
 			{
-				OnCredentialsUpdated?.Invoke(Credentials);
+				OnTwitchCredentialsUpdated?.Invoke(Credentials);
+			}
+		}
+
+		public void SaveBilibili(bool callback = true)
+		{
+			_credentialSerializer.Save(Credentials, _credentialsPath);
+			if (callback)
+			{
+				OnBilibiliCredentialsUpdated?.Invoke(Credentials);
 			}
 		}
 	}

@@ -36,7 +36,7 @@
 		<form id="settings-form" name="settings-form">
 			<div class="row">
 				<!--twitch setting-->
-				<div class="col s4 m6">
+				<div class="col s4 m6 hide" id="twitch-settings-card">
 					<div class="card">
 						<div class="card-content twitch-header white-text">
 							<span class="card-title" id="twitch-settings-title">Twitch Settings</span>
@@ -121,7 +121,7 @@
 				</div>
 
 				<!--bilibili setting-->
-				<div class="col s4 m6">
+				<div class="col s4 m6 hide" id="bilibili-settings-card">
 					<div class="card">
 						<div class="card-content bilibili-header white-text">
 							<span class="card-title" id="bilibili-settings-title">Bilibli Settings</span>
@@ -132,7 +132,43 @@
 									   placeholder="123456" form="settings-form">
 								<label for="bilibili_room_id" id="bilibili-settings-room-id">Room ID</label>
 							</div>
-
+							
+							<div class="row">
+								<p class="caption" id="bilibili-settings-blive-settings">BLive Interaction settings</p>
+							</div>
+							<ul class="collapsible popout">
+								<li>
+									<div class="collapsible-header"><i class="material-icons">code</i><span id="bilibili-settings-blive-settings-code">Identity Code</span></div>
+									<div class="collapsible-body auto_overflow">
+										<div class="BLive">
+											<div class="BLive_close"></div>
+											<div class="BLive_title">认证身份后可开启玩法</div>
+											<div class="BLive_row BLive_code_row">
+												<div class="BLive_code_label">身份码</div>
+												<input class="BLive_code_input" id="bilibili_identity_code" name="bilibili_identity_code" placeholder="请输入身份码" form="settings-form" require>
+												<div id="BLive_code_clear" class="BLive_code_clear" onclick="clear_blive_code()"></div>
+											</div>
+											<div class="BLive_row" style="justify-content: space-between;margin-top:8px">
+												<div class="BLive_row">
+													<div class="BLive_code_promote_icon"></div>
+													<span class="BLive_code_promote_text">在获取推流地址处可获取身份码</span>
+												</div>
+												<a class="BLive_code_get_text" href="https://link.bilibili.com/p/center/index#/my-room/start-live" target="_blank">去获取</span>
+											</div>
+											<div style="display: grid; justify-content: center;">
+												<a class="BLive_submit" id="BLive_submit" onclick="blive_submit()" href="javascript:void(0);">
+													开启玩法
+												</a>
+												<label>
+													<input class="BLive_code_save" name="bilibili_identity_code_save" type="checkbox" form="settings-form" id="bilibili_identity_code_save">
+													<span class="BLive_code_save_label">记住身份码</span>
+												</label>
+											</div>
+										</div>
+									</div>
+								</li>
+							</ul>
+							
 							<div class="row">
 								<p class="caption" id="bilibili-settings-danmuku-settings">Danmuku settings</p>
 							</div>
@@ -158,6 +194,87 @@
 												</label>
 											</div>
 										</div>
+										<div class="row">
+											<div class="switch">
+												<label>
+													<input id="danmuku_avatar" name="danmuku_avatar" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-avatar">User Avatar</span>
+												</label>
+											</div>
+										</div>
+										<div class="row display_flex space_between">
+											<div class="switch">
+												<label>
+													<input id="danmuku_badge_prefix" name="danmuku_badge_prefix" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-badge-prefix">Badge Prefix</span>
+												</label>
+											</div>
+											<div class="space"></div>
+											<div class="switch">
+												<label>
+													<span id="bilibili-settings-danmuku-badge-prefix-text">Text Prefix</span>
+													<input id="danmuku_badge_prefix_type" name="danmuku_badge_prefix_type" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-badge-prefix-icon">Icon Prefix</span>
+												</label>
+											</div>
+										</div>
+										<div class="row display_flex space_between">
+											<div class="switch">
+												<label>
+													<input id="danmuku_honor_badge_prefix" name="danmuku_honor_badge_prefix" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-honor-badge-prefix">Honor Badge Prefix</span>
+												</label>
+											</div>
+											<div class="space"></div>
+											<div class="switch">
+												<label>
+													<span id="bilibili-settings-danmuku-honor-badge-prefix-text">Text Prefix</span>
+													<input id="danmuku_honor_badge_prefix_type" name="danmuku_honor_badge_prefix_type" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-honor-badge-prefix-icon">Icon Prefix</span>
+												</label>
+											</div>
+										</div>
+										<div class="row display_flex space_between">
+											<div class="switch">
+												<label>
+													<input id="danmuku_broadcaster_prefix" name="danmuku_broadcaster_prefix" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-broadcaster-prefix">Broadcaster Prefix</span>
+												</label>
+											</div>
+											<div class="space"></div>
+											<div class="switch">
+												<label>
+													<span id="bilibili-settings-danmuku-broadcaster-prefix-text">Text Prefix</span>
+													<input id="danmuku_broadcaster_prefix_type" name="danmuku_broadcaster_prefix_type" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-broadcaster-prefix-icon">Icon Prefix</span>
+												</label>
+											</div>
+										</div>
+										<div class="row display_flex space_between">
+											<div class="switch">
+												<label>
+													<input id="danmuku_moderator_prefix" name="danmuku_moderator_prefix" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-moderator-prefix">Moderator Prefix</span>
+												</label>
+											</div>
+											<div class="space"></div>
+											<div class="switch">
+												<label>
+													<span id="bilibili-settings-danmuku-moderator-prefix-text">Text Prefix</span>
+													<input id="danmuku_moderator_prefix_type" name="danmuku_moderator_prefix_type" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-moderator-prefix-icon">Icon Prefix</span>
+												</label>
+											</div>
+										</div>
 									</div>
 								</li>
 								<li>
@@ -178,6 +295,15 @@
 													<input id="danmuku_gift_combo" name="danmuku_gift_combo" type="checkbox" form="settings-form">
 													<span class="lever"></span>
 													<span id="bilibili-settings-danmuku-gift_combo">Gift Combo</span>
+												</label>
+											</div>
+										</div>
+										<div class="row">
+											<div class="switch">
+												<label>
+													<input id="danmuku_gift_combine" name="danmuku_gift_combine" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-gift-combine">Gift Combine</span>
 												</label>
 											</div>
 										</div>
@@ -267,6 +393,15 @@
 												</label>
 											</div>
 										</div>
+										<div class="row">
+											<div class="switch">
+												<label>
+													<input id="danmuku_interaction_red_packet" name="danmuku_interaction_red_packet" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-interaction-red-packet">Red Packet</span>
+												</label>
+											</div>
+										</div>
 									</div>
 								</li>
 								<li>
@@ -305,6 +440,24 @@
 													<input id="danmuku_guard_lottery" name="danmuku_guard_lottery" type="checkbox" form="settings-form">
 													<span class="lever"></span>
 													<span id="bilibili-settings-danmuku-guard-lottery">Guard Lottery</span>
+												</label>
+											</div>
+										</div>
+										<div class="row display_flex space_between">
+											<div class="switch">
+												<label>
+													<input id="danmuku_guard_prefix" name="danmuku_guard_prefix" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-guard-prefix">Guard Prefix</span>
+												</label>
+											</div>
+											<div class="space"></div>
+											<div class="switch">
+												<label>
+													<span id="bilibili-settings-danmuku-guard-prefix-text">Text Prefix</span>
+													<input id="danmuku_guard_prefix_type" name="danmuku_guard_prefix_type" type="checkbox" form="settings-form">
+													<span class="lever"></span>
+													<span id="bilibili-settings-danmuku-guard-prefix-icon">Icon Prefix</span>
 												</label>
 											</div>
 										</div>
@@ -414,6 +567,23 @@
 									</div>
 								</li>
 							</ul>
+						
+							<div class="row">
+								<p class="caption" id="bilibili-settings-utilities">Utilities</p>
+							</div>
+							<ul class="collapsible popout">
+								<li>
+									<div class="collapsible-header"><i class="material-icons">cleaning_services</i><span id="bilibili-settings-utilities-clean-cache">Clean Cache</span></div>
+									<div class="collapsible-body auto_overflow">
+										<div class="row">
+											<a class="waves-effect waves-light btn" id="bilibili-settings-utilities-images-button" >
+												<i class="material-icons left">image</i>
+												<span id="bilibili-settings-utilities-images-button-text">Image Cache</span>
+											</a>
+										</div>
+									</div>
+								</li>
+							</ul>
 						</div>
 					</div>
 				</div>
@@ -447,6 +617,27 @@
 										<input id="ParseEmojis" name="ParseEmojis" type="checkbox" form="settings-form">
 										<span class="lever"></span>
 										<span id="global-settings-parse-emojis">Parse Emojis</span>
+									</label>
+								</div>
+							</div>
+							<div class="row">
+								<p class="caption" id="global-settings-chat-settings">Chat services</p>
+							</div>
+							<div class="row">
+								<div class="switch">
+									<label>
+										<input id="EnableTwitch" name="EnableTwitch" type="checkbox" form="settings-form" onclick="toggleElement('twitch-settings-card')">
+										<span class="lever"></span>
+										<span id="global-settings-chat-twitch-enable">Twitch</span>
+									</label>
+								</div>
+							</div>
+							<div class="row">
+								<div class="switch">
+									<label>
+										<input id="EnableBilibili" name="EnableBilibili" type="checkbox" form="settings-form" onclick="toggleElement('bilibili-settings-card')">
+										<span class="lever"></span>
+										<span id="global-settings-chat-bilibili-enable">Bilibili</span>
 									</label>
 								</div>
 							</div>
@@ -490,6 +681,16 @@
 				tokenField.type = "password";
 			}
 		}
+		
+		function toggleElement(id) {
+			var element = document.getElementById(id);
+			if (element.classList.contains("hide"))
+			{
+				element.classList.remove("hide");
+			} else {
+				element.classList.add("hide");
+			}
+		}
 
 		function saveSettings(event) {
 			event.preventDefault();
@@ -503,8 +704,6 @@
 				if (element === null) {
 					continue;
 				}
-
-
 
 				if (element.tagName.toLowerCase() === "input") {
 					switch (element.type) {
@@ -590,6 +789,13 @@
 					element.value = value;
 				} else if (typeof value === "boolean") {
 					element.checked = value;
+					if (key == "EnableTwitch" && value) {
+						toggleElement("twitch-settings-card")
+					}
+					
+					if (key == "EnableBilibili" && value) {
+						toggleElement("bilibili-settings-card")
+					}
 				}
 			}
 

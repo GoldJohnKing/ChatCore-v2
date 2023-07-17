@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ChatCore.Interfaces;
@@ -34,7 +34,7 @@ namespace ChatCore.Services.Twitch
 				_twitchService.Start();
 				IsRunning = true;
 
-				_logger.LogInformation("Started");
+				_logger.LogInformation("[TwitchServiceManager] | [Start] | Started");
 			}
 		}
 
@@ -59,7 +59,7 @@ namespace ChatCore.Services.Twitch
 				_twitchService.Stop();
 				IsRunning = false;
 
-				_logger.LogInformation("Stopped");
+				_logger.LogInformation("[TwitchServiceManager] | [Stop] | Stopped");
 			}
 		}
 
@@ -70,7 +70,7 @@ namespace ChatCore.Services.Twitch
 				Stop(null!);
 			}
 
-			_logger.LogInformation("Disposed");
+			_logger.LogInformation("[TwitchServiceManager] | [Dispose] | Disposed");
 		}
 
 		public IChatService GetService()

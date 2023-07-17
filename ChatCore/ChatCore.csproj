@@ -4,15 +4,16 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-		<Version>2.1.2-b2</Version>
+		<Version>2.2.0</Version>
 		<LangVersion>9</LangVersion>
 		<Nullable>enable</Nullable>
 		<NoWarn>1591</NoWarn>
 		<OutDir>$(ProjectDir)bin\$(Configuration)</OutDir>
 		<DocumentationFile>$(OutDir)\ChatCore.xml</DocumentationFile>
 		<GameDirPath>S:\Game\SteamLibrary\steamapps\common\Beat Saber</GameDirPath>
-		<AssemblyVersion>2.1.2.2</AssemblyVersion>
-	</PropertyGroup>
+		<AssemblyVersion>2.2.0.0</AssemblyVersion>
+	  <UserSecretsId>7d582ffc-3828-492c-9f7f-ca06d47cec32</UserSecretsId>
+  </PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
@@ -25,6 +26,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="ilmerge" Version="3.0.41" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.0" />
@@ -54,10 +57,29 @@
 		<EmbeddedResource Include="Resources\Web\Statics\Lang\en.json" />
 		<EmbeddedResource Include="Resources\Web\Statics\Lang\zh.json" />
 		<EmbeddedResource Include="Resources\Web\Statics\Lang\ja.json" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\BilibiliLiveBroadcaster.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\BilibiliLiveModerator.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\BilibiliLiveGuard1.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\BilibiliLiveGuard2.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\BilibiliLiveGuard3.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\BilibiliLiveGuard1_full.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\BilibiliLiveGuard2_full.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\BilibiliLiveGuard3_full.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\Blive\Close.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\Blive\Close01.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\Blive\Ellipse.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\Blive\question_mark.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\Blive\round.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\Blive\tv.png" />
+		<EmbeddedResource Include="Resources\Web\Statics\Images\Blive\Vector.png" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Remove="internalize_excludes.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\ChatCoreSVG\ChatCoreSVG.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

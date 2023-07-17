@@ -37,7 +37,93 @@ function fetch_language_file() {
 		if (language_file_request.readyState === 4 && language_file_request.status === 200) {
 			language_pack = JSON.parse(language_file_request.responseText);
 			if (language_pack !== undefined && (Object.keys(language_pack)).length > 0) {
-				let ranslation_list = ["title", "brand-logo", "version", "twitch-settings-title", "twitch-settings-login", "twitch-settings-login-button", "twitch-settings-oauth-token", "twitch-settings-oauth-token-toggle", "twitch-settings-channel-title", "twitch-settings-emote-settings", "twitch-settings-parse-bbtv-emotes", "twitch-settings-parse-ffz-emotes", "twitch-settings-parse-twitch-emotes", "twitch-settings-parse-cheermotes", "global-settings-title", "global-settings-web-app", "global-settings-launch-web-app-on-startup", "global-settings-global-setting", "global-settings-parse-emojis", "save-button-text", "bilibili-settings-title", "bilibili-settings-room-id", "bilibili-settings-danmuku-settings", "bilibili-settings-danmuku-settings-basic", "bilibili-settings-danmuku-settings-gift", "bilibili-settings-danmuku-settings-interaction", "bilibili-settings-danmuku-settings-guard", "bilibili-settings-danmuku-settings-notification", "bilibili-settings-danmuku-settings-block-list", "bilibili-settings-danmuku-danmuku", "bilibili-settings-danmuku-superchat", "bilibili-settings-danmuku-gift", "bilibili-settings-danmuku-gift_combo", "bilibili-settings-danmuku-interaction-enter", "bilibili-settings-danmuku-interaction-follow", "bilibili-settings-danmuku-interaction-share", "bilibili-settings-danmuku-interaction-special-follow", "bilibili-settings-danmuku-interaction-mutual-follow", "bilibili-settings-danmuku-interaction-guard-enter", "bilibili-settings-danmuku-interaction-effect", "bilibili-settings-danmuku-interaction-anchor", "bilibili-settings-danmuku-interaction-raffle", "bilibili-settings-danmuku-new-guard", "bilibili-settings-danmuku-new-guard-msg", "bilibili-settings-danmuku-guard-msg", "bilibili-settings-danmuku-guard-lottery", "bilibili-settings-danmuku-notification-block_list", "bilibili-settings-danmuku-notification-room-info-change", "bilibili-settings-danmuku-notification-room-prepare", "bilibili-settings-danmuku-notification-room-online", "bilibili-settings-danmuku-notification-room-rank", "bilibili-settings-danmuku-notification-boardcast", "bilibili-settings-danmuku-notification-PK", "bilibili-settings-danmuku-notification-junk", "bilibili-settings-block-list-username", "bilibili-settings-block-list-uid", "bilibili-settings-block-list-keyword"];
+				let ranslation_list = [
+					"title",
+					"brand-logo",
+					"version",
+					"twitch-settings-title",
+					"twitch-settings-login",
+					"twitch-settings-login-button",
+					"twitch-settings-oauth-token",
+					"twitch-settings-oauth-token-toggle",
+					"twitch-settings-channel-title",
+					"twitch-settings-emote-settings",
+					"twitch-settings-parse-bbtv-emotes",
+					"twitch-settings-parse-ffz-emotes",
+					"twitch-settings-parse-twitch-emotes",
+					"twitch-settings-parse-cheermotes",
+					"global-settings-title",
+					"global-settings-web-app",
+					"global-settings-launch-web-app-on-startup",
+					"global-settings-global-setting",
+					"global-settings-parse-emojis",
+					"global-settings-chat-settings",
+					"global-settings-chat-twitch-enable",
+					"global-settings-chat-bilibili-enable",
+					"save-button-text",
+					"bilibili-settings-title",
+					"bilibili-settings-room-id",
+					"bilibili-settings-blive-settings",
+					"bilibili-settings-blive-settings-code",
+					"bilibili-settings-danmuku-settings",
+					"bilibili-settings-danmuku-settings-basic",
+					"bilibili-settings-danmuku-settings-gift",
+					"bilibili-settings-danmuku-settings-interaction",
+					"bilibili-settings-danmuku-settings-guard",
+					"bilibili-settings-danmuku-settings-notification",
+					"bilibili-settings-danmuku-settings-block-list",
+					"bilibili-settings-danmuku-danmuku",
+					"bilibili-settings-danmuku-superchat",
+					"bilibili-settings-danmuku-avatar",
+					"bilibili-settings-danmuku-badge-prefix",
+					"bilibili-settings-danmuku-badge-prefix-text",
+					"bilibili-settings-danmuku-badge-prefix-icon",
+					"bilibili-settings-danmuku-honor-badge-prefix",
+					"bilibili-settings-danmuku-honor-badge-prefix-text",
+					"bilibili-settings-danmuku-honor-badge-prefix-icon",
+					"bilibili-settings-danmuku-broadcaster-prefix",
+					"bilibili-settings-danmuku-broadcaster-prefix-text",
+					"bilibili-settings-danmuku-broadcaster-prefix-icon",
+					"bilibili-settings-danmuku-moderator-prefix",
+					"bilibili-settings-danmuku-moderator-prefix-text",
+					"bilibili-settings-danmuku-moderator-prefix-icon",
+					"bilibili-settings-danmuku-gift",
+					"bilibili-settings-danmuku-gift_combo",
+					"bilibili-settings-danmuku-gift-combine",
+					"bilibili-settings-danmuku-gift-star",
+					"bilibili-settings-danmuku-interaction-enter",
+					"bilibili-settings-danmuku-interaction-follow",
+					"bilibili-settings-danmuku-interaction-share",
+					"bilibili-settings-danmuku-interaction-special-follow",
+					"bilibili-settings-danmuku-interaction-mutual-follow",
+					"bilibili-settings-danmuku-interaction-guard-enter",
+					"bilibili-settings-danmuku-interaction-effect",
+					"bilibili-settings-danmuku-interaction-anchor",
+					"bilibili-settings-danmuku-interaction-raffle",
+					"bilibili-settings-danmuku-interaction-red-packet",
+					"bilibili-settings-danmuku-new-guard",
+					"bilibili-settings-danmuku-new-guard-msg",
+					"bilibili-settings-danmuku-guard-msg",
+					"bilibili-settings-danmuku-guard-lottery",
+					"bilibili-settings-danmuku-guard-prefix",
+					"bilibili-settings-danmuku-guard-prefix-text",
+					"bilibili-settings-danmuku-guard-prefix-icon",
+					"bilibili-settings-danmuku-notification-block_list",
+					"bilibili-settings-danmuku-notification-room-info-change",
+					"bilibili-settings-danmuku-notification-room-prepare",
+					"bilibili-settings-danmuku-notification-room-online",
+					"bilibili-settings-danmuku-notification-room-rank",
+					"bilibili-settings-danmuku-notification-like",
+					"bilibili-settings-danmuku-notification-boardcast",
+					"bilibili-settings-danmuku-notification-PK",
+					"bilibili-settings-danmuku-notification-junk",
+					"bilibili-settings-block-list-username",
+					"bilibili-settings-block-list-uid",
+					"bilibili-settings-block-list-keyword",
+					"bilibili-settings-utilities",
+					"bilibili-settings-utilities-clean-cache",
+					"bilibili-settings-utilities-images-button-text"
+				];
 				ranslation_list.forEach((key) => {
 					set_translation(key);
 				});
@@ -211,3 +297,41 @@ $(document).ready(function () {
 	$('.collapsible').collapsible();
 	$('.dropdown-trigger').dropdown();
 });
+
+function clear_blive_code() {
+	$('#bilibili_identity_code').val("");
+}
+
+function blive_submit() {
+	saveSettings(event);
+}
+
+function clean_cache_bilibili_image() {
+	var taget_button = document.getElementById("bilibili-settings-utilities-images-button")
+	
+	taget_button.enabled = false;
+	taget_button.classList.add("disabled");
+	
+	// new HttpRequest instance
+	var request = new XMLHttpRequest();
+	request.open("GET", "/clean/cache/images");
+	request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+	request.onabort = function () {
+		M.toast({ html: set_translation("request-onabort", false) === "" ? "Something went wrong, try again later." : set_translation("request-onabort", false) })
+	};
+	request.onerror = function () {
+		M.toast({ html: set_translation("request-onerror-clean-cache-bilibili-image", false) === "" ? "Something went wrong while trying to clean image cache. Make sure Beat Saber is still running." : set_translation("request-onerror-clean-cache-bilibili-image", false) })
+	};
+	request.onload = function () {
+		if (request.readyState === 4 && request.status === 200) {
+			M.toast({ html: set_translation("request-onload-clean-cache-bilibili-image", false) === "" ? "Image cache has been cleaned successfully." : set_translation("request-onload-clean-cache-bilibili-image", false) })
+		} else {
+			M.toast({ html: set_translation("request-onerror-clean-cache-bilibili-image", false) === "" ? "Something went wrong while trying to clean image cache. Make sure Beat Saber is still running." : set_translation("request-onerror-clean-cache-bilibili-image", false) })
+		}
+	};
+	request.onloadend = function () {
+		taget_button.classList.remove("disabled")
+		taget_button.enabled = true;
+	};
+	request.send();
+}

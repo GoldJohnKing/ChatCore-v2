@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -6,7 +7,9 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using ChatCore.Interfaces;
+using ChatCore.Models;
 using ChatCore.Utilities;
 using Microsoft.Extensions.Logging;
 
@@ -21,6 +24,7 @@ namespace ChatCore.Services
 		private HttpListener? _listener;
 		private CancellationTokenSource? _cancellationToken;
 		private static string? _pageData;
+		private static bool _bilibiliOnly = false;
 
 		private readonly SemaphoreSlim _requestLock = new SemaphoreSlim(1, 1);
 
@@ -31,8 +35,9 @@ namespace ChatCore.Services
 			_settings = settings;
 		}
 
-		public void Start()
+		public void Start(bool bilibiliOnly = false)
 		{
+			_bilibiliOnly = bilibiliOnly;
 			if (_pageData == null)
 			{
 				using var reader = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("ChatCore.Resources.Web.index.html")!);
@@ -48,22 +53,23 @@ namespace ChatCore.Services
 			_listener = new HttpListener { Prefixes = { $"http://localhost:{MainSettingsProvider.WEB_APP_PORT}/" } };
 			_listener.Start();
 
-			_logger.Log(LogLevel.Information, $"Listening on {string.Join(", ", _listener.Prefixes)}");
+			_logger.Log(LogLevel.Information, $"[WebLoginProvider] | [Start] | Listening on {string.Join(", ", _listener.Prefixes)}");
 
 			Task.Run(async () =>
 			{
+				await Task.Delay(1000);
 				while (true)
 				{
 					try
 					{
-						_logger.LogInformation("Waiting for incoming request...");
+						_logger.LogInformation("[WebLoginProvider] | [Start] | Waiting for incoming request...");
 						var httpListenerContext = await _listener.GetContextAsync().ConfigureAwait(false);
-						_logger.LogWarning("Request received");
+						_logger.LogWarning("[WebLoginProvider] | [Start] | Request received");
 						await OnContext(httpListenerContext).ConfigureAwait(false);
 					}
 					catch (Exception e)
 					{
-						_logger.LogError(e, "WebLoginProvider errored.");
+						_logger.LogError(e, "[WebLoginProvider] | [Start] | WebLoginProvider errored.");
 					}
 				}
 
@@ -73,7 +79,36 @@ namespace ChatCore.Services
 
 		private async Task OnContext(HttpListenerContext ctx)
 		{
-			string[] resource_file_list = { "/Statics/Css/default.css", "/Statics/Css/Material+Icons.css", "/Statics/Css/materialize.min.css", "/Statics/Fonts/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2", "/Statics/Js/default.js", "/Statics/Js/materialize.min.js", "/Statics/Js/jquery-3.5.1.min.js", "/Statics/Lang/en.json", "/Statics/Lang/zh.json", "/Statics/Lang/ja.json" };
+			string[] resource_file_list = {
+				"/Statics/Css/default.css",
+				"/Statics/Css/Material+Icons.css",
+				"/Statics/Css/materialize.min.css",
+				"/Statics/Fonts/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2",
+
+				"/Statics/Js/default.js",
+				"/Statics/Js/materialize.min.js",
+				"/Statics/Js/jquery-3.5.1.min.js",
+
+				"/Statics/Lang/en.json",
+				"/Statics/Lang/zh.json",
+				"/Statics/Lang/ja.json",
+
+				"/Statics/Images/BilibiliLiveBroadcaster.png",
+				"/Statics/Images/BilibiliLiveModerator.png",
+				"/Statics/Images/BilibiliLiveGuard1.png",
+				"/Statics/Images/BilibiliLiveGuard2.png",
+				"/Statics/Images/BilibiliLiveGuard3.png",
+				"/Statics/Images/BilibiliLiveGuard1_full.png",
+				"/Statics/Images/BilibiliLiveGuard2_full.png",
+				"/Statics/Images/BilibiliLiveGuard3_full.png",
+				"/Statics/Images/Blive/Close.png",
+				"/Statics/Images/Blive/Close01.png",
+				"/Statics/Images/Blive/Ellipse.png",
+				"/Statics/Images/Blive/question_mark.png",
+				"/Statics/Images/Blive/round.png",
+				"/Statics/Images/Blive/tv.png",
+				"/Statics/Images/Blive/Vector.png"
+			};
 			await _requestLock.WaitAsync();
 			try
 			{
@@ -109,19 +144,44 @@ namespace ChatCore.Services
 						response.ContentType = "font/woff2";
 					}
 
-					Console.WriteLine("Trying to get resource: " + "ChatCore.Resources.Web" + request.Url.AbsolutePath.Replace("/", "."));
+					// _logger.Log(LogLevel.Information, "Trying to get resource: " + "ChatCore.Resources.Web" + request.Url.AbsolutePath.Replace("/", "."));
 					var buffer = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("ChatCore.Resources.Web" + request.Url.AbsolutePath.Replace("/", "."))!);
 					buffer.BaseStream.CopyTo(response.OutputStream);
+				}
+				else if (request.HttpMethod == "GET" && request.Url.AbsolutePath == "/clean/cache/images")
+				{
+					var targetDirectories = new List<string>() {
+						Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"ChatCore\Badges").ToString(),
+						Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"ChatCore\Avatars").ToString()
+					};
+
+					foreach (var dir in targetDirectories)
+					{
+						if (Directory.Exists(dir))
+						{
+							Directory.Delete(dir, true);
+						}
+					}
+					response.StatusCode = 200;
 				}
 				else
 				{
 					var settingsJson = _settings.GetSettingsAsJson();
 					settingsJson["twitch_oauth_token"] = new JSONString(_authManager.Credentials.Twitch_OAuthToken);
 					settingsJson["twitch_channels"] = new JSONArray(_authManager.Credentials.Twitch_Channels);
+					settingsJson["bilibili_room_id"] = new JSONNumber(_authManager.Credentials.Bilibili_room_id);
+					settingsJson["bilibili_identity_code"] = new JSONString(_authManager.Credentials.Bilibili_identity_code);
+					// TODO: update identity code from blive sdk
+					settingsJson["bilibili_identity_code_save"] = new JSONBool(_authManager.Credentials.Bilibili_identity_code_save);
 
 					var pageBuilder = new StringBuilder(_pageData);
 					pageBuilder.Replace("{libVersion}", ChatCoreInstance.Version.ToString(3));
 					pageBuilder.Replace("var data = {};", $"var data = {settingsJson};");
+					if (_bilibiliOnly)
+					{
+						pageBuilder.Replace("var bilibili_only = false;", $"var bilibili_only = true;");
+					}
+					
 
 					var data = Encoding.UTF8.GetBytes(pageBuilder.ToString());
 					response.ContentType = "text/html";
@@ -134,7 +194,7 @@ namespace ChatCore.Services
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Exception occurred during webapp request.");
+				_logger.LogError(ex, "[WebLoginProvider] | [OnContext] | Exception occurred during webapp request.");
 			}
 			finally
 			{
@@ -191,8 +251,54 @@ namespace ChatCore.Services
 
 				if (authChanged)
 				{
-					_authManager.Save();
+					_authManager.SaveTwitch();
 				}
+
+				authChanged = false;
+				// Console.WriteLine(postStr);
+
+				if (responseJson.HasKey("bilibili_room_id") && (_authManager.Credentials.Bilibili_room_id != responseJson["bilibili_room_id"].AsInt))
+				{
+					_authManager.Credentials.Bilibili_room_id = responseJson["bilibili_room_id"].AsInt;
+					authChanged = true;
+					responseJson.Remove("bilibili_room_id");
+				}
+
+				if (responseJson.HasKey("bilibili_identity_code_save") && (_authManager.Credentials.Bilibili_identity_code_save != responseJson["bilibili_identity_code_save"].AsBool))
+				{
+					_authManager.Credentials.Bilibili_identity_code_save = responseJson["bilibili_identity_code_save"].AsBool;
+					authChanged = true;
+					responseJson.Remove("bilibili_identity_code_save");
+				}
+
+				if (responseJson.HasKey("bilibili_identity_code") && (_authManager.Credentials.Bilibili_identity_code != responseJson["bilibili_identity_code"]))
+				{
+					_authManager.Credentials.Bilibili_identity_code = (!string.IsNullOrWhiteSpace(responseJson["bilibili_identity_code"].Value) && _authManager.Credentials.Bilibili_identity_code_save) ? responseJson["bilibili_identity_code"].Value : string.Empty;
+					authChanged = true;
+					responseJson.Remove("bilibili_identity_code");
+				}
+
+				if (!_authManager.Credentials.Bilibili_identity_code_save && !string.IsNullOrWhiteSpace(_authManager.Credentials.Bilibili_identity_code) )
+				{
+					_authManager.Credentials.Bilibili_identity_code = string.Empty;
+					authChanged = true;
+				}
+
+				if (authChanged)
+				{
+					_authManager.SaveBilibili();
+				}
+
+				if (responseJson.HasKey("EnableTwitch") && (_settings.EnableTwitch != responseJson["EnableTwitch"].AsBool))
+				{
+					_settings.updateTwitch(responseJson["EnableTwitch"].AsBool);
+				}
+
+				if (responseJson.HasKey("EnableBilibili") && (_settings.EnableBilibili != responseJson["EnableBilibili"].AsBool))
+				{
+					_settings.updateBilibili(responseJson["EnableBilibili"].AsBool);
+				}
+
 				_settings.SetFromDictionary(responseJson);
 				_settings.Save();
 
@@ -213,7 +319,7 @@ namespace ChatCore.Services
 
 			_listener?.Stop();
 			_cancellationToken.Cancel();
-			_logger.LogInformation("Stopped");
+			_logger.LogInformation("[WebLoginProvider] | [Stop] | Stopped");
 		}
 	}
 }

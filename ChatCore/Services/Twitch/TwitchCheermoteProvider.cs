@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Net.Http;
@@ -28,20 +28,21 @@ namespace ChatCore.Services.Twitch
 			var isGlobal = string.IsNullOrEmpty(category);
 			try
 			{
-				_logger.LogDebug($"Requesting Twitch {(isGlobal ? "global " : "")}cheermotes{(isGlobal ? "." : $" for channel {category}")}.");
+				_logger.LogDebug($"[TwitchCheermoteProvider] | [TryRequestResources] | Requesting Twitch {(isGlobal ? "global " : "")}cheermotes{(isGlobal ? "." : $" for channel {category}")}.");
 				using var msg = new HttpRequestMessage(HttpMethod.Get,
 					$"https://api.twitch.tv/v5/bits/actions?client_id={TwitchDataProvider.TWITCH_CLIENT_ID}&channel_id={category}&include_sponsored=1");
+					// $"https://twitch-proxy.beatmods.top/api/v5/bits/actions?client_id={TwitchDataProvider.TWITCH_CLIENT_ID}&channel_id={category}&include_sponsored=1");
 				var resp = await _httpClient.SendAsync(msg);
 				if (!resp.IsSuccessStatusCode)
 				{
-					_logger.LogError($"Unsuccessful status code when requesting Twitch {(isGlobal ? "global " : "")}cheermotes{(isGlobal ? "." : " for channel " + category)}. {resp.ReasonPhrase}");
+					_logger.LogError($"[TwitchCheermoteProvider] | [TryRequestResources] | Unsuccessful status code when requesting Twitch {(isGlobal ? "global " : "")}cheermotes{(isGlobal ? "." : " for channel " + category)}. {resp.ReasonPhrase}");
 					return false;
 				}
 
 				var json = JSON.Parse(await resp.Content.ReadAsStringAsync());
 				if (!json["actions"].IsArray)
 				{
-					_logger.LogError("badge_sets was not an object.");
+					_logger.LogError("[TwitchCheermoteProvider] | [TryRequestResources] | badge_sets was not an object.");
 					return false;
 				}
 
@@ -70,12 +71,12 @@ namespace ChatCore.Services.Twitch
 					count++;
 				}
 
-				_logger.LogDebug($"Success caching {count} Twitch {(isGlobal ? "global " : "")}cheermotes{(isGlobal ? "." : " for channel " + category)}.");
+				_logger.LogDebug($"[TwitchCheermoteProvider] | [TryRequestResources] | Success caching {count} Twitch {(isGlobal ? "global " : "")}cheermotes{(isGlobal ? "." : " for channel " + category)}.");
 				return true;
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, $"An error occurred while requesting Twitch {(isGlobal ? "global " : "")}cheermotes{(isGlobal ? "." : " for channel " + category)}.");
+				_logger.LogError(ex, $"[TwitchCheermoteProvider] | [TryRequestResources] | An error occurred while requesting Twitch {(isGlobal ? "global " : "")}cheermotes{(isGlobal ? "." : " for channel " + category)}.");
 			}
 
 			return false;

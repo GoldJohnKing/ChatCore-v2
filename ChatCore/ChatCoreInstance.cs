@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime;
 using ChatCore.Config;
 using ChatCore.Exceptions;
 using ChatCore.Interfaces;
 using ChatCore.Logging;
 using ChatCore.Services;
-using ChatCore.Services.BiliBili;
+using ChatCore.Services.Bilibili;
 using ChatCore.Services.Twitch;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -23,6 +25,10 @@ namespace ChatCore
 		private static ChatCoreInstance? _instance;
 		private static ServiceProvider? _serviceProvider;
 		private static Version? _version;
+		private static ChatServiceMultiplexer? _chatServiceMultiplexer;
+		private static OpenBLiveProvider? _openBLiveProvider;
+		private static MainSettingsProvider? _settings;
+		private static ILogger? _logger;
 
 		private ChatCoreInstance() { }
 
@@ -66,43 +72,45 @@ namespace ChatCore
 					.AddSingleton<HttpClient>()
 					.AddSingleton<ObjectSerializer>()
 					.AddSingleton<MainSettingsProvider>()
+					.AddSingleton<BilibiliService>()
+					.AddSingleton<BilibiliServiceManager>()
+					.AddSingleton<IPathProvider, PathProvider>()
+					.AddSingleton<IUserAuthProvider, UserAuthProvider>()
+					.AddSingleton<IWebLoginProvider, WebLoginProvider>()
+					.AddSingleton<IEmojiParser, FrwTwemojiParser>()
+					.AddSingleton<IDefaultBrowserLauncherService, ProcessDotStartBrowserLauncherService>()
+					.AddTransient<IWebSocketService, WebSocket4NetServiceProvider>()
+					.AddSingleton<IOpenBLiveProvider, OpenBLiveProvider>()
 					.AddSingleton<TwitchService>()
-					.AddSingleton<TwitchServiceManager>()
-					.AddSingleton<TwitchMessageParser>()
-					.AddSingleton<TwitchDataProvider>()
-					.AddSingleton<TwitchCheermoteProvider>()
-					.AddSingleton<TwitchBadgeProvider>()
-					.AddSingleton<BiliBiliService>()
-					.AddSingleton<BiliBiliServiceManager>()
-					.AddSingleton<BTTVDataProvider>()
-					.AddSingleton<FFZDataProvider>()
-					.AddSingleton<IChatService>(x =>
-						new ChatServiceMultiplexer(
-							x.GetService<ILogger<ChatServiceMultiplexer>>(),
-							new List<IChatService>
-							{
-								x.GetService<TwitchService>(),
-								x.GetService<BiliBiliService>()
-							}
+						.AddSingleton<TwitchServiceManager>()
+						.AddSingleton<TwitchMessageParser>()
+						.AddSingleton<TwitchDataProvider>()
+						.AddSingleton<TwitchCheermoteProvider>()
+						.AddSingleton<TwitchBadgeProvider>()
+						.AddSingleton<BTTVDataProvider>()
+						.AddSingleton<FFZDataProvider>()
+						.AddSingleton<IChatService>(x =>
+							new ChatServiceMultiplexer(
+								x.GetService<ILogger<ChatServiceMultiplexer>>(),
+								new List<IChatService>
+								{
+									x.GetService<TwitchService>(),
+									x.GetService<BilibiliService>()
+								},
+								false, false
+							)
 						)
-					)
-					.AddSingleton<IChatServiceManager>(x =>
+						.AddSingleton<IChatServiceManager>(x =>
 						new ChatServiceManager(
 							x.GetService<ILogger<ChatServiceManager>>(),
 							x.GetService<IChatService>(),
 							new List<IChatServiceManager>
 							{
 								x.GetService<TwitchServiceManager>(),
-								x.GetService<BiliBiliServiceManager>()
+								x.GetService<BilibiliServiceManager>()
 							}
 						)
-					)
-					.AddSingleton<IPathProvider, PathProvider>()
-					.AddSingleton<IUserAuthProvider, UserAuthProvider>()
-					.AddSingleton<IWebLoginProvider, WebLoginProvider>()
-					.AddSingleton<IEmojiParser, FrwTwemojiParser>()
-					.AddSingleton<IDefaultBrowserLauncherService, ProcessDotStartBrowserLauncherService>()
-					.AddTransient<IWebSocketService, WebSocket4NetServiceProvider>();
+					);
 
 				if (logReceiver != null)
 				{
@@ -111,18 +119,20 @@ namespace ChatCore
 
 				_serviceProvider = serviceCollection.BuildServiceProvider();
 
-				var logger = _serviceProvider.GetService<ILogger<ChatCoreInstance>>();
-				var settings = _serviceProvider.GetService<MainSettingsProvider>();
-				if (settings.DisableWebApp)
+				_logger = _serviceProvider.GetService<ILogger<ChatCoreInstance>>();
+				_settings = _serviceProvider.GetService<MainSettingsProvider>();
+				_settings.onTwitchUpdate += onEnableTwitch;
+				_settings.onBilibiliUpdate += onEnableBilibili;
+				if (_settings.DisableWebApp)
 				{
-					logger.Log(LogLevel.Information, "WebLoginProvider disabled...");
+					_logger.Log(LogLevel.Information, "[ChatCoreInstance] | [Create(...)] | WebLoginProvider disabled...");
 					return _instance;
 				}
 
-				logger.Log(LogLevel.Information, "Attempting to start WebLoginProvider");
+				_logger.Log(LogLevel.Information, "[ChatCoreInstance] | [Create(...)] | Attempting to start WebLoginProvider");
 				_serviceProvider.GetService<IWebLoginProvider>().Start();
-				logger.Log(LogLevel.Information, "Supposedly started WebLoginProvider");
-				if (settings.LaunchWebAppOnStartup)
+				_logger.Log(LogLevel.Information, "[ChatCoreInstance] | [Create(...)] | Supposedly started WebLoginProvider");
+				if (_settings.LaunchWebAppOnStartup)
 				{
 					_serviceProvider.GetService<IDefaultBrowserLauncherService>().Launch($"http://localhost:{MainSettingsProvider.WEB_APP_PORT}");
 				}
@@ -146,7 +156,19 @@ namespace ChatCore
 
 				var services = _serviceProvider.GetService<IChatServiceManager>();
 				services.Start(Assembly.GetCallingAssembly());
-				return (ChatServiceMultiplexer)services.GetService();
+				_chatServiceMultiplexer = (ChatServiceMultiplexer)services.GetService();
+				if (_settings!.EnableTwitch)
+				{
+					_logger.Log(LogLevel.Information, "[ChatCoreInstance] | [RunAllServices] | Twitch Enabled");
+					onEnableTwitch(true);
+				}
+
+				if (_settings!.EnableBilibili)
+				{
+					_logger.Log(LogLevel.Information, "[ChatCoreInstance] | [RunAllServices] | Bilibili Enabled");
+					onEnableBilibili(true);
+				}
+				return _chatServiceMultiplexer;
 			}
 		}
 
@@ -159,7 +181,15 @@ namespace ChatCore
 			{
 				lock (_runLock)
 				{
-					_serviceProvider.GetService<IChatServiceManager>().Stop(Assembly.GetCallingAssembly());
+					try
+					{
+						var x = _serviceProvider.GetService<IChatServiceManager>().GetService();
+						_logger.Log(LogLevel.Information, $"[ChatCoreInstance] | [StopAllServices] | {x.DisplayName} stopped.");
+						_serviceProvider.GetService<IChatServiceManager>().Stop(Assembly.GetCallingAssembly());
+					} catch (Exception ex)
+					{
+						_logger.Log(LogLevel.Information, $"[ChatCoreInstance] | [StopAllServices] | Exception: {ex}");
+					}
 				}
 			}
 		}
@@ -195,6 +225,62 @@ namespace ChatCore
 		}
 
 		/// <summary>
+		/// Starts the Twitch services if they haven't been already.
+		/// </summary>
+		/// <returns>A reference to the Twitch service</returns>
+		public BilibiliService RunBilibiliServices()
+		{
+			lock (_runLock)
+			{
+				if (_serviceProvider == null)
+				{
+					throw new ChatCoreNotInitializedException("Make sure to call ChatCoreInstance.Create() to initialize ChatCore!");
+				}
+
+				var bilibili = _serviceProvider.GetService<BilibiliServiceManager>();
+				bilibili.Start(Assembly.GetCallingAssembly());
+				return (BilibiliService)bilibili.GetService();
+			}
+		}
+
+		public OpenBLiveProvider RunBLiveServices()
+		{
+			lock (_runLock)
+			{
+				if (_serviceProvider == null)
+				{
+					throw new ChatCoreNotInitializedException("Make sure to call ChatCoreInstance.Create() to initialize ChatCore!");
+				}
+
+				_openBLiveProvider = (OpenBLiveProvider)_serviceProvider.GetService<IOpenBLiveProvider>();
+				_openBLiveProvider.Start();
+				return _openBLiveProvider;
+			}
+		}
+
+		public void StopBLiveServices()
+		{
+			lock (_runLock)
+			{
+				if (_openBLiveProvider != null)
+				{
+					_openBLiveProvider.Stop();
+				}
+			}
+		}
+
+		/// <summary>
+		/// Stops the Twitch services as long as no references remain. Make sure to unregister any callbacks first!
+		/// </summary>
+		public void StopBilibiliServices()
+		{
+			lock (_runLock)
+			{
+				_serviceProvider.GetService<BilibiliServiceManager>().Stop(Assembly.GetCallingAssembly());
+			}
+		}
+
+		/// <summary>
 		/// Launches the settings WebApp in the users default browser.
 		/// </summary>
 		public void LaunchWebApp()
@@ -207,6 +293,72 @@ namespace ChatCore
 				}
 
 				_serviceProvider.GetService<IDefaultBrowserLauncherService>().Launch($"http://localhost:{MainSettingsProvider.WEB_APP_PORT}");
+			}
+		}
+
+		public static Dictionary<string, bool> BilibiliDisplaySettings()
+		{
+			var result = new Dictionary<string, bool>();
+			if (_serviceProvider != null)
+			{
+				var _settings = _serviceProvider.GetService<MainSettingsProvider>();
+				result.Add("showAvatar", _settings.danmuku_avatar);
+				result.Add("showGuard", _settings.danmuku_guard_prefix);
+				result.Add("showGuardText", _settings.danmuku_guard_prefix_type);
+				result.Add("showBadge", _settings.danmuku_badge_prefix);
+				result.Add("showBadgeText", _settings.danmuku_badge_prefix_type);
+				result.Add("showHonorBadge", _settings.danmuku_honor_badge_prefix);
+				result.Add("showHonorBadgeText", _settings.danmuku_honor_badge_prefix_type);
+				result.Add("showBroadcaster", _settings.danmuku_broadcaster_prefix);
+				result.Add("showBroadcasterText", _settings.danmuku_broadcaster_prefix_type);
+				result.Add("showModerator", _settings.danmuku_moderator_prefix);
+				result.Add("showModeratorText", _settings.danmuku_moderator_prefix_type);
+			}
+
+			return result;
+		}
+
+		private static void onEnableTwitch(bool enable)
+		{
+			_logger.LogInformation($"[ChatCoreInstance] | [onEnableTwitch] | {enable.ToString()}");
+			if (_chatServiceMultiplexer == null)
+			{
+				throw new ChatCoreNotInitializedException("Make sure to call ChatCoreInstance.RunAllServices() to initialize Services!");
+			}
+
+			if (enable)
+			{
+				_chatServiceMultiplexer.EnableTwitchService(null);
+			}
+			else
+			{
+				_chatServiceMultiplexer.DisableTwitchService(null);
+			}
+		}
+
+		private static void onEnableBilibili(bool enable)
+		{
+			_logger.LogInformation($"[ChatCoreInstance] | [onEnableBilibili] | {enable.ToString()}");
+			if (_chatServiceMultiplexer == null)
+			{
+				throw new ChatCoreNotInitializedException("Make sure to call ChatCoreInstance.RunAllServices() to initialize Services!");
+			}
+
+			if (enable)
+			{
+				_chatServiceMultiplexer.EnableBilibiliService(null);
+				_openBLiveProvider = (OpenBLiveProvider)_serviceProvider.GetService<IOpenBLiveProvider>();
+				_openBLiveProvider.Enable();
+				_openBLiveProvider.Start();
+				_serviceProvider.GetService<IOpenBLiveProvider>().Start();
+			}
+			else
+			{
+				_chatServiceMultiplexer.DisableBilibiliService(null);
+				_openBLiveProvider = (OpenBLiveProvider)_serviceProvider.GetService<IOpenBLiveProvider>();
+				_openBLiveProvider.Disable();
+				_openBLiveProvider.Stop();
+				_serviceProvider.GetService<IOpenBLiveProvider>().Stop();
 			}
 		}
 	}

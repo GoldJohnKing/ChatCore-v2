@@ -2,9 +2,9 @@ using System;
 using System.Collections.Concurrent;
 using ChatCore.Interfaces;
 using ChatCore.Models.Twitch;
-using ChatCore.Models.BiliBili;
+using ChatCore.Models.Bilibili;
 using ChatCore.Services.Twitch;
-using ChatCore.Services.BiliBili;
+using ChatCore.Services.Bilibili;
 
 namespace ChatCore.Utilities
 {
@@ -22,9 +22,9 @@ namespace ChatCore.Utilities
 			return msg as TwitchMessage;
 		}
 
-		public static BiliBiliChatMessage? AsBiliBiliMessage(this IChatMessage msg)
+		public static BilibiliChatMessage? AsBilibiliMessage(this IChatMessage msg)
 		{
-			return msg as BiliBiliChatMessage;
+			return msg as BilibiliChatMessage;
 		}
 
 		public static TwitchChannel? AsTwitchChannel(this IChatChannel channel)
@@ -37,9 +37,9 @@ namespace ChatCore.Utilities
 			return user as TwitchUser;
 		}
 
-		public static BiliBiliChatUser? AsBilibiliUser(this IChatUser user)
+		public static BilibiliChatUser? AsBilibiliUser(this IChatUser user)
 		{
-			return user as BiliBiliChatUser;
+			return user as BilibiliChatUser;
 		}
 
 		public static TwitchBadge? AsTwitchBadge(this IChatBadge badge)

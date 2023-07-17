@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -51,7 +51,7 @@ namespace ChatCore.Services.Twitch
 				}
 				catch (Exception ex)
 				{
-					_logger.LogError(ex, $"An exception occurred while trying to request global Twitch resources.");
+					_logger.LogError(ex, $"[TwitchDataProvider] | [TryRequestGlobalResources] | An exception occurred while trying to request global Twitch resources.");
 				}
 				finally
 				{
@@ -123,7 +123,7 @@ namespace ChatCore.Services.Twitch
 				}
 				catch (Exception ex)
 				{
-					_logger.LogError(ex, $"An exception occurred while trying to request Twitch channel resources for {channel.Id}.");
+					_logger.LogError(ex, $"[TwitchDataProvider] | [TryRequestChannelResources] | An exception occurred while trying to request Twitch channel resources for {channel.Id}.");
 				}
 				finally
 				{
@@ -138,12 +138,12 @@ namespace ChatCore.Services.Twitch
 			try
 			{
 				// TODO: readd a way to actually clear channel resources
-				_logger.LogInformation($"Releasing resources for channel {channel.Id}");
+				_logger.LogInformation($"[TwitchDataProvider] | [TryReleaseChannelResources] | Releasing resources for channel {channel.Id}");
 				_channelDataCached.Remove(channel.Id);
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, $"An exception occurred while trying to release Twitch channel resources for {channel.Id}.");
+				_logger.LogError(ex, $"[TwitchDataProvider] | [TryReleaseChannelResources] | An exception occurred while trying to release Twitch channel resources for {channel.Id}.");
 			}
 			finally
 			{

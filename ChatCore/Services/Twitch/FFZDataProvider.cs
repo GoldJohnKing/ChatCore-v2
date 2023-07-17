@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -29,19 +29,19 @@ namespace ChatCore.Services.Twitch
 
 			try
 			{
-				_logger.LogDebug($"Requesting FFZ {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : $" for channel {category}")}.");
+				_logger.LogDebug($"[DDZDataProvider] | [TryRequestResources] | Requesting FFZ {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : $" for channel {category}")}.");
 				using var msg = new HttpRequestMessage(HttpMethod.Get, isGlobal ? "https://api.frankerfacez.com/v1/set/global" : $"https://api.frankerfacez.com/v1/room/{category}");
 				var resp = await _httpClient.SendAsync(msg);
 				if (!resp.IsSuccessStatusCode)
 				{
-					_logger.LogError($"Unsuccessful status code when requesting FFZ {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : " for channel " + category)}. {resp.ReasonPhrase}");
+					_logger.LogError($"[DDZDataProvider] | [TryRequestResources] | Unsuccessful status code when requesting FFZ {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : " for channel " + category)}. {resp.ReasonPhrase}");
 					return false;
 				}
 
 				var json = JSON.Parse(await resp.Content.ReadAsStringAsync());
 				if (!json["sets"].IsObject)
 				{
-					_logger.LogError("sets was not an object");
+					_logger.LogError("[DDZDataProvider] | [TryRequestResources] | sets was not an object");
 					return false;
 				}
 
@@ -55,12 +55,12 @@ namespace ChatCore.Services.Twitch
 					count++;
 				}
 
-				_logger.LogDebug($"Success caching {count} FFZ {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : " for channel " + category)}.");
+				_logger.LogDebug($"[DDZDataProvider] | [TryRequestResources] | Success caching {count} FFZ {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : " for channel " + category)}.");
 				return true;
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, $"An error occurred while requesting FFZ {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : " for channel " + category)}.");
+				_logger.LogError(ex, $"[DDZDataProvider] | [TryRequestResources] | An error occurred while requesting FFZ {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : " for channel " + category)}.");
 			}
 
 			return false;

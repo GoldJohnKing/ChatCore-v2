@@ -2,9 +2,9 @@ using System;
 using ChatCore.Interfaces;
 using ChatCore.Utilities;
 
-namespace ChatCore.Models.BiliBili
+namespace ChatCore.Models.Bilibili
 {
-	public class BiliBiliChatEmote : IChatEmote
+	public class BilibiliChatEmote : IChatEmote
 	{
 		public string Id { get; internal set; } = null!;
 		public string Name { get; internal set; } = null!;
@@ -15,8 +15,19 @@ namespace ChatCore.Models.BiliBili
 		public EmoteType Type { get; internal set; } = EmoteType.SingleImage;
 		public ImageRect UVs { get; internal set; }
 
-		public BiliBiliChatEmote() { }
-		public BiliBiliChatEmote(string json)
+		public BilibiliChatEmote() { }
+
+		public BilibiliChatEmote(string id, string name, string uri, bool isAnimated = false, int startIndex = 0) {
+			Id = id;
+			Name = name;
+			Uri = uri;
+			StartIndex = startIndex;
+			EndIndex = startIndex + name.Length;
+			IsAnimated = isAnimated;
+			Type = EmoteType.SingleImage;
+
+		}
+		public BilibiliChatEmote(string json)
 		{
 			var obj = JSON.Parse(json);
 			if (obj.TryGetKey(nameof(Id), out var id))

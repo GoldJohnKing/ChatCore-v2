@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ChatCore.Interfaces;
@@ -41,7 +41,7 @@ namespace ChatCore.Services
 			{
 				service.Start(assembly);
 			}
-			_logger.LogInformation($"Streaming services have been started");
+			_logger.LogInformation($"[ChatServiceManager] | [Start] | Streaming services have been started");
 		}
 
 		public void Stop(Assembly assembly)
@@ -50,7 +50,7 @@ namespace ChatCore.Services
 			{
 				service.Stop(assembly);
 			}
-			_logger.LogInformation($"Streaming services have been stopped");
+			_logger.LogInformation($"[ChatServiceManager] | [Stop] | Streaming services have been stopped");
 		}
 
 		public void Dispose()
@@ -59,7 +59,7 @@ namespace ChatCore.Services
 			{
 				service.Stop(null!);
 			}
-			_logger.LogInformation("Disposed");
+			_logger.LogInformation("[ChatServiceManager] | [Dispose] | Disposed");
 		}
 
 		public IChatService GetService()

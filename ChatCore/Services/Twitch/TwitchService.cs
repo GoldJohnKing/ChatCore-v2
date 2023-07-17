@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -30,6 +30,7 @@ namespace ChatCore.Services.Twitch
 		private readonly string _anonUsername;
 		private string? _loggedInUsername;
 		private bool _isStarted;
+		private bool _enable; 
 
 		private int _currentMessageCount;
 		private DateTime _lastResetTime = DateTime.UtcNow;
@@ -66,7 +67,7 @@ namespace ChatCore.Services.Twitch
 
 			Channels = new ReadOnlyDictionary<string, IChatChannel>(_channels);
 
-			_authManager.OnCredentialsUpdated += _authManager_OnCredentialsUpdated;
+			_authManager.OnTwitchCredentialsUpdated += _authManager_OnCredentialsUpdated;
 			_websocketService.OnOpen += _websocketService_OnOpen;
 			_websocketService.OnClose += _websocketService_OnClose;
 			_websocketService.OnError += _websocketService_OnError;
@@ -75,7 +76,7 @@ namespace ChatCore.Services.Twitch
 
 		private void _authManager_OnCredentialsUpdated(LoginCredentials credentials)
 		{
-			if (_isStarted)
+			if (_isStarted && _enable)
 			{
 				Start(true);
 			}
@@ -89,10 +90,12 @@ namespace ChatCore.Services.Twitch
 			}
 			lock (_initLock)
 			{
-				if (!_isStarted)
+				if (!_isStarted && _enable)
 				{
+					_logger.LogInformation("[TwitchService] | [Start] | Start");
 					_isStarted = true;
 					_websocketService.Connect("wss://irc-ws.chat.twitch.tv:443", forceReconnect);
+					// _websocketService.Connect("wss://twitch-proxy.beatmods.top/ws", forceReconnect);
 					Task.Run(ProcessQueuedMessages);
 				}
 			}
@@ -121,16 +124,16 @@ namespace ChatCore.Services.Twitch
 		{
 			lock (_messageReceivedLock)
 			{
-				//_logger.LogInformation("RawMessage: " + rawMessage);
+				_logger.LogInformation($"[TwitchService] | [_websocketService_OnMessageReceived] | RawMessage: {rawMessage}");
 				_rawMessageReceivedCallbacks?.InvokeAll(assembly, this, rawMessage);
-				if (_messageParser.ParseRawMessage(rawMessage, _channels, LoggedInUser, out var parsedMessages))
+				if (_messageParser.ParseRawMessage(rawMessage, _channels, LoggedInUser?? new TwitchUser(), out var parsedMessages))
 				{
 					foreach (var chatMessage in parsedMessages)
 					{
 						var twitchMessage = (TwitchMessage)chatMessage;
 						if (assembly != null)
 						{
-							twitchMessage.Sender = LoggedInUser;
+							twitchMessage.Sender = LoggedInUser?? new TwitchUser();
 						}
 
 						var twitchChannel = (twitchMessage.Channel as TwitchChannel);
@@ -148,7 +151,7 @@ namespace ChatCore.Services.Twitch
 								_dataProvider.TryRequestGlobalResources();
 								_loggedInUsername = twitchMessage.Channel.Id;
 								// This isn't a typo, when you first sign in your username is in the channel id.
-								_logger.LogInformation($"Logged into Twitch as {_loggedInUsername}");
+								_logger.LogInformation($"[TwitchService] | [ws_OnMessageReceived] | Logged into Twitch as {_loggedInUsername}");
 								_websocketService.ReconnectDelay = 500;
 								LoginCallbacks?.InvokeAll(assembly!, this, _logger);
 								foreach (var channel in _authManager.Credentials.Twitch_Channels)
@@ -176,7 +179,7 @@ namespace ChatCore.Services.Twitch
 									if (!_channels.ContainsKey(twitchMessage.Channel.Id))
 									{
 										_channels[twitchMessage.Channel.Id] = twitchMessage.Channel.AsTwitchChannel()!;
-										_logger.LogInformation($"Added channel {twitchMessage.Channel.Id} to the channel list.");
+										_logger.LogInformation($"[TwitchService] | [ws_OnMessageReceived] | Added channel {twitchMessage.Channel.Id} to the channel list.");
 										JoinRoomCallbacks?.InvokeAll(assembly!, this, twitchMessage.Channel, _logger);
 									}
 								}
@@ -188,7 +191,7 @@ namespace ChatCore.Services.Twitch
 									if (_channels.TryRemove(twitchMessage.Channel.Id, out var channel))
 									{
 										_dataProvider.TryReleaseChannelResources(twitchMessage.Channel);
-										_logger.LogInformation($"Removed channel {channel.Id} from the channel list.");
+										_logger.LogInformation($"[TwitchService] | [ws_OnMessageReceived] | Removed channel {channel.Id} from the channel list.");
 										LeaveRoomCallbacks?.InvokeAll(assembly!, this, twitchMessage.Channel, _logger);
 									}
 								}
@@ -206,7 +209,7 @@ namespace ChatCore.Services.Twitch
 								LoggedInUser = twitchMessage.Sender!.AsTwitchUser()!;
 								if (string.IsNullOrEmpty(LoggedInUser.DisplayName))
 								{
-									LoggedInUser.DisplayName = _loggedInUsername;
+									LoggedInUser.DisplayName = _loggedInUsername?? "";
 								}
 								continue;
 							case "CLEARCHAT":
@@ -233,24 +236,25 @@ namespace ChatCore.Services.Twitch
 
 		private void _websocketService_OnClose()
 		{
-			_logger.LogInformation("Twitch connection closed");
+			_logger.LogInformation("[TwitchService] | [ws_OnClose] | Twitch connection closed");
 		}
 
 		private void _websocketService_OnError()
 		{
-			_logger.LogError("An error occurred in Twitch connection");
+			_logger.LogError("[TwitchService] | [ws_OnError] | An error occurred in Twitch connection");
 		}
 
 		private void _websocketService_OnOpen()
 		{
-			_logger.LogInformation("Twitch connection opened");
-			_websocketService.SendMessage("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership");
+			_logger.LogInformation("[TwitchService] | [ws_OnOpen] | Twitch connection opened");
+			// _websocketService.SendMessage("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership");
+			_websocketService.SendMessage("CAP REQ :twitch.tv/tags twitch.tv/commands");
 			TryLogin();
 		}
 
 		private void TryLogin()
 		{
-			_logger.LogInformation("Trying to login!");
+			_logger.LogInformation("[TwitchService] | [TryLogin] | Trying to login!");
 			if (!string.IsNullOrEmpty(OAuthToken))
 			{
 				_websocketService.SendMessage($"PASS {OAuthToken}");
@@ -270,7 +274,7 @@ namespace ChatCore.Services.Twitch
 			}
 			else
 			{
-				_logger.LogWarning("WebSocket service is not connected!");
+				_logger.LogWarning("[TwitchService] | [SendRawMessage] | WebSocket service is not connected!");
 			}
 		}
 
@@ -340,13 +344,25 @@ namespace ChatCore.Services.Twitch
 
 		public void JoinChannel(string channel)
 		{
-			_logger.LogInformation($"Trying to join channel #{channel}");
+			_logger.LogInformation($"[TwitchService] | [JoinChannel] | Trying to join channel #{channel}");
 			SendRawMessage(Assembly.GetCallingAssembly(), $"JOIN #{channel.ToLower()}");
 		}
 
 		public void PartChannel(string channel)
 		{
 			SendRawMessage(Assembly.GetCallingAssembly(), $"PART #{channel.ToLower()}");
+		}
+
+		public void Enable()
+		{
+			_enable = true;
+			Start();
+		}
+
+		public void Disable()
+		{
+			_enable = false;
+			Stop();
 		}
 	}
 }

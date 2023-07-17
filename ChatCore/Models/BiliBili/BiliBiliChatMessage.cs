@@ -1,16 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ChatCore.Interfaces;
 using ChatCore.Services;
-using ChatCore.Services.BiliBili;
+using ChatCore.Services.Bilibili;
 using ChatCore.Utilities;
+using Microsoft.Extensions.Logging;
 
-namespace ChatCore.Models.BiliBili
+namespace ChatCore.Models.Bilibili
 {
-	public class BiliBiliChatMessage : IChatMessage
+	public class BilibiliChatMessage : IChatMessage
 	{
 		public string Id { get; internal set; } = "";
 		public bool IsSystemMessage { get; internal set; }
@@ -19,22 +22,23 @@ namespace ChatCore.Models.BiliBili
 		public bool IsPing { get; internal set; }
 		public string Message { get; internal set; } = "";
 		public string Username { get; internal set; } = "";
-		public int Uid { get; internal set; } = -1;
+		public string Uid { get; internal set; } = "-1";
 		public string Content { get; internal set; } = "";
-		public IChatUser Sender { get; internal set; } = new BiliBiliChatUser();
-		public IChatChannel Channel { get; internal set; } = new BiliBiliChatChannel();
+		public IChatUser Sender { get; internal set; } = new BilibiliChatUser();
+		public IChatChannel Channel { get; internal set; } = new BilibiliChatChannel();
 		public IChatEmote[] Emotes { get; internal set; } = Array.Empty<IChatEmote>();
 		public ReadOnlyDictionary<string, string> Metadata { get; internal set; } = new ReadOnlyDictionary<string, string>(new Dictionary<string, string>());
 		public string MessageType { get; private set; } = "";
-		public Dictionary<string, dynamic> extra { get; internal set; } = new Dictionary<string, dynamic>();
-		private static readonly Dictionary<string, Action<BiliBiliChatMessage, JSONNode>> comands = new Dictionary<string, Action<BiliBiliChatMessage, JSONNode>>();
+		public string Color { get; internal set; } = "#FFFFFF";
+		public BilibiliChatMessageExtra extra { get; internal set; } = new BilibiliChatMessageExtraDanmuku();
+		private static readonly Dictionary<string, Action<BilibiliChatMessage, JSONNode>> comands = new Dictionary<string, Action<BilibiliChatMessage, JSONNode>>();
 		// private static Dictionary<string, dynamic> gift = new Dictionary<string, dynamic>();
 
-		static BiliBiliChatMessage()
+		static BilibiliChatMessage()
 		{
 			CreateCommands();
 		}
-		public BiliBiliChatMessage(string json, int _room_id)
+		public BilibiliChatMessage(string json)
 		{
 			var obj = JSON.Parse(json);
 			if (obj == null)
@@ -46,8 +50,8 @@ namespace ChatCore.Models.BiliBili
 			IsActionMessage = false;
 			IsHighlighted = false;
 			IsPing = false;
-			obj["room_id"] = new JSONNumber(_room_id);
-
+			//obj["room_id"] = new JSONNumber(_room_id);
+			//Console.WriteLine("[DEBUG] | [RAW] " + json);
 			CreateMessage(JSON.Parse(json));
 		}
 		public JSONObject ToJson()
@@ -73,7 +77,7 @@ namespace ChatCore.Models.BiliBili
 
 		private static void CreateCommands()
 		{
-			comands.Add("DANMU_MSG", (b, danmuku) => {
+			Action<BilibiliChatMessage, JSONNode> danmuku_action = (b, danmuku) => {
 				var info = danmuku["info"].AsArray!;
 				if (int.Parse(info[0][9].Value) > 0)
 				{
@@ -82,48 +86,80 @@ namespace ChatCore.Models.BiliBili
 				else
 				{
 					var isEmotion = int.Parse(info[0][12].Value) == 1;
+					var extra = JSON.Parse(info[0][15]["extra"].Value);
 					b.MessageType = isEmotion ? "danmuku_motion" : "danmuku";
-                    b.Uid = info[2][0].AsInt;
-                    b.Username = info[2][1].Value;
-                    b.Content = (isEmotion ? "[表情]" : "") + info[1].Value.ToString();
-
-                    b.Message = (isEmotion ? "[表情]" : "") + info[1].Value;
-                    b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
-					//b.Channel = new BiliBiliChatChannel(danmuku);
-					b.extra.Add("raw_msg", info[1].Value.ToString());
-					if (isEmotion)
-					{
-						b.extra.Add("emoticon_id", info[0][13]["emoticon_unique"].Value.ToString());
-						b.extra.Add("emoticon_name", info[1].Value.ToString());
-						b.extra.Add("emoticon_img", info[0][13]["url"].Value.ToString());
-					}
-				}
-			});
-			comands.Add("DANMU_MSG:4:0:2:2:2:0", (b, danmuku) => {
-				var info = danmuku["info"].AsArray!;
-				if (int.Parse(info[0][9].Value) > 0)
-				{
-					b.MessageType = "ignore";
-				}
-				else
-				{
-					var isEmotion = int.Parse(info[0][12].Value) == 1;
-					b.MessageType = isEmotion ? "danmuku_motion" : "danmuku";
-					b.Uid = info[2][0].AsInt;
+					b.Uid = info[2][0].ToString();
 					b.Username = info[2][1].Value;
 					b.Content = (isEmotion ? "[表情]" : "") + info[1].Value.ToString();
+					b.Color = "#" + int.Parse(extra["color"]).ToString("X");
+					b.Message = info[1].Value;
+					// b.Message = (isEmotion ? "[表情]" : "") + info[1].Value;
+					var Sender = new BilibiliChatUser();
+					Sender.SetUid(b.Uid);
+					Sender.SetUserName(b.Username);
+					Sender.SetIsModerator(info[2][2].AsInt);
+					Sender.SetGuardLevel(info[7].AsInt);
+					Sender.SetHonorLevel(info[16][0].AsInt);
+					var MedalNull = (info[3].AsArray!).Count;
+					if (MedalNull == 0)
+					{
+						Sender.SetMedal(0, "", true, new string[] { "16777215", "0", "0"}, 0, 0, 0);
+					}
+					else
+					{
+						Sender.SetMedal(info[3][0].AsInt, info[3][1].Value.ToString(), true, new string[] { info[3][9].Value.ToString(), info[3][8].Value.ToString(), info[3][7].Value.ToString() }, info[3][10].AsInt, info[3][3].AsInt, info[3][12].AsInt);
+					}
+					Sender.UpdateDisplayName(true);
+					b.Sender = Sender;
 
-					b.Message = (isEmotion ? "[表情]" : "") + info[1].Value;
-					b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
-					//b.Channel = new BiliBiliChatChannel(danmuku);
-					b.extra.Add("raw_msg", info[1].Value.ToString());
+					//b.Channel = new BilibiliChatChannel(danmuku);
 					if (isEmotion)
 					{
-						b.extra.Add("emoticon_id", info[0][13]["emoticon_unique"].Value.ToString());
-						b.extra.Add("emoticon_name", info[1].Value.ToString());
-						b.extra.Add("emoticon_img", info[0][13]["url"].Value.ToString());
+						var extraMsg = new BilibiliChatMessageExtraEmotionDanmuku();
+						extraMsg.raw_msg = info[1].Value.ToString();
+						extraMsg.emoticon_id = info[0][13]["emoticon_unique"].Value.ToString();
+						extraMsg.emoticon_name = info[1].Value.ToString();
+						extraMsg.emoticon_img = info[0][13]["url"].Value.ToString();
+						b.extra = extraMsg;
+						b.Emotes = new IChatEmote[] { new BilibiliChatEmote(info[0][13]["emoticon_unique"].Value.ToString(), info[1].Value.ToString(), info[0][13]["url"].Value.ToString()) };
+					}
+					else
+					{
+						var emote_list = new List<IChatEmote>();
+						BilibiliChatMessageExtra extraMsg = new BilibiliChatMessageExtraDanmuku();
+						if (extra["emots"] != null)
+						{
+							extraMsg = new BilibiliChatMessageExtraEmotionDanmuku();
+							foreach (var emote in extra["emots"])
+							{
+								var target = new Regex(Regex.Escape((emote.Value)["emoji"].Value.ToString()), RegexOptions.Compiled);
+								Match match = target.Match(b.Message);
+								while (match.Success)
+								{
+									emote_list.Add(new BilibiliChatEmote((emote.Value)["emoticon_id"].Value.ToString(), (emote.Value)["emoji"].Value.ToString(), (emote.Value)["url"].Value.ToString(), false, match.Index));
+									match = match.NextMatch();
+								}
+							};
+							emote_list.Sort((a, b) => b.StartIndex - a.StartIndex);
+						}
+						if (extraMsg is BilibiliChatMessageExtraDanmuku danmuku1)
+						{
+							danmuku1.raw_msg = info[1].Value.ToString();
+						}
+						else
+						{
+							((BilibiliChatMessageExtraEmotionDanmuku)extraMsg).raw_msg = info[1].Value.ToString();
+						}
+
+						b.extra = extraMsg;
+						b.Emotes = emote_list.ToArray();
 					}
 				}
+			};
+			comands.Add("DANMU_MSG", danmuku_action);
+			comands.Add("DANMU_MSG:4:0:2:2:2:0", danmuku_action);
+			comands.Add("DANMU_AGGREGATION", (b, danmuku) => {
+				b.MessageType = "ignore";
 			});
 			comands.Add("SEND_GIFT", (b, danmuku) => {
 				/*b.MessageType = "wait";
@@ -177,83 +213,87 @@ namespace ChatCore.Models.BiliBili
 						{
 							b.Message = data["action"].Value + data["num"].Value + "个" + data["giftName"].Value + " x" + data["combo_num"].Value;
 						}*//*
-						b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
+						b.Sender = new BilibiliChatUser(info, danmuku["room_id"]);
 						gift.Remove(key);
 					}
 				});*/
 				var data = danmuku["data"].AsObject!;
-				b.Uid = data["uid"].AsInt;
+				// Console.WriteLine(data["uid"].GetType().ToString());
+				b.Uid = data["uid"].ToString();
 				b.Username = data["uname"].Value;
 				b.MessageType = "gift";
 				b.Content = "";
 				b.IsHighlighted = true;
 
-				var info = new JSONArray();
-				info[2] = new JSONObject();
-				info[7] = new JSONNumber(data["guard_level"].AsInt);
+				var Sender = new BilibiliChatUser();
+				Sender.SetUid(b.Uid);
+				Sender.SetUserName(b.Username);
+				Sender.SetGuardLevel(data["guard_level"].AsInt);
+				Sender.SetMedal(data["medal_info"]["medal_level"].AsInt, data["medal_info"]["medal_name"].Value, true, new string[] { data["medal_info"]["medal_color_start"].Value.ToString(), data["medal_info"]["medal_color_end"].Value.ToString(), data["medal_info"]["medal_color_border"].Value.ToString() }, data["medal_info"]["guard_level"].AsInt, data["medal_info"]["anchor_roomid"].AsInt, data["medal_info"]["target_id"]);
+				Sender.UpdateDisplayName(true);
+				b.Sender = Sender;
 
-				info[2][0] = new JSONNumber(b.Uid);
-				info[2][1] = new JSONString(b.Username);
-				info[2][2] = new JSONNumber(0);
-				info[2][7] = new JSONString("");
-				info[2][3] = new JSONArray();
-				info[3][0] = new JSONNumber(data["medal_info"]["medal_level"].AsInt);
-				info[3][1] = new JSONNumber(data["medal_info"]["medal_name"].Value);
-				info[3][3] = new JSONNumber(data["medal_info"]["medal_color"].Value);
-				info[3][10] = new JSONNumber(data["medal_info"]["guard_level"].AsInt);
+				var extra = new BilibiliChatMessageExtraGift();
+				extra.gift_id = data["giftId"].Value.ToString();
+				extra.gift_action = data["action"].Value.ToString();
+				extra.gift_num = data["num"].AsInt;
+				extra.gift_name = data["giftName"].Value.ToString();
+				extra.origin_gift = data["blind_gift"].IsNull ? "" : data["blind_gift"]["original_gift_name"].Value.ToString();
+				extra.gift_type = BilibiliService.bilibiliGiftCoinType[data["giftId"].AsInt.ToString()];
+				extra.gift_price = (double)BilibiliService.bilibiliGiftPrice[data["giftId"].AsInt.ToString()] * (double)(data["num"].AsInt);
+				extra.gift_img = BilibiliService.bilibiliGiftInfo[data["giftId"].AsInt.ToString()];
+				b.extra = extra;
+				var MessagePrice = "(" + (extra.gift_type == "silver" ? "免￥" : "￥") + string.Format("{0:0.0}", extra.gift_price) + ")";
+				var GiftPlacholder = $"%GIFT_{data["giftId"].Value}%";
 
-
-				if (string.IsNullOrEmpty(data["combo_num"].Value))
+				if (data["blind_gift"].IsNull)
 				{
-					b.Message = data["action"].Value + data["num"].Value + "个" + data["giftName"].Value;
+					b.Message = data["action"].Value + data["num"].Value + "个" + data["giftName"].Value + GiftPlacholder + MessagePrice;
 				}
 				else
 				{
-					b.Message = data["action"].Value + data["num"].Value + "个" + data["giftName"].Value + " x" + data["combo_num"].Value;
+					b.Message = data["action"].Value + data["num"].Value + "个" + data["giftName"].Value + GiftPlacholder + MessagePrice + $"(来自{extra.origin_gift})";
 				}
-				b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
-				b.extra.Add("id", data["giftId"].Value.ToString());
-				b.extra.Add("num", data["num"].AsInt);
-				b.extra.Add("gift_name", data["giftName"].Value.ToString());
-				b.extra.Add("origin_gift", data["blind_gift"].IsNull? "" : data["blind_gift"]["original_gift_name"].Value.ToString());
-				b.extra.Add("type", BiliBiliService.bilibiliGiftCoinType[data["giftId"].Value.ToString()]);
-				b.extra.Add("price", BiliBiliService.bilibiliGiftPrice[data["giftId"].Value.ToString()] * data["num"].AsInt);
-				b.extra.Add("img", BiliBiliService.bilibiliGiftInfo[data["giftId"].Value.ToString()]);
+
+				var emote_list = new List<IChatEmote>();
+				var target = new Regex(GiftPlacholder, RegexOptions.Compiled);
+				Match match = target.Match(b.Message);
+				while (match.Success)
+				{
+					emote_list.Add(new BilibiliChatEmote(GiftPlacholder, GiftPlacholder, BilibiliService.bilibiliGiftInfo[data["giftId"].AsInt.ToString()], true, match.Index));
+					match = match.NextMatch();
+				}
+				b.Emotes = emote_list.ToArray();
 			});
 			comands.Add("COMBO_END", (b, danmuku) => {
-				b.MessageType = "combo_end";
+				b.MessageType = "ignore";
+				/*b.MessageType = "combo_end";
 				var data = danmuku["data"].AsObject!;
 				b.Uid = data["uid"].AsInt;
 				b.Username = data["uname"].Value;
 				b.Content = "";
 				b.IsHighlighted = true;
-				var info = new JSONArray();
-				info[2] = new JSONObject();
-				info[7] = 0;
-
-				info[2][0] = new JSONNumber(b.Uid);
-				info[2][1] = new JSONString(b.Username);
-				info[2][2] = new JSONNumber(0);
-				info[2][7] = new JSONString("");
-				info[2][3] = new JSONArray();
-				info[3][0] = new JSONNumber(data["medal_info"]["medal_level"].AsInt);
-				info[3][1] = new JSONNumber(data["medal_info"]["medal_name"].Value);
-				info[3][3] = new JSONNumber(data["medal_info"]["medal_color"].Value);
-				info[3][10] = new JSONNumber(data["medal_info"]["guard_level"].AsInt);
+				var Sender = new BilibiliChatUser();
+				Sender.SetUid(b.Uid, danmuku["room_id"]);
+				Sender.SetUserName(b.Username);
+				Sender.SetMedal(data["medal_info"]["medal_level"].AsInt, data["medal_info"]["medal_name"].Value, true, data["medal_info"]["medal_color"].Value.ToString(), data["medal_info"]["guard_level"].AsInt, 0, data["medal_info"]["target_id"]);
+				Sender.UpdateDisplayName();
+				b.Sender = Sender;
 
 				b.Message = data["action"].Value + (data["gift_num"].AsInt == 0 ? 1 : data["gift_num"].AsInt) + "个" + data["gift_name"].Value + " x" + data["combo_num"].Value;
-				b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
+				b.Sender = new BilibiliChatUser();
 
 				b.extra.Add("id", data["giftId"].Value.ToString());
 				b.extra.Add("num", data["num"].AsInt == 0 ? 1 : data["num"].AsInt);
 				b.extra.Add("total_num", data["total_num"].AsInt);
 				b.extra.Add("gift_name", data["giftName"].Value.ToString());
-				b.extra.Add("type", BiliBiliService.bilibiliGiftCoinType[data["giftId"].Value.ToString()]);
-				b.extra.Add("price", BiliBiliService.bilibiliGiftPrice[data["giftId"].Value.ToString()] * data["total_num"].AsInt);
-				b.extra.Add("img", BiliBiliService.bilibiliGiftInfo[data["giftId"].Value.ToString()]);
+				b.extra.Add("type", BilibiliService.bilibiliGiftCoinType[data["giftId"].Value.ToString()]);
+				b.extra.Add("price", BilibiliService.bilibiliGiftPrice[data["giftId"].Value.ToString()] * data["total_num"].AsInt);
+				b.extra.Add("img", BilibiliService.bilibiliGiftInfo[data["giftId"].Value.ToString()]);*/
 			});
 			comands.Add("COMBO_SEND", (b, danmuku) => {
-				b.MessageType = "combo_send";
+				b.MessageType = "ignore";
+				/*b.MessageType = "combo_send";
 				var data = danmuku["data"].AsObject!;
 				b.Uid = data["uid"].AsInt;
 				b.Username = data["uname"].Value;
@@ -272,88 +312,95 @@ namespace ChatCore.Models.BiliBili
 				info[2][3][1] = new JSONNumber(data["medal_info"]["medal_name"].Value);
 
 				b.Message = data["action"].Value + (data["gift_num"].AsInt == 0 ? 1 : data["gift_num"].AsInt) + "个" + data["gift_name"].Value + " x" + data["combo_num"];
-				b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
+				b.Sender = new BilibiliChatUser(info, danmuku["room_id"]);
 
 				b.extra.Add("id", data["giftId"].Value.ToString());
 				b.extra.Add("num", data["num"].AsInt == 0 ? 1 : data["num"].AsInt);
 				b.extra.Add("total_num", data["total_num"].AsInt);
 				b.extra.Add("gift_name", data["giftName"].Value.ToString());
-				b.extra.Add("type", BiliBiliService.bilibiliGiftCoinType[data["giftId"].Value.ToString()]);
-				b.extra.Add("price", BiliBiliService.bilibiliGiftPrice[data["giftId"].Value.ToString()] * data["total_num"].AsInt);
-				b.extra.Add("img", BiliBiliService.bilibiliGiftInfo[data["giftId"].Value.ToString()]);
+				b.extra.Add("type", BilibiliService.bilibiliGiftCoinType[data["giftId"].Value.ToString()]);
+				b.extra.Add("price", BilibiliService.bilibiliGiftPrice[data["giftId"].Value.ToString()] * data["total_num"].AsInt);
+				b.extra.Add("img", BilibiliService.bilibiliGiftInfo[data["giftId"].Value.ToString()]);*/
+			});
+			comands.Add("GIFT_STAR_PROCESS", (b, danmuku) => {
+				b.MessageType = "gift_star";
+				var data = danmuku["data"].AsObject!;
+
+				b.IsSystemMessage = true;
+
+				b.Message = data["tip"].Value;
 			});
 			comands.Add("SUPER_CHAT_MESSAGE", (b, danmuku) => {
 				b.MessageType = "super_chat";
 				var data = danmuku["data"].AsObject!;
-				b.Uid = data["uid"].AsInt;
+				b.Uid = data["uid"].ToString();
 				b.Username = data["user_info"]["uname"].Value;
 				b.Content = data["message"].Value;
 				b.IsHighlighted = true;
 
-				var info = new JSONArray();
-				info[2] = new JSONObject();
-				info[7] = new JSONNumber(data["user_info"]["guard_level"].AsInt);
-
-				info[2][0] = new JSONNumber(b.Uid);
-				info[2][1] = new JSONString(b.Username);
-				info[2][2] = new JSONNumber(0);
-				info[2][7] = new JSONString("");
-				info[2][3] = new JSONArray();
-				info[3][0] = new JSONNumber(data["medal_info"]["medal_level"].AsInt);
-				info[3][1] = new JSONNumber(data["medal_info"]["medal_name"].Value);
-				info[3][3] = new JSONNumber(data["medal_info"]["medal_color"].Value);
-				info[3][10] = new JSONNumber(data["medal_info"]["guard_level"].AsInt);
+				var Sender = new BilibiliChatUser();
+				Sender.SetUid(b.Uid);
+				Sender.SetUserName(b.Username);
+				Sender.SetIsModerator(data["user_info"]["manager"].AsInt);
+				Sender.SetMedal(data["medal_info"]["medal_level"].AsInt, data["medal_info"]["medal_name"].Value, true, new string[] { data["medal_info"]["medal_color_start"].Value.ToString(), data["medal_info"]["medal_color_end"].Value.ToString(), data["medal_info"]["medal_color_border"].Value.ToString() }, data["user_info"]["guard_level"].AsInt, data["medal_info"]["anchor_roomid"].AsInt, data["medal_info"]["target_id"].AsInt);
+				Sender.UpdateDisplayName(true);
+				b.Sender = Sender;
 
 				b.Message = "【SC (￥" + data["price"].AsInt + ")】" + b.Content;
-				b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
 
-				b.extra.Add("price", data["price"].Value.ToString());
-				b.extra.Add("time", data["time"].Value.ToString());
+				var extra = new BilibiliChatMessageExtraSuperChat();
+				extra.sc_price = data["price"].Value.ToString();
+				extra.sc_time = data["time"].Value.ToString();
+				b.extra = extra;
 			});
 			comands.Add("SUPER_CHAT_MESSAGE_JPN", (b, danmuku) => {
 				b.MessageType = "super_chat_japanese";
 				var data = danmuku["data"].AsObject!;
-				b.Uid = data["uid"].AsInt;
+				b.Uid = data["uid"].ToString();
 				b.Username = data["user_info"]["uname"].Value;
 				b.Content = data["message_jpn"].Value;
 				b.IsHighlighted = true;
 
-				var info = new JSONArray();
-				info[2] = new JSONObject();
-				info[7] = new JSONNumber(data["user_info"]["guard_level"].AsInt);
-
-				info[2][0] = new JSONNumber(b.Uid);
-				info[2][1] = new JSONString(b.Username);
-				info[2][2] = new JSONNumber(0);
-				info[2][7] = new JSONString("");
-				info[2][3] = new JSONArray();
-				info[3][0] = new JSONNumber(data["medal_info"]["medal_level"].AsInt);
-				info[3][1] = new JSONNumber(data["medal_info"]["medal_name"].Value);
-				info[3][3] = new JSONNumber(data["medal_info"]["medal_color"].Value);
-				info[3][10] = new JSONNumber(data["medal_info"]["guard_level"].AsInt);
+				var Sender = new BilibiliChatUser();
+				Sender.SetUid(b.Uid);
+				Sender.SetUserName(b.Username);
+				Sender.SetIsModerator(data["user_info"]["manager"].AsInt);
+				Sender.SetMedal(data["medal_info"]["medal_level"].AsInt, data["medal_info"]["medal_name"].Value, true, new string[] { data["medal_info"]["medal_color_start"].Value.ToString(), data["medal_info"]["medal_color_end"].Value.ToString(), data["medal_info"]["medal_color_border"].Value.ToString() }, data["user_info"]["guard_level"].AsInt, data["medal_info"]["anchor_roomid"].AsInt, data["medal_info"]["target_id"].AsInt);
+				Sender.UpdateDisplayName(true);
+				b.Sender = Sender;
 
 				b.Message = "【SC (JP￥" + data["price"].AsInt + ")】" + b.Content;
-				b.Sender = new BiliBiliChatUser(info, danmuku["room_id"]);
 
-				b.extra.Add("price", data["price"].Value.ToString());
-				b.extra.Add("time", data["time"].Value.ToString());
+				var extra = new BilibiliChatMessageExtraSuperChat();
+				extra.sc_price = data["price"].Value.ToString();
+				extra.sc_time = data["time"].Value.ToString();
+				b.extra = extra;
 			});
 			comands.Add("WELCOME", (b, danmuku) => {
-				b.MessageType = "welcome";
+				b.MessageType = "ignore";
+				/*b.MessageType = "welcome";
 				var data = danmuku["data"].AsObject!;
 				b.Uid = data["uid"].AsInt;
 				b.Username = data["uname"].Value;
 				b.Content = "";
 				b.IsSystemMessage = true;
 
-				b.Message = "欢迎老爷 " + b.Username + " 进入直播间";
+				b.Message = "欢迎老爷 " + b.Username + " 进入直播间";*/
 			});
 			comands.Add("INTERACT_WORD", (b, danmuku) => {
 				var data = danmuku["data"].AsObject!;
-				b.Uid = data["uid"].AsInt;
+				b.Uid = data["uid"].ToString();
 				b.Username = data["uname"].Value;
 				b.Content = "";
 				b.IsSystemMessage = true;
+
+				var Sender = new BilibiliChatUser();
+				Sender.SetUid(b.Uid);
+				Sender.SetUserName(b.Username);
+				//Sender.SetIsModerator(info[2][2].AsInt);
+				Sender.SetMedal(data["fans_medal"]["medal_level"].AsInt, data["fans_medal"]["medal_name"].Value, true, new string[] { data["fans_medal"]["medal_color_start"].Value.ToString(), data["fans_medal"]["medal_color_end"].Value.ToString(), data["fans_medal"]["medal_color_border"].Value.ToString() }, data["fans_medal"]["guard_level"].AsInt, data["fans_medal"]["anchor_roomid"].AsInt, data["fans_medal"]["target_id"].AsInt);
+				Sender.UpdateDisplayName();
+				//b.Sender = Sender;
 
 				switch (data["msg_type"].Value.ToString())
 				{
@@ -382,26 +429,11 @@ namespace ChatCore.Models.BiliBili
 						b.Message = "【暂不支持该消息】";
 						break;
 				}
-
-				var info = new JSONArray();
-				info[2] = new JSONObject();
-				info[7] = new JSONNumber(data["user_info"]["guard_level"].AsInt);
-
-				info[2][0] = new JSONNumber(b.Uid);
-				info[2][1] = new JSONString(b.Username);
-				info[2][2] = new JSONNumber(0);
-				info[2][7] = new JSONString("");
-				info[2][3] = new JSONArray();
-				info[3][0] = new JSONNumber(data["medal_info"]["medal_level"].AsInt);
-				info[3][1] = new JSONNumber(data["medal_info"]["medal_name"].Value);
-				info[3][3] = new JSONNumber(data["medal_info"]["medal_color"].Value);
-				info[3][10] = new JSONNumber(data["medal_info"]["guard_level"].AsInt);
-
 			});
 			comands.Add("WELCOME_GUARD", (b, danmuku) => {
 				b.MessageType = "welcome_guard";
 				var data = danmuku["data"].AsObject!;
-				b.Uid = data["uid"].AsInt;
+				b.Uid = data["uid"].ToString();
 				b.Username = data["username"].Value;
 				b.Content = "";
 				b.IsSystemMessage = true;
@@ -412,10 +444,16 @@ namespace ChatCore.Models.BiliBili
 			comands.Add("ENTRY_EFFECT", (b, danmuku) => {
 				b.MessageType = "effect";
 				var data = danmuku["data"].AsObject!;
-				b.Uid = data["uid"].AsInt;
+				b.Uid = data["uid"].ToString();
 				b.Username = data["copy_writing"].Value.Replace("<%", "").Replace("%>", "");
 				b.Content = data["copy_writing"].Value.Replace("<%", "").Replace("%>", "");
 				b.IsSystemMessage = true;
+
+				var Sender = new BilibiliChatUser();
+				Sender.SetUid(b.Uid);
+				Sender.SetUserName(b.Username);
+				Sender.SetGuardLevel(data["privilege_type"].AsInt);
+				b.Color = data["copy_color"].Value;
 
 				b.Message = b.Content;
 			});
@@ -537,6 +575,64 @@ namespace ChatCore.Models.BiliBili
 
 				b.Message = "【天选】恭喜" + usernameList + "获得" + data["award_name"].Value;
 			});
+			comands.Add("POPULARITY_RED_POCKET_START", (b, danmuku) => {
+				b.MessageType = "red_pocket_start";
+				b.IsSystemMessage = true;
+				var data = danmuku["data"].AsObject!;
+				b.Uid = data["sender_uid"].ToString();
+				b.Username = data["sender_username"].Value;
+				var Sender = new BilibiliChatUser();
+				Sender.SetUid(b.Uid);
+				Sender.SetUserName(b.Username);
+				b.Sender = Sender;
+
+				var extra = new BilibiliChatMessageExtraRedPacket();
+				extra.gift_price = Math.Round((double)(data["total_price"] / 800), 1);
+				extra.gift_img = BilibiliService.bilibiliGiftInfo["13000"];
+				b.extra = extra;
+
+				b.Message = $"【红包】{b.Username}正在派发{extra.gift_price}元红包";
+			});
+			comands.Add("POPULARITY_RED_POCKET_NEW", (b, danmuku) => {
+				b.MessageType = "red_pocket_new";
+				b.IsSystemMessage = true;
+				var data = danmuku["data"].AsObject!;
+				b.Uid = data["uid"].ToString();
+				b.Username = data["uname"].Value;
+				var Sender = new BilibiliChatUser();
+				Sender.SetUid(b.Uid);
+				Sender.SetUserName(b.Username);
+				b.Sender = Sender;
+
+				var extra = new BilibiliChatMessageExtraRedPacket();
+				extra.gift_price = Math.Round((double)(data["total_price"] / 800), 1);
+				extra.gift_img = BilibiliService.bilibiliGiftInfo["13000"];
+				b.extra = extra;
+
+				b.Message = $"【红包】{b.Username}正在派发{extra.gift_price}元红包";
+			});
+			comands.Add("POPULARITY_RED_POCKET_WINNER_LIST", (b, danmuku) => {
+				b.MessageType = "red_pocket_result";
+				b.IsSystemMessage = true;
+				var data = danmuku["data"].AsObject!;
+				b.Uid = data["uid"].ToString();
+				b.Username = data["uname"].Value;
+				var Sender = new BilibiliChatUser();
+				Sender.SetUid(b.Uid);
+				Sender.SetUserName(b.Username);
+				b.Sender = Sender;
+
+				var list = data["winner_info"].AsArray!;
+				var RewardList = data["awards"].AsArray!;
+				var UsernameList = "";
+
+				foreach (var user in list)
+				{
+					UsernameList += $"{(user.Value)[1].Value} 获得了 {RewardList[(user.Value)[3].Value]["award_name"]} ";
+				}
+
+				b.Message = $"【红包】中奖结果：{UsernameList.Substring(0, UsernameList.Length - 2)}";
+			});
 			comands.Add("RAFFLE_START", (b, danmuku) => {
 				b.MessageType = "raffle_start";
 				var data = danmuku["data"].AsObject!;
@@ -554,33 +650,37 @@ namespace ChatCore.Models.BiliBili
 			comands.Add("GUARD_BUY", (b, danmuku) => {
 				b.MessageType = "new_guard";
 				var data = danmuku["data"].AsObject!;
-				b.Uid = data["uid"].AsInt;
+				b.Uid = data["uid"].ToString();
 				b.Username = data["username"].Value;
 				b.Content = "";
 				b.IsHighlighted = true;
 
 				b.Message = "感谢 " + b.Username + " 成为 " + data["gift_name"].Value + " 加入舰队~";
-				b.extra.Add("gift_name", data["gift_name"].Value);
-				b.extra.Add("num", "1");
-				b.extra.Add("gift_img", BiliBiliService.bilibiliGiftInfo[data["gift_name"].Value.ToString()]);
-				b.extra.Add("price", BiliBiliService.bilibiliGiftPrice[data["gift_name"].Value.ToString()]);
-				;
+
+				var extra = new BilibiliChatMessageExtraNewGuard();
+				extra.gift_name = data["gift_name"].Value;
+				extra.gift_img = BilibiliService.bilibiliGiftInfo[data["gift_name"].Value.ToString()];
+				extra.gift_price = BilibiliService.bilibiliGiftPrice[data["gift_name"].Value.ToString()];
+				b.extra = extra;
 			});
 			comands.Add("USER_TOAST_MSG", (b, danmuku) => {
 				b.MessageType = "new_guard_msg";
 				var data = danmuku["data"].AsObject!;
-				b.Uid = data["uid"].AsInt;
+				b.Uid = data["uid"].ToString();
 				b.Username = data["username"].Value;
 				b.Content = "";
 				b.IsSystemMessage = true;
 				b.IsHighlighted = true;
 
 				b.Message = b.Username + " 开通了 " + data["num"].Value + "个" + data["unit"] + "的" + data["role_name"] + " 进入舰队啦";
-				b.extra.Add("role_name", data["role_name"].Value);
-				b.extra.Add("num", data["role_name"].Value.ToString());
-				b.extra.Add("unit", data["unit"].Value.ToString());
-				b.extra.Add("gift_img", BiliBiliService.bilibiliGiftInfo[data["role_name"].Value.ToString()]);
-				b.extra.Add("price", BiliBiliService.bilibiliGiftPrice[data["role_name"].Value.ToString()]); 
+
+				var extra = new BilibiliChatMessageExtraNewGuardMsg();
+				extra.role_name = data["role_name"].Value;
+				extra.num = data["role_name"].Value.ToString();
+				extra.unit = data["unit"].Value.ToString();
+				extra.gift_img = BilibiliService.bilibiliGiftInfo[data["role_name"].Value.ToString()];
+				extra.gift_price = BilibiliService.bilibiliGiftPrice[data["role_name"].Value.ToString()];
+				b.extra = extra;
 
 			});
 			comands.Add("GUARD_MSG", (b, danmuku) => {
@@ -620,8 +720,15 @@ namespace ChatCore.Models.BiliBili
 			comands.Add("LIVE", (b, danmuku) => {
 				b.MessageType = "room_live";
 				b.IsSystemMessage = true;
-
-				b.Message = "【开播】直播间开播啦";
+				if (danmuku.TryGetKey("live_time", out var live_time))
+				{
+					b.Message = "【开播】直播间开播啦";
+				}
+				else
+				{
+					b.Message = "【开播】直播推流成功";
+				}
+				
 			});
 			comands.Add("WARNING", (b, danmuku) => {
 				b.MessageType = "warning";
@@ -634,6 +741,29 @@ namespace ChatCore.Models.BiliBili
 				b.IsHighlighted = true;
 
 				b.Message = "【切断】" + danmuku["msg"]?.Value;
+			});
+			comands.Add("LIKE_INFO_V3_CLICK", (b, danmuku) => {
+				b.MessageType = "like_info";
+				b.IsSystemMessage = false;
+				var data = danmuku["data"].AsObject!;
+
+				b.Uid = data["uid"].Value.ToString();
+				b.Username = data["uname"].Value.ToString();
+				b.Content = data["like_text"].Value.ToString();
+				// b.Color = "#" + int.Parse(data["uname_color"]).ToString("X");
+
+				var Sender = new BilibiliChatUser();
+				Sender.SetUid(b.Uid);
+				Sender.SetUserName(b.Username);
+				Sender.SetMedal(data["fans_medal"]["medal_level"].AsInt, data["fans_medal"]["medal_name"].Value, true, new string[] { data["fans_medal"]["medal_color_start"].Value.ToString(), data["fans_medal"]["medal_color_end"].Value.ToString(), data["fans_medal"]["medal_color_border"].Value.ToString() }, data["fans_medal"]["guard_level"].AsInt, data["fans_medal"]["anchor_roomid"].AsInt, data["fans_medal"]["target_id"]);
+				Sender.UpdateDisplayName(true);
+				b.Sender = Sender;
+
+				var emote_list = new List<IChatEmote>();
+				emote_list.Add(new BilibiliChatEmote("[点赞图标]", "[点赞图标]", data["like_icon"].Value.ToString(), false, b.Content.Length));
+				b.Emotes = emote_list.ToArray();
+
+				b.Message = b.Content + "[点赞图标]";
 			});
 			comands.Add("STOP_LIVE_ROOM_LIST", (b, danmuku) => {
 				var data = danmuku["data"].AsObject!;
@@ -650,8 +780,10 @@ namespace ChatCore.Models.BiliBili
 				b.MessageType = "pk_pre";
 				var data = danmuku["data"].AsObject!;
 				b.IsSystemMessage = true;
-				b.extra.Add("timer", int.Parse(data["pre_timer"].Value));
-				b.extra.Add("uname", data["uname"].Value);
+				var extra = new BilibiliChatMessageExtraPK();
+				extra.pk_timer = int.Parse(data["pre_timer"].Value);
+				extra.pk_uname = data["uname"].Value;
+				b.extra = extra;
 
 				b.Message = "【大乱斗】距离与" + data["uname"].Value + "的PK还有" + data["pre_timer"].Value + "秒";
 			});
@@ -663,7 +795,9 @@ namespace ChatCore.Models.BiliBili
 				b.MessageType = "pk_start";
 				var data = danmuku["data"].AsObject!;
 				b.IsSystemMessage = true;
-				b.extra.Add("timer", int.Parse(data["pk_frozen_time"].Value) - int.Parse(data["pk_start_time"].Value));
+				var extra = new BilibiliChatMessageExtraPK();
+				extra.pk_timer = int.Parse(data["pk_frozen_time"].Value) - int.Parse(data["pk_start_time"].Value);
+				b.extra = extra;
 
 				b.Message = "【大乱斗】距离结束还有" + (int.Parse(data["pk_frozen_time"].Value) - int.Parse(data["pk_start_time"].Value)) + "秒";
 			});
@@ -690,6 +824,18 @@ namespace ChatCore.Models.BiliBili
 				b.IsSystemMessage = true;
 
 				b.Message = data["content_segments"][0]["text"].Value.Replace("<%", "").Replace("%>", "").Replace("<$", "").Replace("$>", "");
+			});
+			comands.Add("WIDGET_GIFT_STAR_PROCESS", (b, danmuku) => {
+				b.MessageType = "widget_gift_start";
+				var data = danmuku["data"].AsObject!;
+				b.IsSystemMessage = true;
+
+				b.Message = "【礼物星球活动开始了】";
+			});
+
+			comands.Add("plugin_message", (b, danmuku) => {
+				b.MessageType = "plugin_message";
+				b.IsSystemMessage = true;
 			});
 
 			/*comands.Add("GIFT_TOP", (b, danmuku) => {

@@ -1,10 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using ChatCore.Interfaces;
 using ChatCore.Models.Twitch;
-using ChatCore.Services.BiliBili;
+using ChatCore.Services.Bilibili;
 using ChatCore.Services.Twitch;
 using ChatCore.Utilities;
 using Microsoft.Extensions.Logging;
@@ -18,37 +19,42 @@ namespace ChatCore.Services
 	{
 		private readonly ILogger _logger;
 		private readonly IList<IChatService> _streamingServices;
-		private readonly TwitchService _twitchService;
-		private readonly BiliBiliService _bilibiliService;
+		private readonly TwitchService? _twitchService;
+		private readonly BilibiliService? _bilibiliService;
 		private readonly object _invokeLock = new object();
+		private bool _twitchEnable = false;
+		private bool _bilibiliEnable = false;
 
-		public string DisplayName { get; }
+		public string DisplayName { get; internal set; }
 
-		public ChatServiceMultiplexer(ILogger<ChatServiceMultiplexer> logger, IList<IChatService> streamingServices)
+		public ChatServiceMultiplexer(ILogger<ChatServiceMultiplexer> logger, IList<IChatService> streamingServices, bool twitchEnable, bool bilibiliEnable)
 		{
 			_logger = logger;
 			_streamingServices = streamingServices;
 			_twitchService = (TwitchService)streamingServices.First(s => s is TwitchService);
-			_bilibiliService = (BiliBiliService)streamingServices.First(s => s is BiliBiliService);
+			_bilibiliService = (BilibiliService)streamingServices.First(s => s is BilibiliService);
 
 			var displayNameBuilder = new StringBuilder();
 			foreach (var service in _streamingServices)
 			{
-				service.OnTextMessageReceived += Service_OnTextMessageReceived;
-				service.OnJoinChannel += Service_OnJoinChannel;
-				service.OnRoomStateUpdated += Service_OnRoomStateUpdated;
-				service.OnLeaveChannel += Service_OnLeaveChannel;
-				service.OnLogin += Service_OnLogin;
-				service.OnChatCleared += Service_OnChatCleared;
-				service.OnMessageCleared += Service_OnMessageCleared;
-				service.OnChannelResourceDataCached += Service_OnChannelResourceDataCached;
-
-				if (displayNameBuilder.Length > 0)
+				if ((service.DisplayName == "Twitch" && _twitchEnable) || (service.DisplayName == "Bilibili Live" && _bilibiliEnable))
 				{
-					displayNameBuilder.Append(", ");
-				}
+					service.OnTextMessageReceived += Service_OnTextMessageReceived;
+					service.OnJoinChannel += Service_OnJoinChannel;
+					service.OnRoomStateUpdated += Service_OnRoomStateUpdated;
+					service.OnLeaveChannel += Service_OnLeaveChannel;
+					service.OnLogin += Service_OnLogin;
+					service.OnChatCleared += Service_OnChatCleared;
+					service.OnMessageCleared += Service_OnMessageCleared;
+					service.OnChannelResourceDataCached += Service_OnChannelResourceDataCached;
 
-				displayNameBuilder.Append(service.DisplayName);
+					if (displayNameBuilder.Length > 0)
+					{
+						displayNameBuilder.Append(", ");
+					}
+
+					displayNameBuilder.Append(service.DisplayName);
+				}
 			}
 
 			DisplayName = displayNameBuilder.Length > 0 ? displayNameBuilder.ToString() : "Generic";
@@ -120,20 +126,115 @@ namespace ChatCore.Services
 
 		public void SendTextMessage(string message, IChatChannel channel)
 		{
-			if (channel is TwitchChannel)
+			if (channel is TwitchChannel && _twitchService != null)
 			{
 				_twitchService.SendTextMessage(Assembly.GetCallingAssembly(), message, channel.Id);
 			}
 		}
 
-		public TwitchService GetTwitchService()
+		public TwitchService? GetTwitchService()
 		{
 			return _twitchService;
 		}
 
-		public BiliBiliService GetBiliBiliService()
+		public BilibiliService? GetBilibiliService()
 		{
 			return _bilibiliService;
+		}
+
+		public void EnableTwitchService(TwitchService? twitchService)
+		{
+			_logger.LogInformation("[ChatServiceMultiplexer] | [EnableTwitchService]");
+			var service = twitchService ?? GetTwitchService();
+			if (service != null && !_twitchEnable)
+			{
+				EnableService(service);
+				_twitchEnable = true;
+			}
+		}
+
+		public void EnableBilibiliService(BilibiliService? bilibiliService)
+		{
+			_logger.LogInformation("[ChatServiceMultiplexer] | [EnableBilibiliService]");
+			var service = bilibiliService ?? GetBilibiliService();
+			if (service != null && !_bilibiliEnable)
+			{
+				EnableService(service);
+				_bilibiliEnable = true;
+			}
+		}
+
+		private void EnableService(IChatService service)
+		{
+			service.OnTextMessageReceived += Service_OnTextMessageReceived;
+			service.OnJoinChannel += Service_OnJoinChannel;
+			service.OnRoomStateUpdated += Service_OnRoomStateUpdated;
+			service.OnLeaveChannel += Service_OnLeaveChannel;
+			service.OnLogin += Service_OnLogin;
+			service.OnChatCleared += Service_OnChatCleared;
+			service.OnMessageCleared += Service_OnMessageCleared;
+			service.OnChannelResourceDataCached += Service_OnChannelResourceDataCached;
+
+			var displayNames = DisplayName.Split(',').ToList();
+			displayNames.Remove("Generic");
+			displayNames.Add(service.DisplayName);
+			DisplayName = string.Join(", ", displayNames.ToArray());
+			// DisplayName = DisplayName.Substring(0, DisplayName.Length - 2);
+			service.Enable();
+		}
+
+		public void DisableTwitchService(TwitchService? twitchService)
+		{
+			_logger.LogInformation("[ChatServiceMultiplexer] | [DisableTwitchService]");
+			var service = twitchService ?? GetTwitchService();
+			if (service != null && _twitchEnable)
+			{
+				DisableService(service);
+				_twitchEnable = false;
+			}
+		}
+
+		public void DisableBilibiliService(BilibiliService? bilibiliService)
+		{
+			_logger.LogInformation("[ChatServiceMultiplexer] | [DisableBilibiliService]");
+			var service = bilibiliService ?? GetBilibiliService();
+			if (service != null && _bilibiliEnable)
+			{
+				DisableService(service);
+				_bilibiliEnable = false;
+			}
+		}
+
+		private void DisableService(IChatService service)
+		{
+			service.OnTextMessageReceived -= Service_OnTextMessageReceived;
+			service.OnJoinChannel -= Service_OnJoinChannel;
+			service.OnRoomStateUpdated -= Service_OnRoomStateUpdated;
+			service.OnLeaveChannel -= Service_OnLeaveChannel;
+			service.OnLogin -= Service_OnLogin;
+			service.OnChatCleared -= Service_OnChatCleared;
+			service.OnMessageCleared -= Service_OnMessageCleared;
+			service.OnChannelResourceDataCached -= Service_OnChannelResourceDataCached;
+
+			var displayNames = DisplayName.Split(',').ToList();
+			displayNames.Remove(service.DisplayName);
+			DisplayName = string.Join(", ", displayNames.ToArray());
+			// DisplayName = DisplayName.Substring(0, DisplayName.Length - 2);
+			if (DisplayName.Length == 0)
+			{
+				DisplayName = "Generic";
+			}
+			service.Disable();
+		}
+
+		public void Enable()
+		{
+
+		}
+
+		public void Disable()
+		{
+
 		}
 	}
 }

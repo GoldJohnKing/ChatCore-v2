@@ -1,12 +1,13 @@
-﻿using System;
+using System;
 using ChatCore.Models;
 
 namespace ChatCore.Interfaces
 {
 	public interface IUserAuthProvider
 	{
-		event Action<LoginCredentials> OnCredentialsUpdated;
+		event Action<LoginCredentials> OnTwitchCredentialsUpdated, OnBilibiliCredentialsUpdated;
 		LoginCredentials Credentials { get; }
-		void Save(bool callback = true);
+		void SaveTwitch(bool callback = true);
+		void SaveBilibili(bool callback = true);
 	}
 }
