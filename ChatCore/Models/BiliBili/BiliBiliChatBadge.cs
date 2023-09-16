@@ -104,8 +104,8 @@ namespace ChatCore.Models.Bilibili
 
 				var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"ChatCore\Badges");
 				var badgeId = Name + "_" + Level.ToString() + (Guard == 3 ? "_舰长" : (Guard == 2 ? "_提督" : (Guard == 1 ? "_总督" : "")));
-				var filename = Path.Combine(path, badgeId + ".svg");
-				var imagename = Path.Combine(path, badgeId + ".png");
+				var filename = Path.Combine(path, ImageUtils.convertToValidFilename(badgeId) + ".svg");
+				var imagename = Path.Combine(path, ImageUtils.convertToValidFilename(badgeId) + ".png");
 
 				if (!Directory.Exists(path))
 				{
@@ -120,7 +120,7 @@ namespace ChatCore.Models.Bilibili
 
 				if (File.Exists(filename))
 				{
-					//File.Delete(filename);
+					File.Delete(filename);
 				}
 				Uri = (new System.Uri(imagename)).AbsoluteUri;
 				Id = badgeId;
@@ -163,6 +163,168 @@ namespace ChatCore.Models.Bilibili
 				return count;
 			});
 			return (int)Math.Ceiling(22 * count);
+		}
+
+		public void setMedalColorByLevel(int level, int guardLevel = 0) {
+			switch (level)
+			{
+				
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+					LinearGradientColorA = "#5c968e";
+					LinearGradientColorB = "#5c968e";
+					BorderColor = "#5c968e";
+					break;
+				case 5:
+				case 6:
+				case 7:
+				case 8:
+					LinearGradientColorA = "#5d7b9e";
+					LinearGradientColorB = "#5d7b9e";
+					BorderColor = "#5d7b9e";
+					break;
+				case 9:
+				case 10:
+				case 11:
+				case 12:
+					LinearGradientColorA = "#8d7ca6";
+					LinearGradientColorB = "#8d7ca6";
+					BorderColor = "#8d7ca6";
+					break;
+				case 13:
+				case 14:
+				case 15:
+				case 16:
+					LinearGradientColorA = "#be6686";
+					LinearGradientColorB = "#be6686";
+					BorderColor = "#be6686";
+					break;
+				case 17:
+				case 18:
+				case 19:
+				case 20:
+					LinearGradientColorA = "#c79d24";
+					LinearGradientColorB = "#c79d24";
+					BorderColor = "#c79d24";
+					break;
+				case 21:
+				case 22:
+				case 23:
+				case 24:
+					LinearGradientColorA = "#1a544b";
+					LinearGradientColorB = "#529d92";
+					BorderColor = "#1a544b";
+					break;
+				case 25:
+				case 26:
+				case 27:
+				case 28:
+					LinearGradientColorA = "#06154c";
+					LinearGradientColorB = "#6888f1";
+					BorderColor = "#06154c";
+					break;
+				case 29:
+				case 30:
+				case 31:
+				case 32:
+					LinearGradientColorA = "#06154c";
+					LinearGradientColorB = "#9d9bff";
+					BorderColor = "#06154c";
+					break;
+				case 33:
+				case 34:
+				case 35:
+				case 36:
+					LinearGradientColorA = "#7a0423";
+					LinearGradientColorB = "#e986bb";
+					BorderColor = "#7a0423";
+					break;
+				case 37:
+				case 38:
+				case 39:
+				case 40:
+					// Not correct
+					LinearGradientColorA = "#fe7645";
+					LinearGradientColorB = "#ffa869";
+					BorderColor = "#fe7645";
+					break;
+				default:
+					LinearGradientColorA = "#FFFFFF";
+					LinearGradientColorB = "#000000";
+					BorderColor = "#FFFFFF";
+					break;
+			}
+
+			switch (guardLevel)
+			{
+				case 1:
+				case 2:
+					BorderColor = "#ffe854";
+					break;
+				case 3:
+					BorderColor = "#67e8ff";
+					break;
+			}
+
+
+			// Medal Data from Bilibili Live
+			// | Level | Guard | ColorStart | ColorEnd | Border |
+			// | ----- | ----- | ---------- | -------- | ------- |
+			// |   1   |   0   | #5c968e    | #5c968e  | #5c968e |
+			// |   2   |   0   | #5c968e    | #5c968e  | #5c968e |
+			// |   3   |   0   | #5c968e    | #5c968e  | #5c968e |
+			// |   4   |   0   | #5c968e    | #5c968e  | #5c968e |
+			// |   5   |   0   | #5d7b9e    | #5d7b9e  | #5d7b9e |
+			// |   6   |   0   | #5d7b9e    | #5d7b9e  | #5d7b9e |
+			// |   7   |   0   | #5d7b9e    | #5d7b9e  | #5d7b9e |
+			// |   8   |   0   | #5d7b9e    | #5d7b9e  | #5d7b9e |
+			// |   9   |   0   | #8d7ca6    | #8d7ca6  | #8d7ca6 |
+			// |  10   |   0   | #8d7ca6    | #8d7ca6  | #8d7ca6 |
+			// |  11   |   0   | #8d7ca6    | #8d7ca6  | #8d7ca6 |
+			// |  12   |   0   | #8d7ca6    | #8d7ca6  | #8d7ca6 |
+			// |  13   |   0   | #be6686    | #be6686  | #be6686 |
+			// |  14   |   0   | #be6686    | #be6686  | #be6686 |
+			// |  15   |   0   | #be6686    | #be6686  | #be6686 |
+			// |  16   |   0   | #be6686    | #be6686  | #be6686 |
+			// |  17   |   0   | #c79d24    | #c79d24  | #c79d24 |
+			// |  18   |   0   | #c79d24    | #c79d24  | #c79d24 |
+			// |  19   |   0   | #c79d24    | #c79d24  | #c79d24 |
+			// |  20   |   0   | #c79d24    | #c79d24  | #c79d24 |
+			// |  21   |   0   | #1a544b    | #529d92  | #1a544b |
+			// |  21   |   3   | #1a544b    | #529d92  | #67e8ff |
+			// |  22   |   0   | #1a544b    | #529d92  | #1a544b |
+			// |  22   |   3   | #1a544b    | #529d92  | #67e8ff |
+			// |  23   |   0   | #1a544b    | #529d92  | #1a544b |
+			// |  23   |   3   | #1a544b    | #529d92  | #67e8ff |
+			// |  24   |   0   | #1a544b    | #529d92  | #1a544b |
+			// |  24   |   3   | #1a544b    | #529d92  | #67e8ff |
+			// |  25   |   0   | #06154c    | #6888f1  | #06154c |
+			// |  25   |   2   | #06154c    | #6888f1  | #ffe854 |
+			// |  25   |   3   | #06154c    | #6888f1  | #67e8ff |
+			// |  26   |   0   | #06154c    | #6888f1  | #06154c |
+			// |  26   |   2   | #06154c    | #6888f1  | #ffe854 |
+			// |  26   |   3   | #06154c    | #6888f1  | #67e8ff |
+			// |  27   |   0   | #06154c    | #6888f1  | #06154c |
+			// |  27   |   2   | #06154c    | #6888f1  | #ffe854 |
+			// |  27   |   3   | #06154c    | #6888f1  | #67e8ff |
+			// |  28   |   0   | #06154c    | #6888f1  | #06154c |
+			// |  28   |   2   | #06154c    | #6888f1  | #ffe854 |
+			// |  28   |   3   | #06154c    | #6888f1  | #67e8ff |
+			// |  29   |   0   | #2d0855    | #9d9bff  | #2d0855 |
+			// |  29   |   1   | #2d0855    | #9d9bff  | #ffe854 |
+			// |  29   |   2   | #2d0855    | #9d9bff  | #ffe854 |
+			// |  29   |   3   | #2d0855    | #9d9bff  | #67e8ff |
+			// |  30   |   1   | #2d0855    | #9d9bff  | #ffe854 |
+			// |  30   |   2   | #2d0855    | #9d9bff  | #ffe854 |
+			// |  30   |   3   | #2d0855    | #9d9bff  | #67e8ff |
+			// |  31   |   1   | #2d0855    | #9d9bff  | #ffe854 |
+			// |  31   |   2   | #2d0855    | #9d9bff  | #ffe854 |
+			// |  31   |   3   | #2d0855    | #9d9bff  | #67e8ff |
+			// |  33   |   1   | #7a0423    | #e986bb  | #ffe854 |
+			// |  33   |   2   | #7a0423    | #e986bb  | #ffe854 |
+
 		}
 	}
 }

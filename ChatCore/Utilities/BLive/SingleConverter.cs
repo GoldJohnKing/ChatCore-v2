@@ -1,4 +1,4 @@
-﻿// Copyright (C) Microsoft Corporation. All rights reserved.
+// Copyright (C) Microsoft Corporation. All rights reserved.
 
 namespace OpenBLive.Runtime.Utilities
 {
@@ -18,19 +18,19 @@ namespace OpenBLive.Runtime.Utilities
         private float floatValue;
 
         internal SingleConverter(int intValue)
-        {
-            this.floatValue = 0;
+		{
+			floatValue = 0;
             this.intValue = intValue;
         }
 
         internal SingleConverter(float floatValue)
         {
-            this.intValue = 0;
+            intValue = 0;
             this.floatValue = floatValue;
         }
 
-        internal int GetIntValue() => this.intValue;
+        internal int GetIntValue() => intValue;
 
-        internal float GetFloatValue() => this.floatValue;
+        internal float GetFloatValue() => floatValue;
     }
 }

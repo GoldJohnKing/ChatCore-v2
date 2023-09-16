@@ -27,7 +27,14 @@ namespace ChatCore.Utilities
 					result.Add(font);
 				}
 			}
-			new SVG().genImg(fileName, imageName, width, height, result);
+
+			var genPng = false;
+			var count = 0;
+			while (!genPng && count < 5)
+			{
+				genPng = new SVG().genImg(fileName, imageName, width, height, result);
+				count++;
+			}
 		}
 
 		public static string Base64fromImg(string imageFile)
@@ -62,6 +69,17 @@ namespace ChatCore.Utilities
 		public static string AddBase64DataType(string base64)
 		{
 			return @"data:image/png;base64," + base64;
+		}
+
+		public static string convertToValidFilename(string text)
+		{
+			var invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+
+			foreach (var c in invalid)
+			{
+				text = text.Replace(c.ToString(), "");
+			}
+			return text;
 		}
 	}
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (C) Microsoft Corporation. All rights reserved.
+// Copyright (C) Microsoft Corporation. All rights reserved.
 
 namespace OpenBLive.Runtime.Utilities
 {
@@ -33,24 +33,24 @@ namespace OpenBLive.Runtime.Utilities
 
         public override short ToInt16(byte[] value, int startIndex)
         {
-            this.CheckArguments(value, startIndex, sizeof(short));
+            CheckArguments(value, startIndex, sizeof(short));
 
             return (short)((value[startIndex]) | (value[startIndex + 1] << 8));
         }
 
         public override int ToInt32(byte[] value, int startIndex)
         {
-            this.CheckArguments(value, startIndex, sizeof(int));
+            CheckArguments(value, startIndex, sizeof(int));
 
             return (value[startIndex]) | (value[startIndex + 1] << 8) | (value[startIndex + 2] << 16) | (value[startIndex + 3] << 24);
         }
 
         public override long ToInt64(byte[] value, int startIndex)
         {
-            this.CheckArguments(value, startIndex, sizeof(long));
+            CheckArguments(value, startIndex, sizeof(long));
 
-            int lowBytes = (value[startIndex]) | (value[startIndex + 1] << 8) | (value[startIndex + 2] << 16) | (value[startIndex + 3] << 24);
-            int highBytes = (value[startIndex + 4]) | (value[startIndex + 5] << 8) | (value[startIndex + 6] << 16) | (value[startIndex + 7] << 24);
+            var lowBytes = (value[startIndex]) | (value[startIndex + 1] << 8) | (value[startIndex + 2] << 16) | (value[startIndex + 3] << 24);
+            var highBytes = (value[startIndex + 4]) | (value[startIndex + 5] << 8) | (value[startIndex + 6] << 16) | (value[startIndex + 7] << 24);
             return ((uint)lowBytes | ((long)highBytes << 32));
         }
     }

@@ -24,6 +24,7 @@ namespace OpenBLive.Client
 				result = JsonSerializer.Deserialize<AppStartInfo>(respStr);
 			}
 			catch (Exception ex) {
+				Console.WriteLine(ex.Message);
 			}
 			return result!;
 		}

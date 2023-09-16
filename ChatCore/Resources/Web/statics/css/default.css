@@ -1,3 +1,48 @@
+nav,
+.switch label input[type=checkbox]:checked + .lever:after,
+#saveButton {
+	background-color: #1f60a0;
+}
+
+#translationButton {
+	border-radius: 12px !important;
+	padding: 0 8px !important;
+	background-color: #ffd8e3;
+	color: #1a1c1e;
+}
+
+.default-gap {
+	gap: 4px;
+	padding: 8px;
+}
+
+.default-gap .switch {
+	padding: 8px;
+}
+
+.middle-vertical {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.card {
+	background-color: #f2f3fa;
+}
+
+.flex-auto-grow {
+	flex: 1;
+}
+
+.ul-force-gap {
+	gap: 8px;
+	display: grid;
+}
+
+.card .card-title {
+	font-weight: 400;
+}
+
 .nav-wrapper {
 	padding-left: 16px;
 	padding-right: 16px;
@@ -10,6 +55,7 @@
 
 nav .brand-logo {
 	position: relative !important;
+	font-weight: 600;
 }
 
 @media only screen and (max-width: 992px) {
@@ -22,6 +68,15 @@ nav .brand-logo {
 
 .dropdown-content {
 	width: auto !important;
+}
+
+ul,
+.card-force-round {
+	border-radius: 12px!important;
+}
+
+.btn.col {
+	border-radius: 24px !important;
 }
 
 .twitch-header {
@@ -113,7 +168,7 @@ a.btn-floating.pulse.cyan.tooltipped {
     font-family: 'Microsoft YaHei'!important;
 	height: auto!important;
 	margin: 0 -16px 0 -2px!important;
-	width: -webkit-fill-available!important;
+	/* width: -webkit-fill-available!important; */
 	padding: 8px 16px!important;
 	border: 2px solid lightgray!important;
     border-radius: 4px!important;
@@ -168,7 +223,7 @@ a.btn-floating.pulse.cyan.tooltipped {
 	display: inline!important;
 	background-size: 18px 18px;
 	width: 18px!important;
-	height: 18x!important;
+	height: 18px!important;
 	background-image: url("../Images/Blive/Ellipse.png");
 	background-repeat: no-repeat;
 	transition: all 0.5s;
@@ -180,8 +235,8 @@ a.btn-floating.pulse.cyan.tooltipped {
 
 .BLive_code_save:checked + span {
 	background-size: 18px 18px;
-	width: 18x;
-	height: 18x;
+	width: 18px;
+	height: 18px;
 	background-image: url("../Images/Blive/Vector.png");
 	transition: all 0.5s;
 }

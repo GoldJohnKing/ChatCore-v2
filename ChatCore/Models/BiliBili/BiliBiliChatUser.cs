@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,7 +28,6 @@ namespace ChatCore.Models.Bilibili
 		public int GuardLevel { get; internal set; } = 0;
 		public int HonorLevel { get; internal set; } = 0;
 
-		private static HttpClient httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
 		// private static readonly string BilibiliUserInfoApi = "https://api.bilibili.com/x/space/acc/info?mid=";
 		private static readonly string BilibiliUserInfoApi = "https://api.bilibili.com/x/web-interface/card?mid=";
 
@@ -97,24 +95,38 @@ namespace ChatCore.Models.Bilibili
 			obj.Add(nameof(GuardLevel), new JSONNumber(GuardLevel));
 			return obj;
 		}
-		public string GetUserInfoAsync(string uid)
+		public async Task<string> GetUserInfoAsync(string uid)
 		{
 			if (!BilibiliService.bilibiliuserInfo.ContainsKey(uid))
 			{
+				if (uid == "0")
+				{
+					var avatar_img = "https://i0.hdslb.com/bfs/face/member/noface.jpg";
+					BilibiliService.bilibiliuserInfo.Add(uid, avatar_img);
+					return avatar_img;
+				}
 				try
 				{
-					httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36");
-					var NewUserInfo = JSONNode.Parse(httpClient.GetStringAsync(BilibiliUserInfoApi + uid).Result);
-					if (NewUserInfo["code"].AsInt == 0)
+					var apiResult = await HttpClientUtils.HttpClient(BilibiliUserInfoApi + uid, HttpMethod.Get, null, null);
+					if (apiResult != null && apiResult[0] == "OK")
 					{
-						var avatar_img = NewUserInfo["data"]["card"]["face"].IsNull ? "" : NewUserInfo["data"]["card"]["face"].Value.ToString();
-						BilibiliService.bilibiliuserInfo.Add(uid, avatar_img);
-						return avatar_img;
+						var NewUserInfo = JSONNode.Parse(apiResult[1]);
+						if (NewUserInfo["code"].AsInt == 0)
+						{
+							var avatar_img = NewUserInfo["data"]["card"]["face"].IsNull ? "" : NewUserInfo["data"]["card"]["face"].Value.ToString();
+							BilibiliService.bilibiliuserInfo.Add(uid, avatar_img);
+							return avatar_img;
+						}
 					}
+					else
+					{
+						//_logger.LogInformation($"[BilibiliChatUser] | [GetUserInfoAsync] | Get User Info failed. ({(apiResult == null ? "connection failed" : apiResult[0])})");
+					}
+
 				}
 				catch
 				{
-					return "";
+					//_logger.LogInformation($"[BilibiliChatUser] | [GetUserInfoAsync] | Get User Info failed. (Exception)");
 				}
 			}
 			else
@@ -151,7 +163,7 @@ namespace ChatCore.Models.Bilibili
 		}
 
 		public void SetIsFan(int MedalOwnerRoomId, int BoardcasterUid = 0) {
-			IsFan = (MedalOwnerRoomId == BilibiliService._roomID) || (BoardcasterUid == BilibiliService._userID);
+			IsFan = (MedalOwnerRoomId == -1 && BoardcasterUid == -1) || (MedalOwnerRoomId == BilibiliService._roomID) || (BoardcasterUid == BilibiliService._userID);
 		}
 
 		public void SetGuardLevel(int Level) {
@@ -161,6 +173,25 @@ namespace ChatCore.Models.Bilibili
 		public void SetHonorLevel(int Level)
 		{
 			HonorLevel = Level;
+		}
+
+		public void SetMedal(int Level = 0, string MedalName = "", int GuardLevel = 0, int MedalOwnerRoomId = 0, int BoardcasterUid = 0)
+		{
+			var badgeList = new List<IChatBadge>();
+			var newBadge = new BilibiliChatBadge();
+			newBadge.Name = MedalName;
+			newBadge.Level = Level;
+			newBadge.Color = "#000000";
+			newBadge.Guard = GuardLevel;
+			newBadge.setMedalColorByLevel(Level, GuardLevel);
+			newBadge.genImage();
+			//SetGuardLevel(GuardLevel);
+			if (Level != 0)
+			{
+				badgeList.Add(newBadge);
+			}
+			Badges = badgeList.ToArray();
+			SetIsFan(MedalOwnerRoomId, BoardcasterUid);
 		}
 
 		public void SetMedal(int Level, string MedalName, bool ColorInInt, string[] ColorData, int GuardLevel, int MedalOwnerRoomId, int BoardcasterUid) {
@@ -173,6 +204,10 @@ namespace ChatCore.Models.Bilibili
 			newBadge.LinearGradientColorB = "#" + int.Parse(ColorData[1]).ToString("X6");
 			newBadge.BorderColor = "#" + int.Parse(ColorData[2]).ToString("X6");
 			newBadge.Guard = GuardLevel;
+			if (Level < 35)
+			{
+				newBadge.setMedalColorByLevel(Level, GuardLevel);
+			}
 			newBadge.genImage();
 			//SetGuardLevel(GuardLevel);
 			if (Level != 0)
@@ -270,39 +305,60 @@ namespace ChatCore.Models.Bilibili
 			Badges = badgeList.ToArray();
 		}
 
-		public void genAvatarImage()
+		public async void genAvatarImage()
 		{
-			if (GetUserInfoAsync(Id) == string.Empty)
+			if (await GetUserInfoAsync(Id) == string.Empty)
 			{
 				Avatar = string.Empty;
 				return;
 			}
-			var avatarImageUrl = GetUserInfoAsync(Id) + @"@128w_128h.png";
+			
+			var avatarImageUrl = await GetUserInfoAsync(Id) + @"@128w_128h.png";
 			var scale = 3;
 			var sb = new StringBuilder(SVG_FRAME);
-			var AvatarImageBase64 = ImageUtils.AddBase64DataType(ImageUtils.Base64fromHTTPImg(avatarImageUrl));
-			sb.Replace("%Image%", AvatarImageBase64);
-
-			var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"ChatCore\Avatars");
-			var filename = Path.Combine(path, UserName + ".svg");
-			var imagename = Path.Combine(path, UserName + ".png");
-			if (!Directory.Exists(path))
+			try
 			{
-				Directory.CreateDirectory(path);
+				var AvatarImageBase64 = ImageUtils.AddBase64DataType(ImageUtils.Base64fromHTTPImg(avatarImageUrl));
+				sb.Replace("%Image%", AvatarImageBase64);
+			}
+			catch (Exception ex) {
+				Console.WriteLine("[BilibiliChatUser] | genAvatarImage | Generate Base64 Image: " + ex);
 			}
 
-			using (var writer = new StreamWriter(filename))
+			try
 			{
-				writer.WriteLine(sb.ToString());
-			}
+				var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"ChatCore\Avatars");
+				var filename = Path.Combine(path, ImageUtils.convertToValidFilename(UserName) + ".svg");
+				var imagename = Path.Combine(path, ImageUtils.convertToValidFilename(UserName) + ".png");
+				if (!Directory.Exists(path))
+				{
+					Directory.CreateDirectory(path);
+				}
 
-			ImageUtils.genImg(filename.ToString(), imagename.ToString(), 44 * scale, 44 * scale, true);
-			if (File.Exists(filename))
+				using (var writer = new StreamWriter(filename))
+				{
+					writer.WriteLine(sb.ToString());
+				}
+
+				ImageUtils.genImg(filename.ToString(), imagename.ToString(), 44 * scale, 44 * scale, true);
+				if (File.Exists(filename))
+				{
+					//File.Delete(filename);
+				}
+
+				Avatar = (new System.Uri(imagename)).AbsoluteUri;
+			}
+			catch (Exception ex)
 			{
-				//File.Delete(filename);
+				Console.WriteLine("[BilibiliChatUser] | genAvatarImage | Save Image: " + ex);
 			}
+		}
 
-			Avatar = (new System.Uri(imagename)).AbsoluteUri;
+		public void SetAvatar(string Uid, string Url) {
+			if (!BilibiliService.bilibiliuserInfo.ContainsKey(Uid))
+			{
+				BilibiliService.bilibiliuserInfo.Add(Uid, Url);
+			}
 		}
 	}
 }

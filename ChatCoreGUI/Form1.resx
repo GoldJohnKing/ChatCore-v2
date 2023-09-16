@@ -117,47 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="&gt;&gt;textBox_console.Name" xml:space="preserve">
-    <value>textBox_console</value>
-  </data>
-  <data name="&gt;&gt;textBox_console.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textBox_console.Parent" xml:space="preserve">
-    <value>groupBox_Console</value>
-  </data>
-  <data name="&gt;&gt;textBox_console.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="groupBox_Console.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 12</value>
-  </data>
-  <data name="groupBox_Console.Size" type="System.Drawing.Size, System.Drawing">
-    <value>566, 438</value>
-  </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="groupBox_Console.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="groupBox_Console.Text" xml:space="preserve">
-    <value>Console</value>
-  </data>
-  <data name="&gt;&gt;groupBox_Console.Name" xml:space="preserve">
-    <value>groupBox_Console</value>
-  </data>
-  <data name="&gt;&gt;groupBox_Console.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBox_Console.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;groupBox_Console.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="textBox_console.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 21</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textBox_console.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -192,14 +156,16 @@ v2.2.0:
 - 🔨[Add] Gift image display for Bilibili
 - 🔨[Add] Red bag danmuku support for Bilibili
 - 🔨[Add] Gift danmuku combined feature. (Gift danmuku within 5 seconds sent by the same user will be combined and displayed with delay)
-- 🔨[Add] Bilibili Live Interaction (fill in the room number, and the identification code associated with the room will allow your audience to send 4 unique gifts: Red saber(1🔋), Blue Saber (10🔋), SS (55🔋), 115 (115🔋))
+- 🔨[Add] Bilibili Live Interaction (fill in the room number, and the identification code associated with the room) will allow your audience to send 4 unique gifts: Red saber(1🔋), Blue Saber (10🔋), SS (55🔋), 115 (115🔋))
   ⚠Disclosure: The revenue from the gifts received by the broadcast will not be affected. The developer and illustrator will receive revenue generated from the unique gifts from the platform.
+- 🔨[Add] support three danmuku service connect methods
 - 🔨[Add] feedback danmuku send function
 - 🔨[Add] isolate Twitch and bilibili service
 - 🔨[Add] image cache clean utility
 
 - ⚙[Change] Live start danmuku separated into two types: "Live started" and "Streaming Started".
 - ⚙[Change] Configuration file format changed. The Bilibili room number will be stored in auth.ini instead of settings.ini. (No action is required, it will convert the format from the old version automatically)
+- ⚙[Change] Change Web App UI to Meterial Design 3-ish
 
 - 🔧[Fix] The issue that cannot connect to the new Bilibili live room after saving the Configuration.
 - 🔧[Fix] The issue Websocket throws exceptions when disconnecting connections too frequently.
@@ -207,7 +173,7 @@ v2.2.0:
 - 🔧[Fix] The issue that the block function throws exceptions because the UID is out of the range of the int data type.
 
 - 🛠[Enhance] Support configuration convertion from 2.1.3 or older to 2.2.0.
-- 🛠[Enhance] Update Materialize CSS to 1.2.2</value>
+- 🛠[Enhance] Update Materialize CSS to 2.0.0-alpha</value>
   </data>
   <data name="&gt;&gt;textBox_console.Name" xml:space="preserve">
     <value>textBox_console</value>
@@ -220,6 +186,30 @@ v2.2.0:
   </data>
   <data name="&gt;&gt;textBox_console.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="groupBox_Console.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 12</value>
+  </data>
+  <data name="groupBox_Console.Size" type="System.Drawing.Size, System.Drawing">
+    <value>566, 438</value>
+  </data>
+  <data name="groupBox_Console.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="groupBox_Console.Text" xml:space="preserve">
+    <value>Console</value>
+  </data>
+  <data name="&gt;&gt;groupBox_Console.Name" xml:space="preserve">
+    <value>groupBox_Console</value>
+  </data>
+  <data name="&gt;&gt;groupBox_Console.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBox_Console.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBox_Console.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="button_web.Location" type="System.Drawing.Point, System.Drawing">
     <value>18, 456</value>

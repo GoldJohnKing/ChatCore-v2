@@ -43,9 +43,12 @@ namespace ChatCore.Models
 			var cookies = new CookieContainer();
 			var list = JsonSerializer.Deserialize<List<CookieInfo>>(json);
 			var collection = new CookieCollection();
-			foreach (CookieInfo item in list)
+			if (list != null)
 			{
-				collection.Add(item.toCookie());
+				foreach (CookieInfo item in list)
+				{
+					collection.Add(item.toCookie());
+				}
 			}
 
 			cookies.Add(collection);

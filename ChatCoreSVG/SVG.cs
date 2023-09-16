@@ -14,44 +14,41 @@ namespace ChatCoreSVG
 {
 	public class SVG
 	{
-		public void genImg(string fileName, string imageName, int width = 144, int height = 880, List<SvgFontStruct> importedFonts = null)
+		public bool genImg(string fileName, string imageName, int width = 144, int height = 880, List<SvgFontStruct> importedFonts = null)
 		{
-			/*using (var src = new Bitmap(fileName))
+			var result = false;
+			try
 			{
-				using (var ms = new MemoryStream())
+				using (var bitmap = new Bitmap(width, height))
 				{
-					src.Save(ms, ImageFormat.Png);
-					File.WriteAllBytes(imageName, ms.ToArray());
-				}
-			}*/
-
-			/*var svgDocument = SvgDocument.Open(fileName);
-			var bitmap = svgDocument.Draw();
-			bitmap.Save(imageName, ImageFormat.Png);*/
-
-			using (var bitmap = new Bitmap(width, height))
-			{
-				using (var g = Graphics.FromImage(bitmap))
-				{
-					var svgDocument = SvgDocument.Open(fileName);
-					if (importedFonts != null)
+					using (var g = Graphics.FromImage(bitmap))
 					{
-						foreach (var font in importedFonts)
+						var svgDocument = SvgDocument.Open(fileName);
+						if (importedFonts != null)
 						{
-							if (File.Exists(font.FontPath))
+							foreach (var font in importedFonts)
 							{
-								SvgFontManager.PrivateFontPathList.Add(font.FontPath);
-								SvgFontManager.LocalizedFamilyNames.Add(font.FontNames);
+								if (File.Exists(font.FontPath))
+								{
+									SvgFontManager.PrivateFontPathList.Add(font.FontPath);
+									SvgFontManager.LocalizedFamilyNames.Add(font.FontNames);
+								}
 							}
 						}
+						var renderer = SvgRenderer.FromGraphics(g);
+						svgDocument.Width = width;
+						svgDocument.Height = height;
+						svgDocument.Draw(renderer);
 					}
-					var renderer = SvgRenderer.FromGraphics(g);
-					svgDocument.Width = width;
-					svgDocument.Height = height;
-					svgDocument.Draw(renderer);
+					bitmap.Save(imageName, ImageFormat.Png);
+					result = true;
 				}
-				bitmap.Save(imageName, ImageFormat.Png);
 			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("[Error] [ChatCore.SVG] | SVG | genImg | " + ex.Message);
+			}
+			return result;
 		}
 
 		public static SvgFontStruct ImportFont(string fontName)

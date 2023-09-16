@@ -1,5 +1,5 @@
-﻿using System;
-using Newtonsoft.Json;
+using System;
+using System.Text.Json.Serialization;
 
 namespace OpenBLive.Runtime.Data
 {
@@ -12,11 +12,13 @@ namespace OpenBLive.Runtime.Data
         /// <summary>
         /// 直播间ID
         /// </summary>
-        [JsonProperty("room_id")] public long roomId;
+        [JsonPropertyName("room_id")]
+		public long roomId;
 
         /// <summary>
         /// 留言id
         /// </summary>
-        [JsonProperty("message_ids")] public long[] messageIds;
+        [JsonPropertyName("message_ids")]
+		public long[] messageIds;
     }
 }

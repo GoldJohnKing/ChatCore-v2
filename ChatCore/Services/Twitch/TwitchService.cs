@@ -30,7 +30,7 @@ namespace ChatCore.Services.Twitch
 		private readonly string _anonUsername;
 		private string? _loggedInUsername;
 		private bool _isStarted;
-		private bool _enable; 
+		public bool _enable { get; private set; }
 
 		private int _currentMessageCount;
 		private DateTime _lastResetTime = DateTime.UtcNow;

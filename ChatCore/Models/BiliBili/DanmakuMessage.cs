@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using Brotli;
 using static ChatCore.Models.Bilibili.BilibiliPacket;
 
 namespace ChatCore.Models.Bilibili
@@ -27,11 +28,11 @@ namespace ChatCore.Models.Bilibili
 
 			if (operation == 5)
 			{
-				if (version == 2)
+				byte[] decomp;
+				if (version == 2) // Deflate
 				{
-
 					DataView.ByteSlice(ref buffer, headerLength, packetLength);
-					byte[] decomp;
+					
 					using (var dest = new MemoryStream())
 					{
 						using (var ds = new DeflateStream(new MemoryStream(buffer, 2, packetLength - headerLength - 2), CompressionMode.Decompress, true))
@@ -40,60 +41,49 @@ namespace ChatCore.Models.Bilibili
 						}
 						decomp = dest.ToArray();
 					}
-					while (offset < decomp.Length)
-					{
-						var packetLength1 = DataView.GetInt32(decomp, offset);
-						var headerLength1 = DataView.GetInt16(decomp, HEADEROFFSET + offset);
-						var version1 = DataView.GetInt16(decomp, VERSIONOFFSET + offset);
-						var operation1 = DataView.GetInt32(decomp, OPERATIONOFFSET + offset);
-						var sequence1 = DataView.GetInt32(decomp, SEQUENCEOFFSET + offset);
+				}
+				else if (version == 3) // Brotli
+				{
+					DataView.ByteSlice(ref buffer, headerLength, packetLength);
 
-						var newData = (byte[])decomp.Clone();
-						DataView.ByteSlice(ref newData, offset + headerLength1, offset + packetLength1);
-						yield return new DanmakuMessage()
+					using (var dest = new MemoryStream())
+					{
+						using (var ds = new BrotliStream(new MemoryStream(buffer), CompressionMode.Decompress, true))
 						{
-							PacketLength = packetLength1,
-							HeaderLength = headerLength1,
-							Version = version1,
-							Operation = (DanmakuOperation)operation1,
-							Sequence = sequence1,
-							Body = Encoding.UTF8.GetString(newData, 0, newData.Length),
-							Buffer = decomp
-						};
-						offset += packetLength1;
-						if (packetLength1 <= 0)
-						{
-							break;
+							ds.CopyTo(dest);
 						}
+						decomp = dest.ToArray();
 					}
 				}
 				else
 				{
-					while (offset < buffer.Length)
-					{
-						var packetLength1 = DataView.GetInt32(buffer, offset);
-						var headerLength1 = DataView.GetInt16(buffer, HEADEROFFSET + offset);
-						var version1 = DataView.GetInt16(buffer, VERSIONOFFSET + offset);
-						var operation1 = DataView.GetInt32(buffer, OPERATIONOFFSET + offset);
-						var sequence1 = DataView.GetInt32(buffer, SEQUENCEOFFSET + offset);
+					decomp = buffer;
+				}
 
-						var data = (byte[])buffer.Clone();
-						DataView.ByteSlice(ref data, offset + headerLength1, offset + packetLength1);
-						yield return new DanmakuMessage()
-						{
-							PacketLength = packetLength1,
-							HeaderLength = headerLength1,
-							Version = version1,
-							Operation = (DanmakuOperation)operation1,
-							Sequence = sequence1,
-							Body = Encoding.UTF8.GetString(data, 0, data.Length),
-							Buffer = buffer
-						};
-						offset += packetLength1;
-						if (packetLength1 <= 0)
-						{
-							break;
-						}
+				while (offset < decomp.Length)
+				{
+					var packetLength1 = DataView.GetInt32(decomp, offset);
+					var headerLength1 = DataView.GetInt16(decomp, HEADEROFFSET + offset);
+					var version1 = DataView.GetInt16(decomp, VERSIONOFFSET + offset);
+					var operation1 = DataView.GetInt32(decomp, OPERATIONOFFSET + offset);
+					var sequence1 = DataView.GetInt32(decomp, SEQUENCEOFFSET + offset);
+
+					var data = (byte[])decomp.Clone();
+					DataView.ByteSlice(ref data, offset + headerLength1, offset + packetLength1);
+					yield return new DanmakuMessage()
+					{
+						PacketLength = packetLength1,
+						HeaderLength = headerLength1,
+						Version = version1,
+						Operation = (DanmakuOperation)operation1,
+						Sequence = sequence1,
+						Body = Encoding.UTF8.GetString(data, 0, data.Length),
+						Buffer = decomp
+					};
+					offset += packetLength1;
+					if (packetLength1 <= 0)
+					{
+						break;
 					}
 				}
 			}

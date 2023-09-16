@@ -75,12 +75,40 @@ namespace ChatCore.Models.Bilibili
 			var json = new JSONObject();
 			//json["clientver"] = "1.6.3";
 			//json["platform"] = "web";
-			//json["protover"] = new JSONNumber(1);
+			//json["protover"] = new JSONNumber(3);
 			json["roomid"] = new JSONNumber(roomId);
 			json["uid"] = new JSONNumber(uid);
 			//json["type"] = new JSONNumber(2);
 
 			return new BilibiliPacket(DanmakuOperation.GreetingReq, json);
+		}
+
+		/// <summary>
+		/// Create greeting packet.
+		/// </summary>
+		/// <param name="uid"></param>
+		/// <param name="roomId"></param>
+		/// <param name="token"></param>
+		/// <param name="buvid"></param>
+		/// <returns></returns>
+		public static BilibiliPacket CreateGreetingPacket(int uid, int roomId, string token, string buvid)
+		{
+			var json = new JSONObject();
+			//json["clientver"] = "1.6.3";
+			json["platform"] = "web";
+			json["protover"] = new JSONNumber(3);
+			json["roomid"] = new JSONNumber(roomId);
+			json["uid"] = new JSONNumber(uid);
+			json["key"] = new JSONString(token);
+			json["buvid"] = new JSONString(buvid);
+			json["type"] = new JSONNumber(2);
+
+			return new BilibiliPacket(DanmakuOperation.GreetingReq, json);
+		}
+
+		public static BilibiliPacket CreateAuthPacket(string authBody)
+		{
+			return new BilibiliPacket(DanmakuOperation.GreetingReq, authBody);
 		}
 
 		/// <summary>
@@ -111,6 +139,17 @@ namespace ChatCore.Models.Bilibili
 
 			// Room ids stops live message from Server
 			StopRoom = 1398034256
+		}
+
+		public static string ByteArrayToString(byte[] ba)
+		{
+			var hex = new StringBuilder(ba.Length * 2);
+			foreach (var b in ba)
+			{
+				hex.AppendFormat("{0:x2}", b);
+			}
+
+			return hex.ToString();
 		}
 	}
 }

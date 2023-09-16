@@ -51,7 +51,6 @@ namespace ChatCoreGUI
             this.textBox_console.CausesValidation = false;
             resources.ApplyResources(this.textBox_console, "textBox_console");
             this.textBox_console.Name = "textBox_console";
-            this.textBox_console.TextChanged += new System.EventHandler(this.textBox_console_TextChanged);
             // 
             // button_web
             // 

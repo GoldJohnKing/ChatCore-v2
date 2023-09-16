@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +19,9 @@ namespace ChatCore.Services
 
 		private WebSocket? _client;
 		private string _uri = string.Empty;
+		private string _userAgent = string.Empty;
+		private string _origin = string.Empty;
+		private List<KeyValuePair<string, string>>? _cookies = null;
 		private CancellationTokenSource? _cancellationToken;
 		private DateTime _startTime;
 
@@ -39,7 +43,7 @@ namespace ChatCore.Services
 			_reconnectLock = new SemaphoreSlim(1, 1);
 		}
 
-		public void Connect(string uri, bool forceReconnect = false)
+		public void Connect(string uri, bool forceReconnect = false, string userAgent = "", string origin = "", List<KeyValuePair<string, string>>? cookies = null)
 		{
 			lock (_lock)
 			{
@@ -57,12 +61,16 @@ namespace ChatCore.Services
 
 					_logger.LogDebug($"[WebSocket4NetServiceProvider] | [Connect] | Connecting to {uri}");
 					_uri = uri;
+					_userAgent = userAgent;
+					_origin = origin;
+					_cookies = cookies;
+
 					_cancellationToken = new CancellationTokenSource();
 					Task.Run(async () =>
 					{
 						try
 						{
-							_client = new WebSocket(uri);
+							_client = new WebSocket(uri, "", cookies, null, userAgent, origin);
 							_client.Opened += _client_Opened;
 							_client.Closed += _client_Closed;
 							_client.Error += _client_Error;
@@ -152,7 +160,7 @@ namespace ChatCore.Services
 					try
 					{
 						await Task.Delay(ReconnectDelay, _cancellationToken.Token);
-						Connect(_uri);
+						Connect(_uri, false, _userAgent, _origin, _cookies);
 						ReconnectDelay *= 2;
 						if (ReconnectDelay > 60000)
 						{

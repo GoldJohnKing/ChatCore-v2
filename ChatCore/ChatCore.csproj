@@ -13,6 +13,7 @@
 		<GameDirPath>S:\Game\SteamLibrary\steamapps\common\Beat Saber</GameDirPath>
 		<AssemblyVersion>2.2.0.0</AssemblyVersion>
 	  <UserSecretsId>7d582ffc-3828-492c-9f7f-ca06d47cec32</UserSecretsId>
+	  <Configurations>Debug;Release;OpenBLive</Configurations>
   </PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -22,6 +23,10 @@
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
 		<DebugType>pdbonly</DebugType>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='OpenBLive'">
+	  <DebugType>pdbonly</DebugType>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -41,6 +46,10 @@
 		</Reference>
 		<Reference Include="WebSocket4Net">
 			<HintPath>Libs\WebSocket4Net.dll</HintPath>
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Brotli.Core">
+			<HintPath>Libs\Brotli.Core.dll</HintPath>
 			<Private>true</Private>
 		</Reference>
 	</ItemGroup>
@@ -85,12 +94,22 @@
 	<ItemGroup>
 	  <Folder Include="Properties\" />
 	</ItemGroup>
-
-	<Target Name="ILMerge" AfterTargets="Build">
-		<Exec Command="cd &quot;$(OutDir)&quot;&#xD;&#xA;&quot;$(ILMergeConsolePath)&quot; /xmldocs /targetplatform:v4 /ndebug /allowDup /internalize:&quot;$(ProjectDir)internalize_excludes.txt&quot; /wildcards /out:&quot;$(TargetFileName)&quot; *.dll" />
+	<Target Name="Rename" AfterTargets="Build">
+		<Move SourceFiles="$(OutDir)\Brotli.Core.dll" DestinationFiles="$(OutDir)\Extra\Brotli.Core.dll" />
+		<Message Text="Renamed other dll files." Importance="high" />
 	</Target>
 
-	<Target Name="PostBuild" AfterTargets="ILMerge" Condition="Exists('$(GameDirPath)')">
+	<Target Name="ILMerge" AfterTargets="Rename">
+		<Message Text="Merging Dlls." Importance="high" />
+		<Exec Command="cd &quot;$(OutDir)&quot;&#xD;&#xA;&quot;$(ILMergeConsolePath)&quot; /xmldocs /targetplatform:v4 /ndebug /allowDup /internalize:&quot;$(ProjectDir)internalize_excludes.txt&quot; /wildcards /out:&quot;$(TargetFileName)&quot; *.dll Extra/*.dll" />
+	</Target>
+
+	<Target Name="Rename Back" AfterTargets="ILMerge">
+		<Move SourceFiles="$(OutDir)\Extra\Brotli.Core.dll" DestinationFiles="$(OutDir)\Brotli.Core.dll" />
+		<Message Text="revert other dll files." Importance="high" />
+	</Target>
+
+	<Target Name="PostBuild" AfterTargets="Rename Back" Condition="Exists('$(GameDirPath)')">
 		<Copy SourceFiles="$(OutDir)$(TargetFileName)" DestinationFiles="$(GameDirPath)\Libs\$(TargetFileName)" />
 	</Target>
 

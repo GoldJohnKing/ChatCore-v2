@@ -19,15 +19,16 @@ namespace ChatCore.Services
 	{
 		private readonly ILogger _logger;
 		private readonly IList<IChatService> _streamingServices;
-		private readonly TwitchService? _twitchService;
-		private readonly BilibiliService? _bilibiliService;
+		private static TwitchService? _twitchService;
+		private static BilibiliService? _bilibiliService;
 		private readonly object _invokeLock = new object();
-		private bool _twitchEnable = false;
-		private bool _bilibiliEnable = false;
+		private readonly object _initLock = new object();
+		public bool twitchEnable { get; private set; }
+		public bool bilibiliEnable { get; private set; }
 
 		public string DisplayName { get; internal set; }
 
-		public ChatServiceMultiplexer(ILogger<ChatServiceMultiplexer> logger, IList<IChatService> streamingServices, bool twitchEnable, bool bilibiliEnable)
+		public ChatServiceMultiplexer(ILogger<ChatServiceMultiplexer> logger, IList<IChatService> streamingServices, IOpenBLiveProvider openBLiveServices, bool twitchEnable, bool bilibiliEnable)
 		{
 			_logger = logger;
 			_streamingServices = streamingServices;
@@ -37,7 +38,7 @@ namespace ChatCore.Services
 			var displayNameBuilder = new StringBuilder();
 			foreach (var service in _streamingServices)
 			{
-				if ((service.DisplayName == "Twitch" && _twitchEnable) || (service.DisplayName == "Bilibili Live" && _bilibiliEnable))
+				if ((service.DisplayName == "Twitch" && twitchEnable) || (service.DisplayName == "Bilibili Live" && bilibiliEnable))
 				{
 					service.OnTextMessageReceived += Service_OnTextMessageReceived;
 					service.OnJoinChannel += Service_OnJoinChannel;
@@ -142,25 +143,34 @@ namespace ChatCore.Services
 			return _bilibiliService;
 		}
 
-		public void EnableTwitchService(TwitchService? twitchService)
+		public void EnableTwitchService()
 		{
-			_logger.LogInformation("[ChatServiceMultiplexer] | [EnableTwitchService]");
-			var service = twitchService ?? GetTwitchService();
-			if (service != null && !_twitchEnable)
+			lock (_initLock)
 			{
-				EnableService(service);
-				_twitchEnable = true;
+				_logger.LogInformation("[ChatServiceMultiplexer] | [EnableTwitchService]");
+				//var service = twitchService ?? GetTwitchService();
+				if (_twitchService != null && !_twitchService._enable)
+				{
+					EnableService(_twitchService);
+				}
 			}
 		}
 
-		public void EnableBilibiliService(BilibiliService? bilibiliService)
+		public void EnableBilibiliService()
 		{
-			_logger.LogInformation("[ChatServiceMultiplexer] | [EnableBilibiliService]");
-			var service = bilibiliService ?? GetBilibiliService();
-			if (service != null && !_bilibiliEnable)
+			lock (_initLock)
 			{
-				EnableService(service);
-				_bilibiliEnable = true;
+				if (_bilibiliService != null)
+				{
+					if (_bilibiliService._enable)
+					{
+						_bilibiliService.reloadWebsocketConnection();
+					}
+					else
+					{
+						EnableService(_bilibiliService);
+					}
+				}
 			}
 		}
 
@@ -183,25 +193,24 @@ namespace ChatCore.Services
 			service.Enable();
 		}
 
-		public void DisableTwitchService(TwitchService? twitchService)
+		public void DisableTwitchService()
 		{
 			_logger.LogInformation("[ChatServiceMultiplexer] | [DisableTwitchService]");
-			var service = twitchService ?? GetTwitchService();
-			if (service != null && _twitchEnable)
+			//var service = twitchService ?? GetTwitchService();
+			if (_twitchService != null && twitchEnable)
 			{
-				DisableService(service);
-				_twitchEnable = false;
+				DisableService(_twitchService);
+				twitchEnable = false;
 			}
 		}
 
-		public void DisableBilibiliService(BilibiliService? bilibiliService)
+		public void DisableBilibiliService()
 		{
 			_logger.LogInformation("[ChatServiceMultiplexer] | [DisableBilibiliService]");
-			var service = bilibiliService ?? GetBilibiliService();
-			if (service != null && _bilibiliEnable)
+			if (_bilibiliService != null && bilibiliEnable)
 			{
-				DisableService(service);
-				_bilibiliEnable = false;
+				DisableService(_bilibiliService);
+				bilibiliEnable = false;
 			}
 		}
 

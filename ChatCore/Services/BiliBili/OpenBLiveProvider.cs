@@ -41,6 +41,9 @@ namespace ChatCore.Services.Bilibili
 		private string? _status;
 		private Task? _deamon;
 		private bool _enable = false;
+		private string _identity_code = "";
+
+		public event Action? onWssUpdate;
 
 		public OpenBLiveProvider(ILogger<WebLoginProvider> logger, IUserAuthProvider authManager)
 		{
@@ -85,6 +88,11 @@ namespace ChatCore.Services.Bilibili
 			if (_bApiClient != null)
 			{
 				_status = "Instance already exists";
+				if (_identity_code != _authManager.Credentials.Bilibili_identity_code)
+				{
+					_status = "Restarting";
+					Stop();
+				}
 				return;
 			}
 
@@ -132,6 +140,7 @@ namespace ChatCore.Services.Bilibili
 			_appStartInfo = new AppStartInfo();
 			_appId = _config["bilibili_live_app_id"]!;
 			_status = "Starting";
+			_identity_code = _authManager.Credentials.Bilibili_identity_code;
 
 			Task.Run(async () =>
 			{
@@ -139,7 +148,7 @@ namespace ChatCore.Services.Bilibili
 				SignUtility.accessKeyId = _config["bilibili_live_access_key_id"]!;
 				SignUtility.accessKeySecret = _config["bilibili_live_access_key_secret"]!;
 
-				_appStartInfo = await _bApiClient!.StartInteractivePlay(_authManager.Credentials.Bilibili_identity_code, _appId);
+				_appStartInfo = await _bApiClient!.StartInteractivePlay(_identity_code, _appId);
 
 				if (_appStartInfo?.Code != 0)
 				{
@@ -152,7 +161,10 @@ namespace ChatCore.Services.Bilibili
 				_gameId = _appStartInfo?.Data?.GameInfo?.GameId;
 				if (_gameId != null)
 				{
-					_logger.LogDebug("[OpenBLiveProvider] | [Start] | 成功开启，开始心跳，游戏ID: " + _gameId);
+
+					_logger.LogInformation("[OpenBLiveProvider] | [Start] | 成功开启，开始心跳，游戏ID: " + _gameId);
+					//_logger.LogInformation("[OpenBLiveProvider] | [Start] | Return Data: wss: " + _appStartInfo?.Data?.WebsocketInfo?.WssLink?.ToArray().ToString() + ", body: " + _appStartInfo?.Data?.WebsocketInfo?.AuthBody);
+					onWssUpdate?.Invoke();
 					_status = $"Success";
 					_cancellationToken = new CancellationTokenSource();
 					_heatbeat = new InteractivePlayHeartBeat(_gameId, 20000, _cancellationToken);
@@ -234,7 +246,7 @@ namespace ChatCore.Services.Bilibili
 
 		private void M_PlayHeartBeat_HeartBeatSucceed()
 		{
-			// Logger.Log("心跳成功");
+			//Logger.Log("心跳成功");
 		}
 
 		private void M_PlayHeartBeat_HeartBeatError(string json)
@@ -245,53 +257,13 @@ namespace ChatCore.Services.Bilibili
 			Stop();
 		}
 
-		private static void WebSocketBLiveClientOnSuperChat(SuperChat superChat)
-		{
-			var sb = new StringBuilder("收到SC!");
-			sb.AppendLine();
-			sb.Append("来自用户：");
-			sb.AppendLine(superChat.userName);
-			sb.Append("留言内容：");
-			sb.AppendLine(superChat.message);
-			sb.Append("金额：");
-			sb.Append(superChat.rmb);
-			sb.Append("元");
-			Logger.Log(sb.ToString());
+		public string getWssLink() {
+			return _appStartInfo?.Data?.WebsocketInfo?.WssLink?[0] ?? "";
 		}
 
-		private static void WebSocketBLiveClientOnGuardBuy(Guard guard)
+		public string getAuthBody()
 		{
-			var sb = new StringBuilder("收到大航海!");
-			sb.AppendLine();
-			sb.Append("来自用户：");
-			sb.AppendLine(guard.userInfo.userName);
-			sb.Append("赠送了");
-			sb.Append(guard.guardUnit);
-			Logger.Log(sb.ToString());
-		}
-
-		private static void WebSocketBLiveClientOnGift(SendGift sendGift)
-		{
-			var sb = new StringBuilder("收到礼物!");
-			sb.AppendLine();
-			sb.Append("来自用户：");
-			sb.AppendLine(sendGift.userName);
-			sb.Append("赠送了");
-			sb.Append(sendGift.giftNum);
-			sb.Append("个");
-			sb.Append(sendGift.giftName);
-			Logger.Log(sb.ToString());
-		}
-
-		private static void WebSocketBLiveClientOnDanmaku(Dm dm)
-		{
-			var sb = new StringBuilder("收到弹幕!");
-			sb.AppendLine();
-			sb.Append("用户：");
-			sb.AppendLine(dm.userName);
-			sb.Append("弹幕内容：");
-			sb.Append(dm.msg);
-			Logger.Log(sb.ToString());
+			return _appStartInfo?.Data?.WebsocketInfo?.AuthBody ?? "";
 		}
 	}
 }

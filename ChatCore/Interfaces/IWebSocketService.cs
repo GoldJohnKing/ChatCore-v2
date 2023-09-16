@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace ChatCore.Interfaces
@@ -15,7 +16,7 @@ namespace ChatCore.Interfaces
 		event Action<Assembly, string> OnMessageReceived;
 		event Action<Assembly, byte[]> OnDataRecevied;
 
-		void Connect(string uri, bool forceReconnect = false);
+		void Connect(string uri, bool forceReconnect = false, string userAgent = "", string origin = "", List<KeyValuePair<string, string>>? cookies = null);
 		void Disconnect();
 		void SendMessage(string message);
 		void SendMessage(byte[] bytes);

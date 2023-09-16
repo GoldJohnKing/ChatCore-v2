@@ -70,7 +70,7 @@ namespace ChatCore.Services.Twitch
 				{
 					if (!_channelDataCached.Contains(channel.Id))
 					{
-						var roomId = channel.Roomstate.RoomId;
+						var roomId = channel.Roomstate!.RoomId;
 						await _twitchBadgeProvider.TryRequestResources(roomId);
 						await _twitchCheermoteProvider.TryRequestResources(roomId);
 						await _bttvDataProvider.TryRequestResources(channel.Id);
@@ -83,7 +83,7 @@ namespace ChatCore.Services.Twitch
 							{
 								'_'
 							}, 2);
-							ret[$"{x.Value.Type}_{(parts.Length > 1 ? parts[1] : parts[0])}"] = x.Value;
+							ret[$"{x.Value!.Type}_{(parts.Length > 1 ? parts[1] : parts[0])}"] = x.Value;
 						});
 
 						_twitchCheermoteProvider.Resources.ToList().ForEach(x =>
@@ -92,7 +92,7 @@ namespace ChatCore.Services.Twitch
 							{
 								'_'
 							}, 2);
-							foreach (var tier in x.Value.Tiers)
+							foreach (var tier in x.Value!.Tiers)
 							{
 								ret[$"{tier.Type}_{(parts.Length > 1 ? parts[1] : parts[0])}{tier.MinBits}"] = tier;
 							}
@@ -104,7 +104,7 @@ namespace ChatCore.Services.Twitch
 							{
 								'_'
 							}, 2);
-							ret[$"{x.Value.Type}_{(parts.Length > 1 ? parts[1] : parts[0])}"] = x.Value;
+							ret[$"{x.Value!.Type}_{(parts.Length > 1 ? parts[1] : parts[0])}"] = x.Value;
 						});
 
 						_ffzDataProvider.Resources.ToList().ForEach(x =>
@@ -113,7 +113,7 @@ namespace ChatCore.Services.Twitch
 							{
 								'_'
 							}, 2);
-							ret[$"{x.Value.Type}_{(parts.Length > 1 ? parts[1] : parts[0])}"] = x.Value;
+							ret[$"{x.Value!.Type}_{(parts.Length > 1 ? parts[1] : parts[0])}"] = x.Value;
 						});
 
 						channelResourceDataCached?.Invoke(ret);
@@ -154,12 +154,12 @@ namespace ChatCore.Services.Twitch
 
 		internal bool TryGetThirdPartyEmote(string word, string channel, out ChatResourceData data)
 		{
-			if (_bttvDataProvider.TryGetResource(word, channel, out data))
+			if (_bttvDataProvider.TryGetResource(word, channel, out data!))
 			{
 				return true;
 			}
 
-			if (_ffzDataProvider.TryGetResource(word, channel, out data))
+			if (_ffzDataProvider.TryGetResource(word, channel, out data!))
 			{
 				return true;
 			}
@@ -200,12 +200,12 @@ namespace ChatCore.Services.Twitch
 			}
 
 			var prefix = word.Substring(0, prefixLength).ToLower();
-			return _twitchCheermoteProvider.TryGetResource(prefix, roomId, out data) && int.TryParse(word.Substring(prefixLength), out numBits);
+			return _twitchCheermoteProvider.TryGetResource(prefix, roomId, out data!) && int.TryParse(word.Substring(prefixLength), out numBits);
 		}
 
 		internal bool TryGetBadgeInfo(string badgeId, string roomId, out ChatResourceData badge)
 		{
-			if (_twitchBadgeProvider.TryGetResource(badgeId, roomId, out badge))
+			if (_twitchBadgeProvider.TryGetResource(badgeId, roomId, out badge!))
 			{
 				return true;
 			}

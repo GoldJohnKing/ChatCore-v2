@@ -82,34 +82,35 @@ namespace ChatCore
 					.AddTransient<IWebSocketService, WebSocket4NetServiceProvider>()
 					.AddSingleton<IOpenBLiveProvider, OpenBLiveProvider>()
 					.AddSingleton<TwitchService>()
-						.AddSingleton<TwitchServiceManager>()
-						.AddSingleton<TwitchMessageParser>()
-						.AddSingleton<TwitchDataProvider>()
-						.AddSingleton<TwitchCheermoteProvider>()
-						.AddSingleton<TwitchBadgeProvider>()
-						.AddSingleton<BTTVDataProvider>()
-						.AddSingleton<FFZDataProvider>()
-						.AddSingleton<IChatService>(x =>
-							new ChatServiceMultiplexer(
-								x.GetService<ILogger<ChatServiceMultiplexer>>(),
-								new List<IChatService>
-								{
-									x.GetService<TwitchService>(),
-									x.GetService<BilibiliService>()
-								},
-								false, false
-							)
-						)
-						.AddSingleton<IChatServiceManager>(x =>
-						new ChatServiceManager(
-							x.GetService<ILogger<ChatServiceManager>>(),
-							x.GetService<IChatService>(),
-							new List<IChatServiceManager>
+					.AddSingleton<TwitchServiceManager>()
+					.AddSingleton<TwitchMessageParser>()
+					.AddSingleton<TwitchDataProvider>()
+					.AddSingleton<TwitchCheermoteProvider>()
+					.AddSingleton<TwitchBadgeProvider>()
+					.AddSingleton<BTTVDataProvider>()
+					.AddSingleton<FFZDataProvider>()
+					.AddSingleton<IChatService>(x =>
+						new ChatServiceMultiplexer(
+							x.GetService<ILogger<ChatServiceMultiplexer>>(),
+							new List<IChatService>
 							{
-								x.GetService<TwitchServiceManager>(),
-								x.GetService<BilibiliServiceManager>()
-							}
+								x.GetService<TwitchService>(),
+								x.GetService<BilibiliService>()
+							},
+							x.GetService<IOpenBLiveProvider>(),
+							false, false
 						)
+					)
+					.AddSingleton<IChatServiceManager>(x =>
+					new ChatServiceManager(
+						x.GetService<ILogger<ChatServiceManager>>(),
+						x.GetService<IChatService>(),
+						new List<IChatServiceManager>
+						{
+							x.GetService<TwitchServiceManager>(),
+							x.GetService<BilibiliServiceManager>()
+						}
+					)
 					);
 
 				if (logReceiver != null)
@@ -328,11 +329,11 @@ namespace ChatCore
 
 			if (enable)
 			{
-				_chatServiceMultiplexer.EnableTwitchService(null);
+				_chatServiceMultiplexer.EnableTwitchService();
 			}
 			else
 			{
-				_chatServiceMultiplexer.DisableTwitchService(null);
+				_chatServiceMultiplexer.DisableTwitchService();
 			}
 		}
 
@@ -346,7 +347,7 @@ namespace ChatCore
 
 			if (enable)
 			{
-				_chatServiceMultiplexer.EnableBilibiliService(null);
+				_chatServiceMultiplexer.EnableBilibiliService();
 				_openBLiveProvider = (OpenBLiveProvider)_serviceProvider.GetService<IOpenBLiveProvider>();
 				_openBLiveProvider.Enable();
 				_openBLiveProvider.Start();
@@ -354,7 +355,7 @@ namespace ChatCore
 			}
 			else
 			{
-				_chatServiceMultiplexer.DisableBilibiliService(null);
+				_chatServiceMultiplexer.DisableBilibiliService();
 				_openBLiveProvider = (OpenBLiveProvider)_serviceProvider.GetService<IOpenBLiveProvider>();
 				_openBLiveProvider.Disable();
 				_openBLiveProvider.Stop();

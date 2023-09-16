@@ -53,7 +53,7 @@ namespace OpenBLive.Runtime.Utilities
             var md5Buffer = md5.ComputeHash(buffer);
             // 通过使用循环，将字节类型的数组转换为字符串，此字符串是常规字符格式化所得
 
-            return md5Buffer.Aggregate<byte, string>(null, (current, b) => current + b.ToString("x2"));
+            return md5Buffer.Aggregate<byte, string>("", (current, b) => current + b.ToString("x2"));
         }
 
         /// <summary>

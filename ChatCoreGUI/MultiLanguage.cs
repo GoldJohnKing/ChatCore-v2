@@ -30,10 +30,10 @@ namespace ChatCoreGUI
 
 		private static void Loading(Control control, System.ComponentModel.ComponentResourceManager resources)
 		{
-			if (control is MenuStrip)
+			if (control is MenuStrip strip)
 			{
 				resources.ApplyResources(control, control.Name);
-				var ms = (MenuStrip)control;
+				var ms = strip;
 				if (ms.Items.Count > 0)
 				{
 					foreach (ToolStripMenuItem c in ms.Items)
@@ -52,10 +52,10 @@ namespace ChatCoreGUI
 
 		private static void Loading(ToolStripMenuItem item, System.ComponentModel.ComponentResourceManager resources)
 		{
-			if (item is ToolStripMenuItem)
+			if (item is ToolStripMenuItem item1)
 			{
 				resources.ApplyResources(item, item.Name);
-				var tsmi = (ToolStripMenuItem)item;
+				var tsmi = item1;
 				if (tsmi.DropDownItems.Count > 0)
 				{
 					foreach (ToolStripMenuItem c in tsmi.DropDownItems)

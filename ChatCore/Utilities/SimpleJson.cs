@@ -1,4 +1,4 @@
-﻿/* * * * *
+/* * * * *
  * A simple JSON Parser / builder
  * ------------------------------
  *
@@ -154,7 +154,9 @@ namespace ChatCore.Utilities
 			private JSONNode _mNode;
 			private Enumerator _mEnumerator;
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 			internal LinqEnumerator(JSONNode aNode)
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 			{
 				_mNode = aNode;
 				if (_mNode != null)
@@ -175,7 +177,7 @@ namespace ChatCore.Utilities
 
 			public IEnumerator<KeyValuePair<string, JSONNode>> GetEnumerator()
 			{
-				return new LinqEnumerator(_mNode);
+				return new LinqEnumerator(_mNode!);
 			}
 
 			public void Reset()
@@ -188,7 +190,7 @@ namespace ChatCore.Utilities
 
 			IEnumerator IEnumerable.GetEnumerator()
 			{
-				return new LinqEnumerator(_mNode);
+				return new LinqEnumerator(_mNode!);
 			}
 		}
 
@@ -547,8 +549,7 @@ namespace ChatCore.Utilities
 				return JSONNull.CreateOrGet();
 			}
 
-			double val;
-			if (double.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture, out val))
+			if (double.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture, out var val))
 			{
 				return val;
 			}
@@ -1096,8 +1097,7 @@ namespace ChatCore.Utilities
 
 		public override JSONNode GetValueOrDefault(string aKey, JSONNode aDefault)
 		{
-			JSONNode res;
-			if (_mDict.TryGetValue(aKey, out res))
+			if (_mDict.TryGetValue(aKey, out var res))
 			{
 				return res;
 			}

@@ -12,8 +12,8 @@ namespace OpenBLive.Runtime
 
     public class InteractivePlayHeartBeat : IDisposable
     {
-        public event HeartBeatSucceed HeartBeatSucceed;
-        public event HeartBeatError HeartBeatError;
+        public event HeartBeatSucceed? HeartBeatSucceed;
+        public event HeartBeatError? HeartBeatError;
         private readonly CancellationTokenSource m_Cancellation;
         private readonly string[] m_GameIds;
 		private readonly int m_Time;

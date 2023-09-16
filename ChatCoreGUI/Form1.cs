@@ -48,17 +48,11 @@ namespace ChatCoreGUI
 			_instance.LaunchWebApp();
 		}
 
-
-		private void textBox_console_TextChanged(object sender, EventArgs e)
-		{
-
-		}
-
 		private void addMsg(string msg)
 		{
 			//var _update = new update(updateMsg);
 			Task.Run(() => {
-				this.textBox_console.BeginInvoke(new MethodInvoker(() =>
+				textBox_console.BeginInvoke(new MethodInvoker(() =>
 				{
 					textBox_console.Text = $"{msg}\r\n" + textBox_console.Text + (FirstLine ? "\r\n\r\n" : "");
 					FirstLine = false;

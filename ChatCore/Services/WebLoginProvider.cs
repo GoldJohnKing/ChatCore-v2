@@ -62,9 +62,9 @@ namespace ChatCore.Services
 				{
 					try
 					{
-						_logger.LogInformation("[WebLoginProvider] | [Start] | Waiting for incoming request...");
+						//_logger.LogInformation("[WebLoginProvider] | [Start] | Waiting for incoming request...");
 						var httpListenerContext = await _listener.GetContextAsync().ConfigureAwait(false);
-						_logger.LogWarning("[WebLoginProvider] | [Start] | Request received");
+						//_logger.LogWarning("[WebLoginProvider] | [Start] | Request received");
 						await OnContext(httpListenerContext).ConfigureAwait(false);
 					}
 					catch (Exception e)
@@ -173,10 +173,16 @@ namespace ChatCore.Services
 					settingsJson["bilibili_identity_code"] = new JSONString(_authManager.Credentials.Bilibili_identity_code);
 					// TODO: update identity code from blive sdk
 					settingsJson["bilibili_identity_code_save"] = new JSONBool(_authManager.Credentials.Bilibili_identity_code_save);
+					settingsJson["bilibili_cookies"] = new JSONString(_authManager.Credentials.Bilibili_cookies);
 
 					var pageBuilder = new StringBuilder(_pageData);
 					pageBuilder.Replace("{libVersion}", ChatCoreInstance.Version.ToString(3));
-					pageBuilder.Replace("var data = {};", $"var data = {settingsJson};");
+#if OPENBLIVE
+					// pageBuilder.Replace("var data = {};", $"var data = {settingsJson}; var bilibili_version = true;");
+#else
+					pageBuilder.Replace("var data = {};", $"var data = {settingsJson}; var bilibili_version = false;");
+#endif
+
 					if (_bilibiliOnly)
 					{
 						pageBuilder.Replace("var bilibili_only = false;", $"var bilibili_only = true;");
@@ -278,9 +284,20 @@ namespace ChatCore.Services
 					responseJson.Remove("bilibili_identity_code");
 				}
 
+				if (responseJson.HasKey("bilibili_cookies") && (_authManager.Credentials.Bilibili_cookies != responseJson["bilibili_cookies"]))
+				{
+					_authManager.Credentials.Bilibili_cookies = responseJson["bilibili_cookies"].Value;
+					authChanged = true;
+					responseJson.Remove("bilibili_cookies");
+				}
+
 				if (!_authManager.Credentials.Bilibili_identity_code_save && !string.IsNullOrWhiteSpace(_authManager.Credentials.Bilibili_identity_code) )
 				{
 					_authManager.Credentials.Bilibili_identity_code = string.Empty;
+					authChanged = true;
+				}
+
+				if (responseJson.HasKey("danmuku_service_method") && _settings.danmuku_service_method != responseJson["danmuku_service_method"] && (_settings.danmuku_service_method == "OpenBLive" || responseJson["danmuku_service_method"] == "OpenBLive")){
 					authChanged = true;
 				}
 
@@ -289,18 +306,21 @@ namespace ChatCore.Services
 					_authManager.SaveBilibili();
 				}
 
-				if (responseJson.HasKey("EnableTwitch") && (_settings.EnableTwitch != responseJson["EnableTwitch"].AsBool))
+				var TwitchRequireUpdate = responseJson.HasKey("EnableTwitch") && (_settings.EnableTwitch != responseJson["EnableTwitch"].AsBool);
+				var BilibiliRequireUpdate = (responseJson.HasKey("EnableBilibili") && (_settings.EnableBilibili != responseJson["EnableBilibili"].AsBool)) || (responseJson.HasKey("danmuku_service_method") && _settings.danmuku_service_method != responseJson["danmuku_service_method"]);
+
+				_settings.SetFromDictionary(responseJson);
+				_settings.Save();
+
+				if (TwitchRequireUpdate)
 				{
 					_settings.updateTwitch(responseJson["EnableTwitch"].AsBool);
 				}
 
-				if (responseJson.HasKey("EnableBilibili") && (_settings.EnableBilibili != responseJson["EnableBilibili"].AsBool))
+				if (BilibiliRequireUpdate)
 				{
 					_settings.updateBilibili(responseJson["EnableBilibili"].AsBool);
 				}
-
-				_settings.SetFromDictionary(responseJson);
-				_settings.Save();
 
 				response.StatusCode = 204;
 			}
