@@ -74,7 +74,7 @@ namespace ChatCore.Models.Bilibili
 			Match match = target.Match(bmessage.Message);
 			while (match.Success)
 			{
-				emote_list.Add(new BilibiliChatEmote(GiftPlacholder, GiftPlacholder, GiftUri, true, match.Index));
+				emote_list.Add(new BilibiliChatEmote(GiftPlacholder, GiftPlacholder, GiftUri, extra.gift_img.Substring(extra.gift_img.Length - 3, 3) == "gift", match.Index));
 				match = match.NextMatch();
 			}
 			bmessage.Emotes = emote_list.ToArray();

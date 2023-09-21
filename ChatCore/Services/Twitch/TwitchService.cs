@@ -3,10 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using ChatCore.Interfaces;
 using ChatCore.Models;
+using ChatCore.Models.Bilibili;
 using ChatCore.Models.Twitch;
 using ChatCore.Utilities;
 using Microsoft.Extensions.Logging;
@@ -23,6 +25,7 @@ namespace ChatCore.Services.Twitch
 		private readonly TwitchDataProvider _dataProvider;
 		private readonly IWebSocketService _websocketService;
 		private readonly IUserAuthProvider _authManager;
+		private readonly IWebSocketServerService _socketServerService;
 
 		private readonly object _messageReceivedLock;
 		private readonly object _initLock;
@@ -49,14 +52,16 @@ namespace ChatCore.Services.Twitch
 			add => _rawMessageReceivedCallbacks.AddAction(Assembly.GetCallingAssembly(), value);
 			remove => _rawMessageReceivedCallbacks.RemoveAction(Assembly.GetCallingAssembly(), value);
 		}
+		public event Action<string, List<string>> OnTwitchMessageReceived;
 
-		public TwitchService(ILogger<TwitchService> logger, TwitchMessageParser messageParser, TwitchDataProvider twitchDataProvider, IWebSocketService websocketService, IUserAuthProvider authManager, Random rand)
+		public TwitchService(ILogger<TwitchService> logger, TwitchMessageParser messageParser, TwitchDataProvider twitchDataProvider, IWebSocketService websocketService, IUserAuthProvider authManager, IWebSocketServerService socketServerService, Random rand)
 		{
 			_logger = logger;
 			_messageParser = messageParser;
 			_dataProvider = twitchDataProvider;
 			_websocketService = websocketService;
 			_authManager = authManager;
+			_socketServerService = socketServerService;
 
 			_rawMessageReceivedCallbacks = new ConcurrentDictionary<Assembly, Action<IChatService, string>>();
 			_channels = new ConcurrentDictionary<string, IChatChannel>();
@@ -72,6 +77,7 @@ namespace ChatCore.Services.Twitch
 			_websocketService.OnClose += _websocketService_OnClose;
 			_websocketService.OnError += _websocketService_OnError;
 			_websocketService.OnMessageReceived += _websocketService_OnMessageReceived;
+			OnTwitchMessageReceived += _socketServerService.SendMessage;
 		}
 
 		private void _authManager_OnCredentialsUpdated(LoginCredentials credentials)
@@ -126,10 +132,12 @@ namespace ChatCore.Services.Twitch
 			{
 				_logger.LogInformation($"[TwitchService] | [_websocketService_OnMessageReceived] | RawMessage: {rawMessage}");
 				_rawMessageReceivedCallbacks?.InvokeAll(assembly, this, rawMessage);
+				OnTwitchMessageReceived.Invoke(rawMessage, new List<string> { "twitch_raw" });
 				if (_messageParser.ParseRawMessage(rawMessage, _channels, LoggedInUser?? new TwitchUser(), out var parsedMessages))
 				{
 					foreach (var chatMessage in parsedMessages)
 					{
+						
 						var twitchMessage = (TwitchMessage)chatMessage;
 						if (assembly != null)
 						{
@@ -171,6 +179,7 @@ namespace ChatCore.Services.Twitch
 							case "USERNOTICE":
 							case "PRIVMSG":
 								TextMessageReceivedCallbacks?.InvokeAll(assembly!, this, twitchMessage, _logger);
+								OnTwitchMessageReceived.Invoke(JsonSerializer.Serialize(twitchMessage), new List<string> { "twitch" });
 								continue;
 							case "JOIN":
 								//_logger.LogInformation($"{twitchMessage.Sender.Name} JOINED {twitchMessage.Channel.Id}. LoggedInuser: {LoggedInUser.Name}");

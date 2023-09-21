@@ -102,7 +102,7 @@ namespace ChatCore.Models.Bilibili
 				sb.Replace("%CONTENT%", Name);
 				sb.Replace("%LEVEL%", Level.ToString());
 
-				var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"ChatCore\Badges");
+				var path = (new PathProvider()).GetBadgesImagePath();
 				var badgeId = Name + "_" + Level.ToString() + (Guard == 3 ? "_舰长" : (Guard == 2 ? "_提督" : (Guard == 1 ? "_总督" : "")));
 				var filename = Path.Combine(path, ImageUtils.convertToValidFilename(badgeId) + ".svg");
 				var imagename = Path.Combine(path, ImageUtils.convertToValidFilename(badgeId) + ".png");
@@ -213,32 +213,32 @@ namespace ChatCore.Models.Bilibili
 				case 22:
 				case 23:
 				case 24:
-					LinearGradientColorA = "#1a544b";
-					LinearGradientColorB = "#529d92";
+					LinearGradientColorA = "#529d92";
+					LinearGradientColorB = "#1a544b";
 					BorderColor = "#1a544b";
 					break;
 				case 25:
 				case 26:
 				case 27:
 				case 28:
-					LinearGradientColorA = "#06154c";
-					LinearGradientColorB = "#6888f1";
+					LinearGradientColorA = "#6888f1";
+					LinearGradientColorB = "#06154c";
 					BorderColor = "#06154c";
 					break;
 				case 29:
 				case 30:
 				case 31:
 				case 32:
-					LinearGradientColorA = "#06154c";
-					LinearGradientColorB = "#9d9bff";
+					LinearGradientColorA = "#9d9bff";
+					LinearGradientColorB = "#06154c";
 					BorderColor = "#06154c";
 					break;
 				case 33:
 				case 34:
 				case 35:
 				case 36:
-					LinearGradientColorA = "#7a0423";
-					LinearGradientColorB = "#e986bb";
+					LinearGradientColorA = "#e986bb";
+					LinearGradientColorB = "#7a0423";
 					BorderColor = "#7a0423";
 					break;
 				case 37:
@@ -246,13 +246,13 @@ namespace ChatCore.Models.Bilibili
 				case 39:
 				case 40:
 					// Not correct
-					LinearGradientColorA = "#fe7645";
-					LinearGradientColorB = "#ffa869";
+					LinearGradientColorA = "#ffa869";
+					LinearGradientColorB = "#fe7645";
 					BorderColor = "#fe7645";
 					break;
 				default:
-					LinearGradientColorA = "#FFFFFF";
-					LinearGradientColorB = "#000000";
+					LinearGradientColorA = "#000000";
+					LinearGradientColorB = "#FFFFFF";
 					BorderColor = "#FFFFFF";
 					break;
 			}

@@ -263,3 +263,11 @@ __pycache__/
 
 
 OpenBLive/
+
+ChatCore/Resources/Web/statics/css/materialize.1.2.2.min.css
+
+ChatCore/Resources/Web/statics/css/materialize.1.0.0.min.css
+
+ChatCore/Resources/Web/statics/js/jquery.pjax.js
+
+ChatCore/Resources/Web/statics/js/test.html

@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
-using Brotli;
+using BrotliSharpLib;
 using static ChatCore.Models.Bilibili.BilibiliPacket;
 
 namespace ChatCore.Models.Bilibili
@@ -48,7 +49,9 @@ namespace ChatCore.Models.Bilibili
 
 					using (var dest = new MemoryStream())
 					{
-						using (var ds = new BrotliStream(new MemoryStream(buffer), CompressionMode.Decompress, true))
+						// https://github.com/copyliu/bililive_dm/blob/fbe450db0af7070abdd46eb42273db31584c69f6/BiliDMLib/DanmakuLoader.cs Is wrong in packet length
+						//using (var ds = new BrotliStream(new MemoryStream(buffer), CompressionMode.Decompress, true))
+						using (var ds = new DeflateStream(new MemoryStream(buffer, 2, packetLength - headerLength - 2), CompressionMode.Decompress, true))
 						{
 							ds.CopyTo(dest);
 						}

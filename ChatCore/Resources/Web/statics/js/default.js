@@ -1,22 +1,160 @@
-let userLang;
+let userLang = "";
 let language_pack;
+var tts;
+
+var channelChipsInstance;
+var channelTooltipInstance;
+var usernameChipsInstance;
+var bilibiliBlockListUsernameTooltipInstance;
+var uidChipsInstance;
+var bilibiliBlockListUIDTooltipInstance;
+var keywordsChipsInstance;
+var bilibiliBlockListKeywordTooltipInstance;
+var danmukuServiceMethodSelectorInstance;
+var saveButtonElement;
+var ttsSpeedRangeInstance;
+var ttsPitchRangeInstance;
+
+// Helper functions
+// https://regex101.com/r/5Nrx9S/4
+var twitchChannelNameRegex = /^(?:https?:\/\/)?(?:(?:www\.|go\.)?twitch\.tv\/)?([a-z0-9_]{1,25})[\/?]?(?:.)*$/i;
+
+function extractTwitchChannelName(input) {
+	return twitchChannelNameRegex.exec(input);
+}
+
+function toggleTwitchOAuthVisibility() {
+	var tokenField = document.getElementById("twitch_oauth_token");
+	if (tokenField.type === "password") {
+		tokenField.type = "text";
+	} else {
+		tokenField.type = "password";
+	}
+}
+
+function toggleElement(id, force = false, show = false) {
+	var element = document.getElementById(id);
+	if (force) {
+		if (show && element.classList.contains("hide")) {
+			element.classList.remove("hide");
+		} else if (!show && !element.classList.contains("hide")) {
+			element.classList.add("hide");
+		}
+	}
+	else {
+		if (element.classList.contains("hide")) {
+			element.classList.remove("hide");
+		} else {
+			element.classList.add("hide");
+		}
+	}
+}
+
+function toggleTTSSettings() {
+	toggleElement("overlay-tts-voice-package-selector-warp");
+	toggleElement("overlay-tts-voice-settings-warp");
+	toggleElement("global-settings-web-streaming-overlay-tts-test-button");
+}
+
+function saveSettings(e) {
+	e.preventDefault();
+
+	saveButtonElement.enabled = false;
+	saveButtonElement.classList.add("disabled")
+
+	for (var key in data) {
+		var element = document.getElementById(key);
+
+		if (element === null) {
+			continue;
+		}
+
+		if (element.tagName.toLowerCase() === "input") {
+			switch (element.type) {
+				case "checkbox":
+					data[key] = element.checked;
+					break;
+				case "password":
+				case "text":
+					data[key] = element.value;
+					break;
+				case "number":
+					data[key] = parseInt(element.value);
+					if (isNaN(data[key])) {
+						data[key] = 0;
+					}
+					break;
+			}
+		}
+	}
+
+	data.twitch_channels = channelChipsInstance.getData().map(function (channelTag) {
+		return channelTag.id;
+	});
+
+	data.bilibili_block_list_username = usernameChipsInstance.getData().map(function (usernameTag) {
+		return usernameTag.id;
+	});
+
+	data.bilibili_block_list_uid = uidChipsInstance.getData().map(function (uidTag) {
+		return uidTag.id;
+	});
+
+	data.bilibili_block_list_keyword = keywordsChipsInstance.getData().map(function (keywordTag) {
+		return keywordTag.id;
+	});
+
+	let new_data = data;
+	new_data.bilibili_block_list_username = JSON.stringify(data.bilibili_block_list_username);
+	new_data.bilibili_block_list_uid = JSON.stringify(data.bilibili_block_list_uid);
+	new_data.bilibili_block_list_keyword = JSON.stringify(data.bilibili_block_list_keyword);
+	new_data.overlay_tts_voice_package = ttsVoicePackageSelectorInstance == null ? "" : ttsVoicePackageSelectorInstance.getSelectedValues()[0];
+	new_data.overlay_tts_voice_speed = parseInt(data.overlay_tts_voice_speed);
+	new_data.overlay_tts_voice_pitch = parseInt(data.overlay_tts_voice_pitch);
+
+
+	// new HttpRequest instance
+	var request = new XMLHttpRequest();
+	request.open("POST", "/submit");
+	request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+	request.onabort = function () {
+		M.toast({ text: set_translation("request-onabort", false) === "" ? "Something went wrong, try again later." : set_translation("request-onabort", false) })
+	};
+	request.onerror = function () {
+		M.toast({ text: set_translation("request-onerror", false) === "" ? "Something went wrong while trying to save the settings. Make sure Beat Saber is still running." : set_translation("request-onerror", false) })
+	};
+	request.onload = function () {
+		if (request.readyState === 4 && request.status === 204) {
+			M.toast({ text: set_translation("request-onload", false) === "" ? "Settings have been saved successfully." : set_translation("request-onload", false) })
+		} else {
+			M.toast({ text: set_translation("request-onerror", false) === "" ? "Something went wrong while trying to save the settings. Make sure Beat Saber is still running." : set_translation("request-onerror", false) })
+		}
+	};
+	request.onloadend = function () {
+		saveButtonElement.classList.remove("disabled")
+		saveButtonElement.enabled = true;
+	};
+	request.send(JSON.stringify(new_data));
+}
 
 function detect_language() {
 	/*console.log("Detect Language");*/
-	userLang = navigator.language || navigator.userLanguage;
-	switch (userLang) {
-		case "zh":
-		case "zh-Hans":
-		case "zh-CN":
-			userLang = "zh";
-			break;
-		case "ja":
-		case "ja-jp":
-			userLang = "ja";
-			break;
-		case "en":
-		default:
-			userLang = "en";
+	if (!["en", "zh", "ja"].includes(userLang)) {
+		userLang = navigator.language || navigator.userLanguage;
+		switch (userLang) {
+			case "zh":
+			case "zh-Hans":
+			case "zh-CN":
+				userLang = "zh";
+				break;
+			case "ja":
+			case "ja-jp":
+				userLang = "ja";
+				break;
+			case "en":
+			default:
+				userLang = "en";
+		}
 	}
 
 	fetch_language_file();
@@ -29,6 +167,7 @@ function change_language(lang) {
 }
 
 function fetch_language_file() {
+	data["Language"] = userLang;
 	/*console.log("Fetch Language");*/
 	var language_file_request = new XMLHttpRequest();
 	language_file_request.open('GET', `/Statics/Lang/${userLang}.json`, true);
@@ -127,7 +266,21 @@ function fetch_language_file() {
 					"bilibili-settings-block-list-keyword",
 					"bilibili-settings-utilities",
 					"bilibili-settings-utilities-clean-cache",
-					"bilibili-settings-utilities-images-button-text"
+					"bilibili-settings-utilities-images-button-text",
+					"global-settings-web-streaming-overlay-settings",
+					"global-settings-web-streaming-overlay-customize",
+					"global-settings-web-streaming-overlay-show-init-welcome",
+					"global-settings-web-streaming-overlay-show-username",
+					"global-settings-web-streaming-overlay-show-gift-in-sc",
+					"global-settings-web-streaming-overlay-show-guard-in-sc",
+					"global-settings-web-streaming-overlay-tts",
+					"global-settings-web-streaming-overlay-tts-notice",
+					"global-settings-web-streaming-overlay-tts-enable",
+					"global-settings-web-streaming-overlay-tts-voice-package",
+					"global-settings-web-streaming-overlay-tts-voice-speed",
+					"global-settings-web-streaming-overlay-tts-voice-pitch",
+					"global-settings-web-streaming-overlay-tts-test-button",
+					"global-settings-web-streaming-overlay-button-text"
 				];
 				translation_list.forEach((key) => {
 					set_translation(key);
@@ -141,11 +294,14 @@ function fetch_language_file() {
 				});
 
 				danmukuServiceMethodSelectorInstance.el.addEventListener("change", function () {
+					data["danmuku_service_method"] = danmukuServiceMethodSelectorInstance.getSelectedValues()[0];
 					bilibili_danmuku_functions_disabled(danmukuServiceMethodSelectorInstance.getSelectedValues()[0] === "OpenBLive");
 					toggle_bilibili_cookies();
 				});
 
 				toggle_bilibili_cookies();
+
+				TTSService();
 
 				channelTooltipInstance = M.Tooltip.init(document.querySelector('#twitch-settings-channel-tooltipped'), {
 					text: set_translation("channel-tooltip", false) === "" ? "Make sure to add your channelname here! When you have filled it in, make sure to hit enter and the save button afterwards." : set_translation("channel-tooltip", false)
@@ -330,6 +486,10 @@ function set_translation(id, dom = true) {
 				danmukuServiceMethodSelectorInstance?.destroy();
 				$('#danmuku-service-method-selector').after($("<label></label>").attr({ id: 'danmuku-service-method', for: 'danmuku-service-method-selector' }).text(language_pack[id]));
 			}
+			else if (id === "global-settings-web-streaming-overlay-tts-voice-package" && $(`#${id}`).length === 0) {
+				ttsVoicePackageSelectorInstance?.destroy();
+				$('#overlay-tts-voice-package-selector').after($("<label></label>").attr({ id: 'global-settings-web-streaming-overlay-tts-voice-package', for: 'overlay-tts-voice-package-selector' }).text(language_pack[id]));
+			}
 			else if (id === "title") {
 				document.title = language_pack[id] === "" ? document.title : language_pack[id];
 			} else {
@@ -380,15 +540,81 @@ function bilibili_danmuku_functions_disabled(status) {
 	});
 }
 
-
 $(function () {
+	for (var key in data) {
+		var value = data[key];
+		var element = document.getElementById(key);
+		if (element == null) {
+			if (["bilibili_block_list_keyword", "bilibili_block_list_uid", "bilibili_block_list_username"].includes(key)) {
+				data[key] = JSON.parse(value);
+			} else if (key === "danmuku_service_method") {
+				document.querySelector('#danmuku-service-method-selector').value = value;
+				// $('#danmuku-service-method-selector').val("Default").change();
+				// $('#danmuku-service-method-selector').val(value);
+			} else if (key === "overlay_tts_voice_package" && value !== "") {
+				document.querySelector('#overlay-tts-voice-package-selector').value = value;
+			}
+			continue;
+		}
+		if (typeof value === "string" || typeof value === "number") {
+			if (key === "overlay_tts_voice_speed" || key === "overlay_tts_voice_pitch") {
+				element.value = value / 10;
+			} else {
+				element.value = value;
+			}
+		} else if (typeof value === "boolean") {
+			element.checked = value;
+			if (key == "EnableTwitch" && value) {
+				toggleElement("twitch-settings-card")
+			}
+
+			if (key == "EnableBilibili" && value) {
+				toggleElement("bilibili-settings-card")
+			}
+
+			if (key == "overlay_tts_enable" && !value) {
+				toggleTTSSettings();
+			}
+		}
+	}
+
+	document.getElementById("twitch_oauth_token_visible").checked = document.getElementById("twitch_oauth_token").type !== "password";
+
+	var oauthHash = location.hash.substring(1);
+	var accessToken = oauthHash.substring(oauthHash.indexOf('access_token=')).split('&')[0].split('=')[1];
+
+	// Clean up url
+	history.pushState({}, "ChatCore Settings", location.origin)
+
+	if (accessToken) {
+		var tokenField = document.getElementById("twitch_oauth_token");
+		tokenField.value = 'oauth:' + decodeURIComponent(accessToken);
+	}
+
+	saveButtonElement = document.getElementById("saveButton");
+	saveButtonElement.addEventListener("click", saveSettings);
+	document.getElementById("BLive_submit").addEventListener("click", saveSettings);
+
+	if (bilibili_version) {
+		if (!$("#twitch-settings-switch").hasClass("hide")) {
+			$("#twitch-settings-switch").addClass("hide");
+		}
+	}
+	userLang = data["Language"];
+	tts = new TTS();
 	detect_language();
 	document.getElementById("bilibili-settings-utilities-images-button").addEventListener("click", clean_cache_bilibili_image);
+	document.getElementById("global-settings-web-streaming-overlay-tts-test-button").addEventListener("click", TTSTest);
+
+	ttsSpeedRangeInstance = M.Range.init(document.getElementById("overlay_tts_voice_speed"));
+	ttsPitchRangeInstance = M.Range.init(document.getElementById("overlay_tts_voice_pitch"));
+
+	ttsSpeedRangeInstance.el.addEventListener("click", change_tts_voice_speed);
+	ttsPitchRangeInstance.el.addEventListener("click", change_tts_voice_pitch);
 	// $('.collapsible').collapsible();
 	// $('.dropdown-trigger').dropdown();
 	//$('select').formSelect();
 });
-
 
 function clear_blive_code() {
 	$('#bilibili_identity_code').val("");
@@ -422,4 +648,54 @@ function clean_cache_bilibili_image() {
 		taget_button.enabled = true;
 	};
 	request.send();
+}
+
+function TTSService() {
+	let voiceSelect = document.getElementById('overlay-tts-voice-package-selector');
+	tts.voices.then(voices => {
+		voiceSelect.innerHTML = "";
+		for (let i = 0; i < voices.length; i++) {
+			if (voices[i].lang.includes(userLang)) {
+				if (data["overlay_tts_voice_package"] === "") {
+					document.querySelector('#overlay-tts-voice-package-selector').value = voices[i].name;
+					data["overlay_tts_voice_package"] = voices[i].name;
+					tts.selectVoiceByIndex(i);
+				}
+				let option = document.createElement('option');
+				option.textContent = ((voices[i].localService ? '🖥' : '☁') + " " + voices[i].name);
+				option.setAttribute('data-lang', voices[i].lang);
+				option.setAttribute('data-name', voices[i].name);
+				option.setAttribute('data-index', `${i}`);
+				option.setAttribute('value', voices[i].name);
+				voiceSelect.appendChild(option);
+				if (data["overlay_tts_voice_package"] == voices[i].name) {
+					document.querySelector('#overlay-tts-voice-package-selector').value = voices[i].name;
+				}
+			}
+		}
+		ttsVoicePackageSelectorInstance = M.FormSelect.init(document.querySelector('#overlay-tts-voice-package-selector'), {
+		});
+
+		ttsVoicePackageSelectorInstance.el.addEventListener("change", function () {
+			tts.selectVoiceByName(ttsVoicePackageSelectorInstance.getSelectedValues()[0]);
+			data["overlay_tts_voice_package"] = ttsVoicePackageSelectorInstance.getSelectedValues()[0];
+		});
+	});
+}
+
+function TTSTest() {
+	if (document.getElementById("overlay_tts_enable").checked) {
+		tts.selectVoiceByName(ttsVoicePackageSelectorInstance.getSelectedValues()[0]);
+		tts.test()
+	}
+}
+
+function change_tts_voice_speed() {
+	data["overlay_tts_voice_speed"] = parseFloat(ttsSpeedRangeInstance.value.textContent) * 10;
+	tts.rate = parseFloat(ttsSpeedRangeInstance.value.textContent);
+}
+
+function change_tts_voice_pitch() {
+	data["overlay_tts_voice_pitch"] = parseFloat(ttsPitchRangeInstance.value.textContent) * 10;
+	tts.pitch = parseFloat(ttsPitchRangeInstance.value.textContent);
 }

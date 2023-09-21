@@ -73,7 +73,7 @@ namespace ChatCore.Services
 							_client = new WebSocket(uri, "", cookies, null, userAgent, origin);
 							_client.Opened += _client_Opened;
 							_client.Closed += _client_Closed;
-							_client.Error += _client_Error;
+							//_client.Error += _client_Error;
 							_client.MessageReceived += _client_MessageReceived;
 							_client.DataReceived += _client_DataReceived;
 							_startTime = DateTime.UtcNow;

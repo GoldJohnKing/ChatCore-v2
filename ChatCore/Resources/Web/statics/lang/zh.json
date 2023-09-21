@@ -113,5 +113,20 @@
 	"bilibili-settings-block-list-keyword-chip-add-2": ", 别忘保存",
 	"bilibili-settings-utilities": "实用工具",
 	"bilibili-settings-utilities-clean-cache": "清理缓存",
-	"bilibili-settings-utilities-images-button-text": "图片缓存"
+	"bilibili-settings-utilities-images-button-text": "图片缓存",
+
+	"global-settings-web-streaming-overlay-settings": "直播叠加层",
+	"global-settings-web-streaming-overlay-customize": "自定义",
+	"global-settings-web-streaming-overlay-show-init-welcome": "显示初始化欢迎消息",
+	"global-settings-web-streaming-overlay-show-username": "显示用户名",
+	"global-settings-web-streaming-overlay-show-gift-in-sc": "使用醒目留言样式展示礼物消息",
+	"global-settings-web-streaming-overlay-show-guard-in-sc": "使用醒目留言样式展示大航海消息",
+	"global-settings-web-streaming-overlay-tts": "文字转语音(TTS)",
+	"global-settings-web-streaming-overlay-tts-notice": "文字转语音(TTS)功能受限于当前页面以及直播叠加层所使用的浏览器。如果使用的浏览器没有喜欢的语音包，可以尝试使用其他浏览器(推荐Edge)。如果想要对特定的叠加层禁用文字转语音(TTS)，请在URL最后加上`?disableTTS=1`",
+	"global-settings-web-streaming-overlay-tts-enable": "启用文字转语音(TTS)",
+	"global-settings-web-streaming-overlay-tts-voice-package": "语音包",
+	"global-settings-web-streaming-overlay-tts-voice-speed": "朗读速度",
+	"global-settings-web-streaming-overlay-tts-voice-pitch": "朗读语调",
+	"global-settings-web-streaming-overlay-tts-test-button": "试听测试消息",
+	"global-settings-web-streaming-overlay-button-text": "点击打开直播叠加层"
 }

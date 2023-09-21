@@ -19,6 +19,8 @@ namespace ChatCore.Services
 		public bool DisableWebApp = false;
 		[ConfigMeta(Comment = "Whether or not to launch the webapp in your default browser when ChatCore is started.")]
 		public bool LaunchWebAppOnStartup = true;
+		[ConfigMeta(Comment = "The language you want to use.")]
+		public string Language = "";
 
 		[ConfigSection("Global")]
 		[ConfigMeta(Comment = "When enabled, emojis will be parsed.")]
@@ -130,6 +132,26 @@ namespace ChatCore.Services
 		[ConfigMeta(Comment = "Message contains the  keyword in the list will be blocked.")]
 		public string bilibili_block_list_keyword = "[]";
 
+		[ConfigSection("StreamingOverlay")]
+		[ConfigMeta(Comment = "When enabled, an init welcome message will be shown.")]
+		public bool overlay_show_init_welcome = true;
+		[ConfigMeta(Comment = "When enabled, the username of messages will be shown.")]
+		public bool overlay_show_username = true;
+		[ConfigMeta(Comment = "When enabled, the gift type messages will be shown in SuperChat style.")]
+		public bool overlay_show_gift_in_sc = true;
+		[ConfigMeta(Comment = "When enabled, the guard type messages will be shown in SuperChat style.")]
+		public bool overlay_show_guard_in_sc = true;
+
+		[ConfigSection("TextToSpeach")]
+		[ConfigMeta(Comment = "When enabled, Text-To-Speach Engine will be actived in the streaming overlay.")]
+		public bool overlay_tts_enable = false;
+		[ConfigMeta(Comment = "Text-To-Speach Engine will use this package when the browser supports it.")]
+		public string overlay_tts_voice_package = "";
+		[ConfigMeta(Comment = "Text-To-Speach Engine will use this speed to speak. (10 x actual speed)")]
+		public int overlay_tts_voice_speed = 10;
+		[ConfigMeta(Comment = "Text-To-Speach Engine will use this pitch to speak. (10 x actual pitch)")]
+		public int overlay_tts_voice_pitch = 10;
+
 		private readonly IPathProvider _pathProvider;
 		private readonly ObjectSerializer _configSerializer;
 		private bool _updateTwitch, _updateBilibili;
@@ -148,6 +170,11 @@ namespace ChatCore.Services
 		{
 			_configSerializer.Save(this, Path.Combine(_pathProvider.GetDataPath(), "settings.ini"));
 
+		}
+
+		public void Reload() {
+			var path = Path.Combine(_pathProvider.GetDataPath(), "settings.ini");
+			_configSerializer.Load(this, path);
 		}
 
 		public JSONObject GetSettingsAsJson()

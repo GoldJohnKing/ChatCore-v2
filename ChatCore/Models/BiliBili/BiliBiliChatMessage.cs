@@ -404,7 +404,7 @@ namespace ChatCore.Models.Bilibili
 				//Sender.SetIsModerator(info[2][2].AsInt);
 				Sender.SetMedal(data["fans_medal"]["medal_level"].AsInt, data["fans_medal"]["medal_name"].Value, true, new string[] { data["fans_medal"]["medal_color_start"].Value.ToString(), data["fans_medal"]["medal_color_end"].Value.ToString(), data["fans_medal"]["medal_color_border"].Value.ToString() }, data["fans_medal"]["guard_level"].AsInt, data["fans_medal"]["anchor_roomid"].AsInt, data["fans_medal"]["target_id"].AsInt);
 				Sender.UpdateDisplayName();
-				//b.Sender = Sender;
+				b.Sender = Sender;
 
 				switch (data["msg_type"].Value.ToString())
 				{
@@ -883,6 +883,18 @@ namespace ChatCore.Models.Bilibili
 				{
 					var emote_list = new List<IChatEmote>();
 					BilibiliChatMessageExtra extraMsg = new BilibiliChatMessageExtraDanmuku();
+					var possibleEmojis = new Regex(@"(\[.*?\])", RegexOptions.Compiled);
+					Match emojisMatches = possibleEmojis.Match(b.Message);
+					while (emojisMatches.Success)
+					{
+						var emoji = emojisMatches.Value;
+						if (BilibiliService.bilibiliEmoticons.TryGetValue(emoji, out var emoji_info))
+						{
+							emote_list.Add(new BilibiliChatEmote(emoji_info["id"], emoji_info["name"], emoji_info["url"], false, emojisMatches.Index));
+						}
+
+						emojisMatches = emojisMatches.NextMatch();
+					}
 					if (extraMsg is BilibiliChatMessageExtraDanmuku danmuku1)
 					{
 						danmuku1.raw_msg = data["msg"].Value;

@@ -107,7 +107,7 @@ namespace ChatCore.Models.Bilibili
 				}
 				try
 				{
-					var apiResult = await HttpClientUtils.HttpClient(BilibiliUserInfoApi + uid, HttpMethod.Get, null, null);
+					var apiResult = await (new HttpClientUtils()).HttpClient(BilibiliUserInfoApi + uid, HttpMethod.Get, null, null);
 					if (apiResult != null && apiResult[0] == "OK")
 					{
 						var NewUserInfo = JSONNode.Parse(apiResult[1]);
@@ -294,7 +294,7 @@ namespace ChatCore.Models.Bilibili
 
 			if (displaySettings["showAvatar"] && withAvatar)
 			{
-				genAvatarImage();
+				genAvatarImage().Wait();
 				var newBadge = new BilibiliChatBadge();
 				newBadge.Id = UserName;
 				newBadge.Name = UserName;
@@ -305,7 +305,7 @@ namespace ChatCore.Models.Bilibili
 			Badges = badgeList.ToArray();
 		}
 
-		public async void genAvatarImage()
+		public async Task genAvatarImage()
 		{
 			if (await GetUserInfoAsync(Id) == string.Empty)
 			{
@@ -327,7 +327,7 @@ namespace ChatCore.Models.Bilibili
 
 			try
 			{
-				var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"ChatCore\Avatars");
+				var path = (new PathProvider()).GetAvatarImagePath();
 				var filename = Path.Combine(path, ImageUtils.convertToValidFilename(UserName) + ".svg");
 				var imagename = Path.Combine(path, ImageUtils.convertToValidFilename(UserName) + ".png");
 				if (!Directory.Exists(path))
@@ -343,7 +343,7 @@ namespace ChatCore.Models.Bilibili
 				ImageUtils.genImg(filename.ToString(), imagename.ToString(), 44 * scale, 44 * scale, true);
 				if (File.Exists(filename))
 				{
-					//File.Delete(filename);
+					File.Delete(filename);
 				}
 
 				Avatar = (new System.Uri(imagename)).AbsoluteUri;

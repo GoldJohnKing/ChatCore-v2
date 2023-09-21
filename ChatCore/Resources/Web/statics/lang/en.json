@@ -113,5 +113,20 @@
 	"bilibili-settings-block-list-keyword-chip-add-2": ", don't forget to save.",
 	"bilibili-settings-utilities": "Utilities",
 	"bilibili-settings-utilities-clean-cache": "Clean Cache",
-	"bilibili-settings-utilities-images-button-text": "Image Cache"
+	"bilibili-settings-utilities-images-button-text": "Image Cache",
+
+	"global-settings-web-streaming-overlay-settings": "Streaming Overlay",
+	"global-settings-web-streaming-overlay-customize": "Customize",
+	"global-settings-web-streaming-overlay-show-init-welcome": "Show Init Welcome Message",
+	"global-settings-web-streaming-overlay-show-username": "Show Username",
+	"global-settings-web-streaming-overlay-show-gift-in-sc": "Show Gift Message in SuperChat Style",
+	"global-settings-web-streaming-overlay-show-guard-in-sc": "Show Guard Message in SuperChat Style",
+	"global-settings-web-streaming-overlay-tts": "Text-To-Speach",
+	"global-settings-web-streaming-overlay-tts-notice": "Text-to-speech (TTS) functionality is limited to the browser used in the current page and the streaming overlay page. If your browser does not have a voice package you like, you can try another browser (Edge is recommended). If you want to turn off text-to-speech (TTS) for a specific overlay page, try to add `?disableTTS=1` at the end of the URL.",
+	"global-settings-web-streaming-overlay-tts-enable": "Enable Text-To-Speach",
+	"global-settings-web-streaming-overlay-tts-voice-package": "Voice Package",
+	"global-settings-web-streaming-overlay-tts-voice-speed": "Speach Speed",
+	"global-settings-web-streaming-overlay-tts-voice-pitch": "Speach Pitch",
+	"global-settings-web-streaming-overlay-tts-test-button": "Listen a test message",
+	"global-settings-web-streaming-overlay-button-text": "Click to open Streaming Overlay"
 }

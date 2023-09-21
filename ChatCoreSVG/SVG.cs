@@ -54,28 +54,29 @@ namespace ChatCoreSVG
 		public static SvgFontStruct ImportFont(string fontName)
 		{
 			var result = new SvgFontStruct();
+			var defaultFontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\Windows\Fonts");
 
 			switch (fontName)
 			{
 				case "MSYaheiUIL":
 					result.FontNames = new string[] { "Microsoft YaHei UI Light", "MicrosoftYaHeiUILight", "微软雅黑 Light" };
-					result.FontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\Windows\Fonts\msyhl.ttc").ToString();
+					result.FontPath = Path.Combine(defaultFontPath, @"msyhl.ttc").ToString();
 					break;
 				case "MSYaheiUISL":
 					result.FontNames = new string[] { "Microsoft YaHei UI Semilight", "MicrosoftYaHeiUISemilight", "微软雅黑 Semilight" };
-					result.FontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\Windows\Fonts\微软雅黑 Semilight & Microsoft YaHei UI Semilight.ttc").ToString();
+					result.FontPath = Path.Combine(defaultFontPath, @"微软雅黑 Semilight & Microsoft YaHei UI Semilight.ttc").ToString();
 					break;
 				case "MSYaheiUI":
 					result.FontNames = new string[] { "Microsoft YaHei UI", "MicrosoftYaHeiUI", "微软雅黑" };
-					result.FontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\Windows\Fonts\msyh.ttc").ToString();
+					result.FontPath = Path.Combine(defaultFontPath, @"msyh.ttc").ToString();
 					break;
 				case "MSYaheiUISB":
 					result.FontNames = new string[] { "Microsoft YaHei UI Semibold", "MicrosoftYaHeiUISemibold", "微软雅黑 Semibold" };
-					result.FontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\Windows\Fonts\微软雅黑 Semibold & Microsoft YaHei UI Semibold.ttc").ToString();
+					result.FontPath = Path.Combine(defaultFontPath, @"微软雅黑 Semibold & Microsoft YaHei UI Semibold.ttc").ToString();
 					break;
 				case "MSYaheiUIB":
 					result.FontNames = new string[] { "Microsoft YaHei UI Bold", "MicrosoftYaHeiUIBold", "微软雅黑 Bold" };
-					result.FontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\Windows\Fonts\msyhbd.ttc").ToString();
+					result.FontPath = Path.Combine(defaultFontPath, @"msyhbd.ttc").ToString();
 					break;
 				default:
 					result = ImportFont("MSYaheiUI");

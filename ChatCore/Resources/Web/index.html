@@ -3,14 +3,15 @@
 <head>
 	<title>ChatCore Settings</title>
 	<!--Import Google Icon Font-->
-	<link rel="stylesheet" href="Statics/Css/Material+Icons.css">
+	<link rel="stylesheet" href="Statics/Css/Material+Symbols+Outlined.css">
 	<!-- Compiled and minified CSS -->
 	<link rel="stylesheet" href="Statics/Css/materialize.min.css">
 	<!--Let browser know website is optimized for mobile-->
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<meta charset="UTF-8">
 	<link rel="stylesheet" href="Statics/Css/default.css">
-	<script src="Statics/Js/jquery-3.5.1.min.js"></script>
+	<script src="Statics/Js/jquery-3.7.1.min.js"></script>
+	<script src="Statics/Js/tts.js"></script>
 </head>
 <body class="grey lighten-3">
 	<nav>
@@ -18,7 +19,7 @@
 			<div style="display:flex; flex-direction:row">
 				<div class="brand-logo" id="brand-logo">ChatCore</div>
 				<div style="padding: 0 16px;">
-					<a class='dropdown-trigger btn' href='#' data-target='languagedropdown' id="translationButton"><span class="material-icons" style="padding: 8px 0;">g_translate</span></a>
+					<a class='dropdown-trigger btn' href='#' data-target='languagedropdown' id="translationButton"><span class="material-symbols-outlined" style="padding: 8px 0;">g_translate</span></a>
 					<ul id='languagedropdown' class='dropdown-content'>
 						<li><a onclick='change_language("en")'>English</a></li>
 						<li><a onclick='change_language("zh")'>中文(简体)</a></li>
@@ -42,12 +43,12 @@
 							<span class="card-title" id="twitch-settings-title">Twitch Settings</span>
 						</div>
 						<div class="card-content">
-							<p class="caption" id="twitch-settings-login">Login</p>
+							<p class="caption default-gap" id="twitch-settings-login">Login</p>
 							<div class="row default-gap">
 								<div class="middle-vertical col s12">
 									<div class="input-field flex-auto-grow">
-										<input id="twitch_oauth_token" name="twitch_oauth_token" type="password" class="validate"
-											   placeholder="oauth:12abc3defg4p678arw9aq2xasd0gwa43" form="settings-form">
+										<input id="twitch_oauth_token" name="twitch_oauth_token" type="password" autocomplete="token"
+											   class="validate" placeholder="oauth:12abc3defg4p678arw9aq2xasd0gwa43" form="settings-form">
 										<label for="twitch_oauth_token" id="twitch-settings-oauth-token">OAuth token</label>
 									</div>
 									<p>
@@ -68,8 +69,8 @@
 								<div class="middle-vertical col s12">
 									<p class="caption">
 										<span id="twitch-settings-channel-title" class="flex-auto-grow">Channels</span>
-										<a class="btn-floating pulse cyan tooltipped" data-position="right" id="twitch-settings-channel-tooltipped">
-											<i class="material-icons">info_outline</i>
+										<a class="btn-floating pulse info-tooltip-icon-background tooltipped" data-position="right" id="twitch-settings-channel-tooltipped">
+											<i class="material-symbols-outlined info-tooltip-icon">info</i>
 											</a>
 									</p>
 								</div>
@@ -119,7 +120,7 @@
 							<span class="card-title" id="bilibili-settings-title">Bilibili Settings</span>
 						</div>
 						<div class="card-content">
-							<div class="input-field">
+							<div class="input-field default-gap">
 								<select id="danmuku-service-method-selector">
 									<option value="Legacy" id="danmuku-service-method-legacy">Legacy (no login required)</option>
 									<option value="Default" id="danmuku-service-method-default">Default (require cookies)</option>
@@ -128,14 +129,14 @@
 								<label for="danmuku-service-method-selector" id="danmuku-service-method">Danmuku Service Connection Method</label>
 							</div>
 
-							<div class="input-field">
+							<div class="input-field default-gap">
 								<input id="bilibili_room_id" name="bilibili_room_id" type="number" class="validate"
 									   placeholder="123456" form="settings-form">
 								<label for="bilibili_room_id" id="bilibili-settings-room-id">Room ID</label>
 							</div>
 
-							<div class="input-field hide" id="bilibili-settings-cookies-div">
-								<input id="bilibili_cookies" name="bilibili_cookies" type="password" class="validate"
+							<div class="input-field default-gap hide" id="bilibili-settings-cookies-div">
+								<input id="bilibili_cookies" name="bilibili_cookies" type="password" class="validate" autocomplete="cookies"
 									   placeholder="dy_spec_agreed=1; buvid3=xxxxx..." form="settings-form">
 								<label for="bilibili_cookies" id="bilibili-settings-cookies">Cookies</label>
 							</div>
@@ -144,7 +145,7 @@
 								<p class="caption col s12" id="bilibili-settings-blive-settings">BLive Interaction settings</p>
 								<ul class="collapsible popout col s12">
 									<li class=" card-force-round">
-										<div class="collapsible-header card-force-round"><i class="material-icons">code</i><span id="bilibili-settings-blive-settings-code">Identity Code</span></div>
+										<div class="collapsible-header card-force-round"><i class="material-symbols-outlined">code</i><span id="bilibili-settings-blive-settings-code">Identity Code</span></div>
 										<div class="collapsible-body card-force-round auto_overflow">
 											<div class="BLive">
 												<div class="BLive_close"></div>
@@ -180,7 +181,7 @@
 								<p class="caption col s12" id="bilibili-settings-danmuku-settings">Danmuku settings</p>
 								<ul class="collapsible popout col s12 ul-force-gap">
 									<li class=" card-force-round">
-										<div class="collapsible-header  card-force-round"><i class="material-icons">chat</i><span id="bilibili-settings-danmuku-settings-basic">Basic</span></div>
+										<div class="collapsible-header  card-force-round"><i class="material-symbols-outlined">chat</i><span id="bilibili-settings-danmuku-settings-basic">Basic</span></div>
 										<div class="collapsible-body  card-force-round">
 											<div class="row">
 												<div class="switch col s12">
@@ -280,7 +281,7 @@
 										</div>
 									</li>
 									<li class=" card-force-round">
-										<div class="collapsible-header  card-force-round"><i class="material-icons">attach_money</i><span id="bilibili-settings-danmuku-settings-gift">Gift</span></div>
+										<div class="collapsible-header  card-force-round"><i class="material-symbols-outlined">attach_money</i><span id="bilibili-settings-danmuku-settings-gift">Gift</span></div>
 										<div class="collapsible-body  card-force-round">
 											<div class="row">
 												<div class="switch col s12">
@@ -312,7 +313,7 @@
 										</div>
 									</li>
 									<li class=" card-force-round">
-										<div class="collapsible-header  card-force-round"><i class="material-icons">connect_without_contact</i><span id="bilibili-settings-danmuku-settings-interaction">Interaction</span></div>
+										<div class="collapsible-header  card-force-round"><i class="material-symbols-outlined">connect_without_contact</i><span id="bilibili-settings-danmuku-settings-interaction">Interaction</span></div>
 										<div class="collapsible-body  card-force-round">
 											<div class="row">
 												<div class="switch col s12">
@@ -407,7 +408,7 @@
 										</div>
 									</li>
 									<li class=" card-force-round">
-										<div class="collapsible-header  card-force-round"><i class="material-icons">anchor</i><span id="bilibili-settings-danmuku-settings-guard">Guard</span></div>
+										<div class="collapsible-header  card-force-round"><i class="material-symbols-outlined">anchor</i><span id="bilibili-settings-danmuku-settings-guard">Guard</span></div>
 										<div class="collapsible-body  card-force-round">
 											<div class="row">
 												<div class="switch col s12">
@@ -465,7 +466,7 @@
 										</div>
 									</li>
 									<li class=" card-force-round">
-										<div class="collapsible-header  card-force-round"><i class="material-icons">notifications</i><span id="bilibili-settings-danmuku-settings-notification">Other Notification</span></div>
+										<div class="collapsible-header  card-force-round"><i class="material-symbols-outlined">notifications</i><span id="bilibili-settings-danmuku-settings-notification">Other Notification</span></div>
 										<div class="collapsible-body  card-force-round">
 											<div class="row">
 												<div class="switch col s12">
@@ -542,24 +543,24 @@
 										</div>
 									</li>
 									<li class=" card-force-round">
-										<div class="collapsible-header  card-force-round"><i class="material-icons">do_not_disturb_on</i><span id="bilibili-settings-danmuku-settings-block-list">Block List</span></div>
+										<div class="collapsible-header  card-force-round"><i class="material-symbols-outlined">do_not_disturb_on</i><span id="bilibili-settings-danmuku-settings-block-list">Block List</span></div>
 										<div class="collapsible-body  card-force-round">
-											<div class="row">
-												<p class="caption col s12"><span id="bilibili-settings-block-list-username">Blocked Username</span><a class="btn-floating pulse cyan tooltipped" data-position="right" id="bilibili-settings-block-list-username-tooltipped"><i class="material-icons">info_outline</i></a></p>
+											<div class="row info-tooltip-row-margin">
+												<p class="caption col s12"><span id="bilibili-settings-block-list-username">Blocked Username</span><a class="btn-floating pulse info-tooltip-icon-background tooltipped" data-position="right" id="bilibili-settings-block-list-username-tooltipped"><i class="material-symbols-outlined info-tooltip-icon">info</i></a></p>
 											</div>
 											<div class="row">
 												<div class="chips col s12" id="bilibili-settings-block-list-usernames">
 												</div>
 											</div>
-											<div class="row">
-												<p class="caption col s12"><span id="bilibili-settings-block-list-uid">Blocked UID</span><a class="btn-floating pulse cyan tooltipped" data-position="right" id="bilibili-settings-block-list-uid-tooltipped"><i class="material-icons">info_outline</i></a></p>
+											<div class="row info-tooltip-row-margin">
+												<p class="caption col s12"><span id="bilibili-settings-block-list-uid">Blocked UID</span><a class="btn-floating pulse info-tooltip-icon-background tooltipped" data-position="right" id="bilibili-settings-block-list-uid-tooltipped"><i class="material-symbols-outlined info-tooltip-icon">info</i></a></p>
 											</div>
 											<div class="row">
 												<div class="chips col s12" id="bilibili-settings-block-list-uids">
 												</div>
 											</div>
-											<div class="row">
-												<p class="caption col s12"><span id="bilibili-settings-block-list-keyword">Blocked Keywords</span><a class="btn-floating pulse cyan tooltipped" data-position="right" id="bilibili-settings-block-list-keyword-tooltipped"><i class="material-icons">info_outline</i></a></p>
+											<div class="row info-tooltip-row-margin">
+												<p class="caption col s12"><span id="bilibili-settings-block-list-keyword">Blocked Keywords</span><a class="btn-floating pulse info-tooltip-icon-background tooltipped" data-position="right" id="bilibili-settings-block-list-keyword-tooltipped"><i class="material-symbols-outlined info-tooltip-icon">info</i></a></p>
 											</div>
 											<div class="row">
 												<div class="chips col s12" id="bilibili-settings-block-list-keywords">
@@ -574,10 +575,10 @@
 								<p class="caption col s12" id="bilibili-settings-utilities">Utilities</p>
 								<ul class="collapsible popout col s12">
 									<li class=" card-force-round">
-										<div class="collapsible-header card-force-round"><i class="material-icons">cleaning_services</i><span id="bilibili-settings-utilities-clean-cache">Clean Cache</span></div>
+										<div class="collapsible-header card-force-round"><i class="material-symbols-outlined">cleaning_services</i><span id="bilibili-settings-utilities-clean-cache">Clean Cache</span></div>
 										<div class="collapsible-body card-force-round">
 											<a class="waves-effect waves-light btn col s6" id="bilibili-settings-utilities-images-button">
-												<i class="material-icons left">image</i>
+												<i class="material-symbols-outlined left">image</i>
 												<span id="bilibili-settings-utilities-images-button-text">Image Cache</span>
 											</a>
 										</div>
@@ -604,6 +605,98 @@
 										<span id="global-settings-launch-web-app-on-startup">Launch Web App On Startup</span>
 									</label>
 								</div>
+
+							</div>
+
+							<div class="row default-gap">
+								<p class="caption col s12" id="global-settings-web-streaming-overlay-settings">Streaming Overlay</p>
+
+								<ul class="collapsible popout col s12 ul-force-gap">
+									<li class=" card-force-round">
+										<div class="collapsible-header card-force-round"><i class="material-symbols-outlined">dashboard_customize</i><span id="global-settings-web-streaming-overlay-customize">Customize</span></div>
+										<div class="collapsible-body card-force-round">
+											<div class="row">
+												<div class="col s12">
+
+												</div>
+
+												<div class="switch col s12">
+													<label>
+														<input id="overlay_show_init_welcome" name="overlay_show_init_welcome" type="checkbox" form="settings-form">
+														<span class="lever"></span>
+														<span id="global-settings-web-streaming-overlay-show-init-welcome">Show Init Welcome Message</span>
+													</label>
+												</div>
+												<div class="switch col s12">
+													<label>
+														<input id="overlay_show_username" name="overlay_show_username" type="checkbox" form="settings-form">
+														<span class="lever"></span>
+														<span id="global-settings-web-streaming-overlay-show-username">Show Username</span>
+													</label>
+												</div>
+												<div class="switch col s12">
+													<label>
+														<input id="overlay_show_gift_in_sc" name="overlay_show_gift_in_sc" type="checkbox" form="settings-form">
+														<span class="lever"></span>
+														<span id="global-settings-web-streaming-overlay-show-gift-in-sc">Show Gift Message in SuperChat Style</span>
+													</label>
+												</div>
+												<div class="switch col s12">
+													<label>
+														<input id="overlay_show_guard_in_sc" name="overlay_show_guard_in_sc" type="checkbox" form="settings-form">
+														<span class="lever"></span>
+														<span id="global-settings-web-streaming-overlay-show-guard-in-sc">Show Guard Message in SuperChat Style</span>
+													</label>
+												</div>
+											</div>
+										</div>
+									</li>
+
+									<li class="card-force-round">
+										<div class="collapsible-header card-force-round"><i class="material-symbols-outlined">text_to_speech</i><span id="global-settings-web-streaming-overlay-tts">Text-To-Speach</span></div>
+										<div class="collapsible-body card-force-round">
+											<div class="row">
+												<div class="notification-tip col s12">
+													<i class="material-symbols-outlined">notifications</i><span id="global-settings-web-streaming-overlay-tts-notice">Text-To-Speach Notice</span>
+												</div>
+												<div class="switch col s12">
+													<label>
+														<input id="overlay_tts_enable" name="overlay_tts_enable" type="checkbox" form="settings-form" onclick="toggleTTSSettings()">
+														<span class="lever"></span>
+														<span id="global-settings-web-streaming-overlay-tts-enable">Enable Text-To-Speach</span>
+													</label>
+												</div>
+
+												<div class="input-field col s12" id="overlay-tts-voice-package-selector-warp">
+													<select id="overlay-tts-voice-package-selector">
+													</select>
+													<label for="overlay-tts-voice-package-selector" id="global-settings-web-streaming-overlay-tts-voice-package">Voice Package</label>
+												</div>
+
+												<div class="row col s12" id="overlay-tts-voice-settings-warp">
+													<p class="range-field col s12">
+														<label for="overlay_tts_voice_speed" id="global-settings-web-streaming-overlay-tts-voice-speed">Speach Speed</label>
+														<input type="range" id="overlay_tts_voice_speed" min="0.5" max="2.0" step="0.1" value="1.0" />
+													</p>
+													<p class="range-field col s12">
+														<label for="overlay_tts_voice_pitch" id="global-settings-web-streaming-overlay-tts-voice-pitch">Speach Pitch</label>
+														<input type="range" id="overlay_tts_voice_pitch" min="0.0" max="2.0" step="0.1" value="1.0" />
+													</p>
+												</div>
+
+												<a class="waves-effect waves-light btn col s12" id="global-settings-web-streaming-overlay-tts-test-button">
+													<span id="global-settings-web-streaming-overlay-tts-test-button">Test Message</span>
+													<i class="material-symbols-outlined left">headphones</i>
+												</a>
+											</div>
+											</div>
+									</li>
+								</ul>
+								<a class="waves-effect waves-light btn col s12" id="global-settings-web-streaming-overlay-button" href="overlay" target="_blank">
+									<i class="material-symbols-outlined left">layers</i>
+									<span id="global-settings-web-streaming-overlay-button-text">Click to open Streaming Overlay</span>
+									<i class="material-symbols-outlined right">open_in_new</i>
+								</a>
 							</div>
 
 							<div class="row default-gap">
@@ -619,14 +712,14 @@
 
 							<div class="row default-gap">
 								<p class="caption col s12" id="global-settings-chat-settings">Chat services</p>
-								<div class="switch col s6">
+								<div class="switch col s6" id="twitch-settings-switch">
 									<label>
 										<input id="EnableTwitch" name="EnableTwitch" type="checkbox" form="settings-form" onclick="toggleElement('twitch-settings-card')">
 										<span class="lever"></span>
 										<span id="global-settings-chat-twitch-enable">Twitch</span>
 									</label>
 								</div>
-								<div class="switch col s6">
+								<div class="switch col s6" id="bilibili-settings-switch">
 									<label>
 										<input id="EnableBilibili" name="EnableBilibili" type="checkbox" form="settings-form" onclick="toggleElement('bilibili-settings-card')">
 										<span class="lever"></span>
@@ -641,182 +734,15 @@
 			<div class="row center-align">
 				<button id="saveButton" class="btn waves-effect waves-light col s12" style="margin: 8px;">
 					<span id="save-button-text">Save settings</span>
-					<i class="material-icons right">send</i>
+					<i class="material-symbols-outlined right">send</i>
 				</button>
 			</div>
 		</form>
 	</div>
 	<script src="Statics/Js/materialize.min.js"></script>
 	<script>
-		var channelChipsInstance;
-		var channelTooltipInstance;
-		var usernameChipsInstance;
-		var bilibiliBlockListUsernameTooltipInstance;
-		var uidChipsInstance;
-		var bilibiliBlockListUIDTooltipInstance;
-		var keywordsChipsInstance;
-		var bilibiliBlockListKeywordTooltipInstance;
-		var danmukuServiceMethodSelectorInstance;
-		var saveButtonElement;
-
-		// Helper functions
-		// https://regex101.com/r/5Nrx9S/4
-		var twitchChannelNameRegex = /^(?:https?:\/\/)?(?:(?:www\.|go\.)?twitch\.tv\/)?([a-z0-9_]{1,25})[\/?]?(?:.)*$/i;
-
-		function extractTwitchChannelName(input) {
-			return twitchChannelNameRegex.exec(input);
-		}
-
-		function toggleTwitchOAuthVisibility() {
-			var tokenField = document.getElementById("twitch_oauth_token");
-			if (tokenField.type === "password") {
-				tokenField.type = "text";
-			} else {
-				tokenField.type = "password";
-			}
-		}
-		
-		function toggleElement(id) {
-			var element = document.getElementById(id);
-			if (element.classList.contains("hide"))
-			{
-				element.classList.remove("hide");
-			} else {
-				element.classList.add("hide");
-			}
-		}
-
-		function saveSettings(e) {
-			e.preventDefault();
-
-			saveButtonElement.enabled = false;
-			saveButtonElement.classList.add("disabled")
-
-			for (var key in data) {
-				var element = document.getElementById(key);
-
-				if (element === null) {
-					continue;
-				}
-
-				if (element.tagName.toLowerCase() === "input") {
-					switch (element.type) {
-						case "checkbox":
-							data[key] = element.checked;
-							break;
-						case "password":
-						case "text":
-							data[key] = element.value;
-							break;
-						case "number":
-							data[key] = parseInt(element.value);
-							if (isNaN(data[key])) {
-								data[key] = 0;
-							}
-							break;
-					}
-				}
-			}
-
-			data.twitch_channels = channelChipsInstance.getData().map(function (channelTag) {
-				return channelTag.id;
-			});
-
-			data.bilibili_block_list_username = usernameChipsInstance.getData().map(function (usernameTag) {
-				return usernameTag.id;
-			});
-
-			data.bilibili_block_list_uid = uidChipsInstance.getData().map(function (uidTag) {
-				return uidTag.id;
-			});
-
-			data.bilibili_block_list_keyword = keywordsChipsInstance.getData().map(function (keywordTag) {
-				return keywordTag.id;
-			});
-
-			let new_data = data;
-			new_data.bilibili_block_list_username = JSON.stringify(data.bilibili_block_list_username);
-			new_data.bilibili_block_list_uid = JSON.stringify(data.bilibili_block_list_uid);
-			new_data.bilibili_block_list_keyword = JSON.stringify(data.bilibili_block_list_keyword);
-
-			new_data.danmuku_service_method = danmukuServiceMethodSelectorInstance.getSelectedValues()[0];
-
-			// new HttpRequest instance
-			var request = new XMLHttpRequest();
-			request.open("POST", "/submit");
-			request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-			request.onabort = function () {
-				M.toast({ text: set_translation("request-onabort", false) === "" ? "Something went wrong, try again later." : set_translation("request-onabort", false) })
-			};
-			request.onerror = function () {
-				M.toast({ text: set_translation("request-onerror", false) === "" ? "Something went wrong while trying to save the settings. Make sure Beat Saber is still running." : set_translation("request-onerror", false) })
-			};
-			request.onload = function () {
-				if (request.readyState === 4 && request.status === 204) {
-					M.toast({ text: set_translation("request-onload", false) === "" ? "Settings have been saved successfully." : set_translation("request-onload", false) })
-				} else {
-					M.toast({ text: set_translation("request-onerror", false) === "" ? "Something went wrong while trying to save the settings. Make sure Beat Saber is still running." : set_translation("request-onerror", false) })
-				}
-			};
-			request.onloadend = function () {
-				saveButtonElement.classList.remove("disabled")
-				saveButtonElement.enabled = true;
-			};
-			request.send(JSON.stringify(new_data));
-		}
-
 		// Data will be injected here by the backend
 		var data = {};
-
-		// your page initialization code here
-		// the DOM will be available here
-		function onLoad() {
-			for (var key in data) {
-				var value = data[key];
-				var element = document.getElementById(key);
-				if (element == null) {
-					if (["bilibili_block_list_keyword", "bilibili_block_list_uid", "bilibili_block_list_username"].includes(key)) {
-						data[key] = JSON.parse(value);
-					} else if (key === "danmuku_service_method") {
-						document.querySelector('#danmuku-service-method-selector').value = value;
-						// $('#danmuku-service-method-selector').val("Default").change();
-						// $('#danmuku-service-method-selector').val(value);
-					}
-					continue;
-				}
-				if (typeof value === "string" || typeof value === "number") {
-					element.value = value;
-				} else if (typeof value === "boolean") {
-					element.checked = value;
-					if (key == "EnableTwitch" && value) {
-						toggleElement("twitch-settings-card")
-					}
-					
-					if (key == "EnableBilibili" && value) {
-						toggleElement("bilibili-settings-card")
-					}
-				}
-			}
-
-			document.getElementById("twitch_oauth_token_visible").checked = document.getElementById("twitch_oauth_token").type !== "password";
-
-			var oauthHash = location.hash.substring(1);
-			var accessToken = oauthHash.substring(oauthHash.indexOf('access_token=')).split('&')[0].split('=')[1];
-
-			// Clean up url
-			history.pushState({}, "ChatCore Settings", location.origin)
-
-			if (accessToken) {
-				var tokenField = document.getElementById("twitch_oauth_token");
-				tokenField.value = 'oauth:' + decodeURIComponent(accessToken);
-			}
-
-			saveButtonElement = document.getElementById("saveButton");
-			saveButtonElement.addEventListener("click", saveSettings);
-			document.getElementById("BLive_submit").addEventListener("click", saveSettings);
-		}
-
-		onLoad();
 	</script>
 	<script src="Statics/Js/default.js"></script>
 </body>

@@ -94,15 +94,14 @@ namespace ChatCore.Models.Bilibili
 		public static BilibiliPacket CreateGreetingPacket(int uid, int roomId, string token, string buvid)
 		{
 			var json = new JSONObject();
-			//json["clientver"] = "1.6.3";
-			json["platform"] = "web";
-			json["protover"] = new JSONNumber(3);
-			json["roomid"] = new JSONNumber(roomId);
 			json["uid"] = new JSONNumber(uid);
-			json["key"] = new JSONString(token);
+			json["roomid"] = new JSONNumber(roomId);
+			json["protover"] = new JSONNumber(2);
 			json["buvid"] = new JSONString(buvid);
-			json["type"] = new JSONNumber(2);
-
+			json["platform"] = "web";
+			json["type"] = new JSONNumber(3);
+			json["key"] = new JSONString(token);
+			//Console.WriteLine(json.ToString());
 			return new BilibiliPacket(DanmakuOperation.GreetingReq, json);
 		}
 
@@ -138,7 +137,8 @@ namespace ChatCore.Models.Bilibili
 			GreetingAck = 8,
 
 			// Room ids stops live message from Server
-			StopRoom = 1398034256
+			StopRoom = 1398034256,
+			StopLiveRoomList = 0
 		}
 
 		public static string ByteArrayToString(byte[] ba)

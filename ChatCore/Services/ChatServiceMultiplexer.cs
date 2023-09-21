@@ -197,7 +197,7 @@ namespace ChatCore.Services
 		{
 			_logger.LogInformation("[ChatServiceMultiplexer] | [DisableTwitchService]");
 			//var service = twitchService ?? GetTwitchService();
-			if (_twitchService != null && twitchEnable)
+			if (_twitchService != null && !twitchEnable)
 			{
 				DisableService(_twitchService);
 				twitchEnable = false;
@@ -207,7 +207,7 @@ namespace ChatCore.Services
 		public void DisableBilibiliService()
 		{
 			_logger.LogInformation("[ChatServiceMultiplexer] | [DisableBilibiliService]");
-			if (_bilibiliService != null && bilibiliEnable)
+			if (_bilibiliService != null && !bilibiliEnable)
 			{
 				DisableService(_bilibiliService);
 				bilibiliEnable = false;

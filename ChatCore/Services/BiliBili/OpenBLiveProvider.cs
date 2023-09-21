@@ -63,23 +63,8 @@ namespace ChatCore.Services.Bilibili
 		{
 			if (_bApiClient != null)
 			{
-				Stop(true);
-				Task.Run(async () =>
-				{
-					while (true)
-					{
-						if (_bApiClient != null)
-						{
-							await Task.Delay(500);
-						}
-						else
-						{
-							await Task.Delay(5000);
-							Start();
-							break;
-						}
-					}
-				});
+				Console.WriteLine("_authManager_OnCredentialsUpdated");
+				Start(true);
 			}
 		}
 
@@ -99,13 +84,14 @@ namespace ChatCore.Services.Bilibili
 			if (string.IsNullOrEmpty(_authManager.Credentials.Bilibili_identity_code) || string.IsNullOrEmpty(_config["bilibili_live_app_id"]) || string.IsNullOrEmpty(_config["bilibili_live_access_key_id"]) || string.IsNullOrEmpty(_config["bilibili_live_access_key_secret"]))
 			{
 				_status = "Lack of parameters";
+				Stop(true);
 				return;
 			}
 
 			if (!_enable)
 			{
 				_status = "Service not Enabled!";
-				Stop();
+				Stop(true);
 				return;
 			}
 
@@ -186,7 +172,7 @@ namespace ChatCore.Services.Bilibili
 
 		public void Stop(bool force = false)
 		{
-			_logger.LogInformation("[OpenBLiveProvider] | [Stop] | Stop");
+			_logger.LogInformation($"[OpenBLiveProvider] | [Stop] | Stop | {_status}");
 			if (_cancellationToken is null)
 			{
 				return;
@@ -227,7 +213,7 @@ namespace ChatCore.Services.Bilibili
 		public void Disable()
 		{
 			_enable = false;
-			Stop();
+			Stop(true);
 		}
 
 		public void Dispose()

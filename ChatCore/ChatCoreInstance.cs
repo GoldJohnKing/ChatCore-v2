@@ -80,6 +80,7 @@ namespace ChatCore
 					.AddSingleton<IEmojiParser, FrwTwemojiParser>()
 					.AddSingleton<IDefaultBrowserLauncherService, ProcessDotStartBrowserLauncherService>()
 					.AddTransient<IWebSocketService, WebSocket4NetServiceProvider>()
+					.AddSingleton<IWebSocketServerService, WebSocketServerProvider>()
 					.AddSingleton<IOpenBLiveProvider, OpenBLiveProvider>()
 					.AddSingleton<TwitchService>()
 					.AddSingleton<TwitchServiceManager>()
@@ -132,6 +133,8 @@ namespace ChatCore
 
 				_logger.Log(LogLevel.Information, "[ChatCoreInstance] | [Create(...)] | Attempting to start WebLoginProvider");
 				_serviceProvider.GetService<IWebLoginProvider>().Start();
+				_logger.Log(LogLevel.Information, "[ChatCoreInstance] | [Create(...)] | Attempting to start WebSocketServerService");
+				_serviceProvider.GetService<IWebSocketServerService>().Start(System.Net.IPAddress.Any, MainSettingsProvider.WEB_APP_PORT == 65535 ? 65534 : (MainSettingsProvider.WEB_APP_PORT + 1));
 				_logger.Log(LogLevel.Information, "[ChatCoreInstance] | [Create(...)] | Supposedly started WebLoginProvider");
 				if (_settings.LaunchWebAppOnStartup)
 				{
@@ -297,6 +300,19 @@ namespace ChatCore
 			}
 		}
 
+		public void LaunchWebSocketServer()
+		{
+			lock (_runLock)
+			{
+				if (_serviceProvider == null)
+				{
+					throw new ChatCoreNotInitializedException("Make sure to call ChatCoreInstance.Create() to initialize ChatCore!");
+				}
+
+				_serviceProvider.GetService<IWebSocketServerService>().Start(System.Net.IPAddress.Any, MainSettingsProvider.WEB_APP_PORT == 65535 ? 65534 : (MainSettingsProvider.WEB_APP_PORT + 1));
+			}
+		}
+
 		public static Dictionary<string, bool> BilibiliDisplaySettings()
 		{
 			var result = new Dictionary<string, bool>();
@@ -348,18 +364,12 @@ namespace ChatCore
 			if (enable)
 			{
 				_chatServiceMultiplexer.EnableBilibiliService();
-				_openBLiveProvider = (OpenBLiveProvider)_serviceProvider.GetService<IOpenBLiveProvider>();
-				_openBLiveProvider.Enable();
-				_openBLiveProvider.Start();
-				_serviceProvider.GetService<IOpenBLiveProvider>().Start();
+				((OpenBLiveProvider)_serviceProvider.GetService<IOpenBLiveProvider>()).Enable();
 			}
 			else
 			{
 				_chatServiceMultiplexer.DisableBilibiliService();
-				_openBLiveProvider = (OpenBLiveProvider)_serviceProvider.GetService<IOpenBLiveProvider>();
-				_openBLiveProvider.Disable();
-				_openBLiveProvider.Stop();
-				_serviceProvider.GetService<IOpenBLiveProvider>().Stop();
+				((OpenBLiveProvider)_serviceProvider.GetService<IOpenBLiveProvider>()).Disable();
 			}
 		}
 	}
