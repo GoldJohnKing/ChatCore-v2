@@ -72,7 +72,7 @@ let formatBilibiliMessage = function (data) {
 		debugData = data["Sender"]["Badges"];
 		if ((data["Sender"]["Badges"]).length > 0) {
 			let uri = data["Sender"]["Badges"][(data["Sender"]["Badges"]).length - 1]["Uri"];
-			if (uri.includes("/.chatcore/cache/Avatars/")) {
+			if (uri !== undefined && typeof uri === "string" && uri !== null && uri.includes("/.chatcore/cache/Avatars/")) {
 				bilibiliMsg.avatar = uri;
 			}
 		}
