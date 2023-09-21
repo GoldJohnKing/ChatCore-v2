@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -264,7 +265,8 @@ namespace ChatCore.Services
 						settingsJson["bilibili_cookies"] = new JSONString(_authManager.Credentials.Bilibili_cookies);
 
 						var pageBuilder = new StringBuilder(_pageData);
-						pageBuilder.Replace("{libVersion}", ChatCoreInstance.Version.ToString(3));
+						pageBuilder.Replace("{libVersion}", FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion);
+						//pageBuilder.Replace("{libVersion}", ChatCoreInstance.Version.ToString(3));
 #if OPENBLIVE
 					// pageBuilder.Replace("var data = {};", $"var data = {settingsJson}; var bilibili_version = true;");
 #else

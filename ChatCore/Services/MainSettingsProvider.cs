@@ -10,8 +10,8 @@ namespace ChatCore.Services
 {
 	public class MainSettingsProvider
 	{
-		// internal const int WEB_APP_PORT = 8338;
-		internal const int WEB_APP_PORT = 18338;
+		 internal const int WEB_APP_PORT = 8338;
+		//internal const int WEB_APP_PORT = 18338;
 
 		[ConfigSection("WebApp")]
 		[HtmlIgnore]
