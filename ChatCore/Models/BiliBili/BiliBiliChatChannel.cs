@@ -1,15 +1,15 @@
 using ChatCore.Interfaces;
 using ChatCore.Utilities;
 
-namespace ChatCore.Models.BiliBili
+namespace ChatCore.Models.Bilibili
 {
-	public class BiliBiliChatChannel : IChatChannel
+	public class BilibiliChatChannel : IChatChannel
 	{
 		public string Id { get; internal set; } = "";
 		public string Name { get; internal set; } = "";
 
-		public BiliBiliChatChannel() { }
-		public BiliBiliChatChannel(string json)
+		public BilibiliChatChannel() { }
+		public BilibiliChatChannel(string json)
 		{
 			var obj = JSON.Parse(json);
 			if (obj.TryGetKey(nameof(Id), out var id))

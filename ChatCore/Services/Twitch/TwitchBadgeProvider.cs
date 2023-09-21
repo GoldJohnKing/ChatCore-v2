@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -27,20 +27,21 @@ namespace ChatCore.Services.Twitch
 			var isGlobal = string.IsNullOrEmpty(category);
 			try
 			{
-				_logger.LogDebug($"Requesting Twitch {(isGlobal ? "global " : "")}badges{(isGlobal ? "." : $" for channel {category}")}.");
+				_logger.LogDebug($"[TwitchBadgeProvider] | [TryRequestResources] | Requesting Twitch {(isGlobal ? "global " : "")}badges{(isGlobal ? "." : $" for channel {category}")}.");
 				using var msg = new HttpRequestMessage(HttpMethod.Get,
 					isGlobal ? $"https://badges.twitch.tv/v1/badges/global/display" : $"https://badges.twitch.tv/v1/badges/channels/{category}/display");
+					// isGlobal ? $"https://twitch-proxy.beatmods.top/badges/v1/badges/global/display" : $"https://twitch-proxy.beatmods.top/badges/v1/badges/channels/{category}/display");
 				var resp = await _httpClient.SendAsync(msg);
 				if (!resp.IsSuccessStatusCode)
 				{
-					_logger.LogError($"Unsuccessful status code when requesting Twitch {(isGlobal ? "global " : "")}badges{(isGlobal ? "." : " for channel " + category)}. {resp.ReasonPhrase}");
+					_logger.LogError($"[TwitchBadgeProvider] | [TryRequestResources] | Unsuccessful status code when requesting Twitch {(isGlobal ? "global " : "")}badges{(isGlobal ? "." : " for channel " + category)}. {resp.ReasonPhrase}");
 					return false;
 				}
 
 				var json = JSON.Parse(await resp.Content.ReadAsStringAsync());
 				if (!json["badge_sets"].IsObject)
 				{
-					_logger.LogError("badge_sets was not an object.");
+					_logger.LogError("[TwitchBadgeProvider] | [TryRequestResources] | badge_sets was not an object.");
 					return false;
 				}
 
@@ -60,12 +61,12 @@ namespace ChatCore.Services.Twitch
 					}
 				}
 
-				_logger.LogDebug($"Success caching {count} Twitch {(isGlobal ? "global " : "")}badges{(isGlobal ? "." : " for channel " + category)}.");
+				_logger.LogDebug($"[TwitchBadgeProvider] | [TryRequestResources] | Success caching {count} Twitch {(isGlobal ? "global " : "")}badges{(isGlobal ? "." : " for channel " + category)}.");
 				return true;
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, $"An error occurred while requesting Twitch {(isGlobal ? "global " : "")}badges{(isGlobal ? "." : " for channel " + category)}.");
+				_logger.LogError(ex, $"[TwitchBadgeProvider] | [TryRequestResources] | An error occurred while requesting Twitch {(isGlobal ? "global " : "")}badges{(isGlobal ? "." : " for channel " + category)}.");
 			}
 
 			return false;

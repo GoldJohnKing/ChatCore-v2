@@ -117,4 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="textBox_bili_mock.Text" xml:space="preserve">
+    <value>{"cmd":"DANMU_MSG","info":[[0,1,25,16777215,1681069562739,-144355108,0,"4af13f5e",0,0,0,"",0,"{}","{}",{"mode":0,"show_player_type":0,"extra":"{\"send_from_me\":false,\"mode\":0,\"color\":16777215,\"dm_type\":0,\"font_size\":25,\"player_mode\":1,\"show_player_type\":0,\"content\":\"0.0\",\"user_hash\":\"1257324382\",\"emoticon_unique\":\"\",\"bulge_display\":0,\"recommend_score\":0,\"main_state_dm_color\":\"\",\"objective_state_dm_color\":\"\",\"direction\":0,\"pk_direction\":0,\"quartet_direction\":0,\"anniversary_crowd\":0,\"yeah_space_type\":\"\",\"yeah_space_url\":\"\",\"jump_to_url\":\"\",\"space_type\":\"\",\"space_url\":\"\",\"animation\":{},\"emots\":null,\"is_audited\":false,\"id_str\":\"296fdbcb29f39a67087c9583e2e6add362\"}"},{"activity_identity":"","activity_source":0,"not_show":0}],"0.0",[894610,"包子侯爵",0,0,0,10000,1,""],[24,"影之声","Timeless倒影",7795779,1725515,"",0,6809855,1725515,5414290,3,1,177682522],[23,0,5805790,"&gt;50000",1],["",""],0,0,null,{"ts":1681069562,"ct":"988F4202"},0,0,null,null,0,210],"dm_v2":"CiIyOTZmZGJjYjI5ZjM5YTY3MDg3Yzk1ODNlMmU2YWRkMzYyEAEYGSD///8HKgg0YWYxM2Y1ZTIDMC4wOPO2t7z2MEjcoZW7//////8BYgCKAQCaARAKCDk4OEY0MjAyEPqrzKEGogGfAQiSzTYSDOWMheWtkOS+r+eItSJKaHR0cHM6Ly9pMS5oZHNsYi5jb20vYmZzL2ZhY2UvOGNiZTA1OTM3ZjhkOWMwN2ZjZjQ5ZmZjOTAyNjkwNjJmZWZlNTdhNS5qcGc4kE5AAVojCBgSCeW9seS5i+WjsCDLqGkw/9GfAzjLqGlAkrvKAkgDUAFiEQgXEN6t4gIaBj41MDAwMCABagByAKoBGQja8NxUEg5UaW1lbGVzc+WAkuW9sRik2gY="}</value>
+  </data>
+  <metadata name="openFileDialog1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>13, 15</value>
+  </metadata>
 </root>

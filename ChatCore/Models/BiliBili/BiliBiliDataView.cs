@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ChatCore.Models.BiliBili
+namespace ChatCore.Models.Bilibili
 {
 	public static class DataView
 	{

@@ -259,3 +259,15 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/ChatCore/ChatCore - Backup.csproj
+
+
+OpenBLive/
+
+ChatCore/Resources/Web/statics/css/materialize.1.2.2.min.css
+
+ChatCore/Resources/Web/statics/css/materialize.1.0.0.min.css
+
+ChatCore/Resources/Web/statics/js/jquery.pjax.js
+
+ChatCore/Resources/Web/statics/js/test.html

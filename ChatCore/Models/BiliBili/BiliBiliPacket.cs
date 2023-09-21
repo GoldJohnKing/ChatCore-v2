@@ -3,16 +3,16 @@ using System.Linq;
 using System.Text;
 using ChatCore.Utilities;
 
-namespace ChatCore.Models.BiliBili
+namespace ChatCore.Models.Bilibili
 {
-	public class BiliBiliPacket
+	public class BilibiliPacket
 	{
-		public const int HeaderLength = 16;
-		public const int PacketOffset = 0;
-		public const int HeaderOffset = 4;
-		public const int VersionOffset = 6;
-		public const int OperationOffset = 8;
-		public const int SequenceOffset = 12;
+		public const int HEADERLENGTH = 16;
+		public const int PACKETOFFSET = 0;
+		public const int HEADEROFFSET = 4;
+		public const int VERSIONOFFSET = 6;
+		public const int OPERATIONOFFSET = 8;
+		public const int SEQUENCEOFFSET = 12;
 
 		public byte[] PacketBuffer { get; private set; }
 
@@ -27,7 +27,7 @@ namespace ChatCore.Models.BiliBili
 
 		private byte[] Decoder(string value, DanmakuOperation operation)
 		{
-			return null;
+			return new byte[0];
 		}
 
 		private void WriteInt(byte[] buffer, int start, int length, int value)
@@ -41,11 +41,9 @@ namespace ChatCore.Models.BiliBili
 		/// <summary>
 		/// Constructor of DanmakuPacket.
 		/// </summary>
-		/// <param name="version"></param>
 		/// <param name="operation"></param>
-		/// <param name="sequence"></param>
-		/// <param name="body"></param>
-		private BiliBiliPacket(DanmakuOperation operation, JSONObject json)
+		/// <param name="json"></param>
+		private BilibiliPacket(DanmakuOperation operation, JSONObject json)
 		{
 			//var headerBytes = new byte[HeaderLength];
 			//var bodyBuffer = Encoding.UTF8.GetBytes(json.ToString());
@@ -61,7 +59,7 @@ namespace ChatCore.Models.BiliBili
 			PacketBuffer = Encoder(json.ToString(), operation);
 		}
 
-		private BiliBiliPacket(DanmakuOperation operation, string json)
+		private BilibiliPacket(DanmakuOperation operation, string json)
 		{
 			PacketBuffer = Encoder(json, operation);
 		}
@@ -72,26 +70,53 @@ namespace ChatCore.Models.BiliBili
 		/// <param name="uid"></param>
 		/// <param name="roomId"></param>
 		/// <returns></returns>
-		public static BiliBiliPacket CreateGreetingPacket(int uid, int roomId)
+		public static BilibiliPacket CreateGreetingPacket(int uid, int roomId)
 		{
 			var json = new JSONObject();
 			//json["clientver"] = "1.6.3";
 			//json["platform"] = "web";
-			//json["protover"] = new JSONNumber(1);
+			//json["protover"] = new JSONNumber(3);
 			json["roomid"] = new JSONNumber(roomId);
 			json["uid"] = new JSONNumber(uid);
 			//json["type"] = new JSONNumber(2);
 
-			return new BiliBiliPacket(DanmakuOperation.GreetingReq, json);
+			return new BilibiliPacket(DanmakuOperation.GreetingReq, json);
+		}
+
+		/// <summary>
+		/// Create greeting packet.
+		/// </summary>
+		/// <param name="uid"></param>
+		/// <param name="roomId"></param>
+		/// <param name="token"></param>
+		/// <param name="buvid"></param>
+		/// <returns></returns>
+		public static BilibiliPacket CreateGreetingPacket(int uid, int roomId, string token, string buvid)
+		{
+			var json = new JSONObject();
+			json["uid"] = new JSONNumber(uid);
+			json["roomid"] = new JSONNumber(roomId);
+			json["protover"] = new JSONNumber(2);
+			json["buvid"] = new JSONString(buvid);
+			json["platform"] = "web";
+			json["type"] = new JSONNumber(3);
+			json["key"] = new JSONString(token);
+			//Console.WriteLine(json.ToString());
+			return new BilibiliPacket(DanmakuOperation.GreetingReq, json);
+		}
+
+		public static BilibiliPacket CreateAuthPacket(string authBody)
+		{
+			return new BilibiliPacket(DanmakuOperation.GreetingReq, authBody);
 		}
 
 		/// <summary>
 		/// Create HeartBeat Packet..
 		/// </summary>
 		/// <returns></returns>
-		public static BiliBiliPacket CreateHeartBeatPacket()
+		public static BilibiliPacket CreateHeartBeatPacket()
 		{
-			return new BiliBiliPacket(DanmakuOperation.HeartBeatReq, "");
+			return new BilibiliPacket(DanmakuOperation.HeartBeatReq, "");
 		}
 
 		public enum DanmakuOperation
@@ -112,7 +137,19 @@ namespace ChatCore.Models.BiliBili
 			GreetingAck = 8,
 
 			// Room ids stops live message from Server
-			StopRoom = 1398034256
+			StopRoom = 1398034256,
+			StopLiveRoomList = 0
+		}
+
+		public static string ByteArrayToString(byte[] ba)
+		{
+			var hex = new StringBuilder(ba.Length * 2);
+			foreach (var b in ba)
+			{
+				hex.AppendFormat("{0:x2}", b);
+			}
+
+			return hex.ToString();
 		}
 	}
 }

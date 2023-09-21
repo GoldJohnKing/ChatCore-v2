@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace ChatCore.Interfaces
@@ -55,5 +55,9 @@ namespace ChatCore.Interfaces
 		/// <param name="message">The text message to be sent</param>
 		/// <param name="channel">The chat channel to send the message to</param>
 		void SendTextMessage(string message, IChatChannel channel);
+
+		void Enable();
+
+		void Disable();
 	}
 }

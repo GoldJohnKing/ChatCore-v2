@@ -1,3 +1,76 @@
+nav,
+.switch label input[type=checkbox]:checked + .lever:after,
+#saveButton,
+#global-settings-web-streaming-overlay-button,
+#global-settings-web-streaming-overlay-tts-test-button {
+	background-color: #1f60a0;
+}
+
+.info-tooltip-icon-background {
+	margin-left: 8px;
+	background-color: #2b93e8 !important;
+}
+
+.info-tooltip-icon {
+	color: #ffd8e3!important;
+}
+
+.info-tooltip-row-margin {
+	margin-bottom: 8px;
+}
+
+#translationButton {
+	border-radius: 12px !important;
+	padding: 0 8px !important;
+	background-color: #ffd8e3;
+	color: #1a1c1e;
+}
+
+.notification-tip {
+	background-color: #2b93e8;
+	display: flex;
+	align-items: center;
+	color: #f3f6fc;
+	padding: 16px;
+	border-radius: 36px;
+	gap: 8px;
+	margin: 8px 0;
+	font-size: 1em;
+	font-weight: 200;
+}
+
+.default-gap {
+	gap: 4px;
+	padding: 8px;
+}
+
+.default-gap .switch {
+	padding: 8px;
+}
+
+.middle-vertical {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.card {
+	background-color: #f2f3fa;
+}
+
+.flex-auto-grow {
+	flex: 1;
+}
+
+.ul-force-gap {
+	gap: 8px;
+	display: grid;
+}
+
+.card .card-title {
+	font-weight: 400;
+}
+
 .nav-wrapper {
 	padding-left: 16px;
 	padding-right: 16px;
@@ -10,6 +83,7 @@
 
 nav .brand-logo {
 	position: relative !important;
+	font-weight: 600;
 }
 
 @media only screen and (max-width: 992px) {
@@ -22,6 +96,15 @@ nav .brand-logo {
 
 .dropdown-content {
 	width: auto !important;
+}
+
+ul,
+.card-force-round {
+	border-radius: 12px!important;
+}
+
+.btn.col {
+	border-radius: 24px !important;
 }
 
 .twitch-header {
@@ -42,4 +125,161 @@ nav .brand-logo {
 
 a.btn-floating.pulse.cyan.tooltipped {
 	margin-left: 10px;
+}
+
+.auto_overflow {
+	overflow: auto;
+}
+
+.display_flex {
+	display: flex!important;
+}
+
+.space_between {
+	justify-content: space-between;
+}
+
+.space {
+	margin: 0 8px;
+}
+
+.BLive {
+	padding: 16px;
+	border: 2px solid lightgray;
+	border-radius: 8px;
+	min-width: 350px;
+	height: 250px;
+	background-image: url("../Images/Blive/tv.png");
+	background-size: 30% auto;
+	background-position: 0% 100%;
+	background-repeat: no-repeat;
+}
+
+.BLive_title {
+	text-align: center;
+    font-size: 18px;
+    font-family: 'Microsoft YaHei';
+    font-weight: 500;
+    color: #ff85ad;
+	margin: 16px 0;
+}
+
+.BLive_row {
+	margin: 0 12px;
+	display:flex;
+	justify-content:center;
+}
+
+.Blive_code_row {
+	height: 48px;
+    border: 2px solid lightgray;
+    border-radius: 6px;
+}
+
+.BLive_close {
+	background-size: 16px 16px;
+	width: 16px;
+	height: 16px;
+	background-image: url("../Images/Blive/Close.png");
+	float: right;
+}
+
+.BLive_code_promote_icon {
+	background-size: 24px 24px;
+	width: 24px;
+	height: 24px;
+	background-image: url("../Images/Blive/question_mark.png")
+}
+
+.BLive_code_input {
+	font-size: 16px!important;
+    font-family: 'Microsoft YaHei'!important;
+	height: auto!important;
+	margin: 0 -16px 0 -2px!important;
+	/* width: -webkit-fill-available!important; */
+	padding: 8px 16px!important;
+	border: 2px solid lightgray!important;
+    border-radius: 4px!important;
+	box-shadow: none!important;
+	-webkit-box-shadow: none!important;
+}
+
+.BLive_code_clear {
+	display: inline;
+	background-size: 16px 16px;
+	min-width: 16px;
+	height: 16px;
+	background-image: url("../Images/Blive/Close01.png");
+	position: relative;
+	right: 12px;
+	top: 14px;
+}
+
+.BLive_code_promote_text {
+	color: lightgray;
+	font-size: 14px;
+    font-family: 'Microsoft YaHei';
+	margin-left: 4px;
+}
+
+.BLive_code_get_text {
+	color: #ff85ad;
+	font-size: 14px;
+    font-family: 'Microsoft YaHei';
+}
+
+.BLive_code_save_label {
+	font-size: 14px;
+    font-family: 'Microsoft YaHei';
+	margin-left: 4px;
+	font-weight: 500;
+	color: gray;
+}
+
+.BLive_code_label {
+	font-size: 16px;
+    font-family: 'Microsoft YaHei';
+	font-weight: bold;
+	padding: 8px 16px;
+    background-color: whitesmoke;
+    border: 2px solid lightgray;
+    border-radius: 4px;
+	min-width: max-content;
+}
+
+.BLive_code_save + span {
+	display: inline!important;
+	background-size: 18px 18px;
+	width: 18px!important;
+	height: 18px!important;
+	background-image: url("../Images/Blive/Ellipse.png");
+	background-repeat: no-repeat;
+	transition: all 0.5s;
+}
+
+.BLive_code_save + span:before {
+	border: none!important;
+}
+
+.BLive_code_save:checked + span {
+	background-size: 18px 18px;
+	width: 18px;
+	height: 18px;
+	background-image: url("../Images/Blive/Vector.png");
+	transition: all 0.5s;
+}
+
+.BLive_submit {
+	background-color: #ff85ad;
+	color: white;
+	font-size: 16px;
+    font-family: 'Microsoft YaHei';
+	border-radius: 4px;
+	padding: 8px 32px;
+	margin: 8px;
+}
+
+#twitch-settings-card,
+#bilibili-settings-card {
+	transition: all 0.5s;
 }

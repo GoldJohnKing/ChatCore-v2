@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -47,18 +47,18 @@ namespace ChatCore.Services.Twitch
 			var matches = _twitchMessageRegex.Matches(rawMessage);
 			if (matches.Count == 0)
 			{
-				_logger.LogInformation($"Unhandled message: {rawMessage}");
+				_logger.LogInformation($"[TwitchDataProvider] | [ParseRawMessage] | Unhandled message: {rawMessage}");
 				stopwatch.Stop();
 				return false;
 			}
 
 			var messages = new List<IChatMessage>();
-			_logger.LogInformation($"Parsing message {rawMessage}");
+			_logger.LogInformation($"[TwitchDataProvider] | [ParseRawMessage] | Parsing message {rawMessage}");
 			foreach (Match match in matches)
 			{
 				if (!match.Groups["MessageType"].Success)
 				{
-					_logger.LogInformation($"Failed to get messageType for message {match.Value}");
+					_logger.LogInformation($"[TwitchDataProvider] | [ParseRawMessage] | Failed to get messageType for message {match.Value}");
 					continue;
 				}
 
@@ -102,7 +102,7 @@ namespace ChatCore.Services.Twitch
 						userBadges = badgeStr.Split(',').Aggregate(new List<IChatBadge>(), (list, m) =>
 						{
 							var badgeId = m.Replace("/", "");
-							if (_twitchDataProvider.TryGetBadgeInfo(badgeId, messageRoomId, out var badgeInfo))
+							if (_twitchDataProvider.TryGetBadgeInfo(badgeId, messageRoomId?? "", out var badgeInfo))
 							{
 								list.Add(new TwitchBadge
 								{
@@ -133,7 +133,7 @@ namespace ChatCore.Services.Twitch
 
 										if (startIndex >= messageText.Length)
 										{
-											_logger.LogWarning($"Start index is greater than message length! RawMessage: {match.Value}, InstanceString: {instanceString}, EmoteStr: {emoteStr}, StartIndex: {startIndex}, MessageLength: {messageText.Length}, IsActionMessage: {isActionMessage}");
+											_logger.LogWarning($"[TwitchDataProvider] | [ParseRawMessage] | Start index is greater than message length! RawMessage: {match.Value}, InstanceString: {instanceString}, EmoteStr: {emoteStr}, StartIndex: {startIndex}, MessageLength: {messageText.Length}, IsActionMessage: {isActionMessage}");
 										}
 
 										var emoteName = messageText.Substring(startIndex, endIndex - startIndex + 1);
@@ -169,7 +169,7 @@ namespace ChatCore.Services.Twitch
 										if (!foundTwitchEmotes.Contains(lastWord))
 										{
 											// Make sure we haven't already matched a Twitch emote with the same string, just incase the user has a BTTV/FFZ emote with the same name
-											if (_settings.ParseCheermotes && messageBits > 0 && _twitchDataProvider.TryGetCheermote(lastWord, messageRoomId, out var cheermoteData, out var numBits) && numBits > 0)
+											if (_settings.ParseCheermotes && messageBits > 0 && _twitchDataProvider.TryGetCheermote(lastWord, messageRoomId ?? "", out var cheermoteData, out var numBits) && numBits > 0)
 											{
 												//_logger.LogInformation($"Got cheermote! Total message bits: {messageBits}");
 												var tier = cheermoteData.GetTier(numBits);
@@ -307,7 +307,7 @@ namespace ChatCore.Services.Twitch
 							//case "resub":
 							//case "raid":
 							default:
-								_logger.LogInformation($"Message: {match.Value}");
+								_logger.LogInformation($"[TwitchDataProvider] | [ParseRawMessage] | Message: {match.Value}");
 								if (messageMeta.TryGetValue("system-msg", out var systemMsgText))
 								{
 									systemMessage = (TwitchMessage)newMessage.Clone();
@@ -371,19 +371,19 @@ namespace ChatCore.Services.Twitch
 				}
 				catch (Exception ex)
 				{
-					_logger.LogError(ex, $"Exception while parsing Twitch message {messageText}");
+					_logger.LogError(ex, $"[TwitchDataProvider] | [ParseRawMessage] | Exception while parsing Twitch message {messageText}");
 				}
 			}
 
 			if (messages.Count > 0)
 			{
 				stopwatch.Stop();
-				_logger.LogDebug($"Successfully parsed {messages.Count} messages in {(decimal)stopwatch.ElapsedTicks / TimeSpan.TicksPerMillisecond}ms");
+				_logger.LogDebug($"[TwitchDataProvider] | [ParseRawMessage] | Successfully parsed {messages.Count} messages in {(decimal)stopwatch.ElapsedTicks / TimeSpan.TicksPerMillisecond}ms");
 				parsedMessages = messages.ToArray();
 				return true;
 			}
 
-			_logger.LogInformation("No messages were parsed successfully.");
+			_logger.LogInformation("[TwitchDataProvider] | [ParseRawMessage] | No messages were parsed successfully.");
 			return false;
 		}
 	}

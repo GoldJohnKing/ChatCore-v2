@@ -1,26 +1,46 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29728.190
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatCore", "ChatCore\ChatCore.csproj", "{B3CCC343-8CC6-4E2F-9BE2-6EDF568135F3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatCoreTester", "ChatCoreTester\ChatCoreTester.csproj", "{67A03E3C-6198-4F8D-BEA0-779F96F4CFA6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatCoreSVG", "ChatCoreSVG\ChatCoreSVG.csproj", "{2F0A81D0-CAAD-4996-9E50-35E89F47F712}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatCoreGUI", "ChatCoreGUI\ChatCoreGUI.csproj", "{DF1E2FA1-E715-4371-8BCD-27D4A26C6922}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		OpenBLive|Any CPU = OpenBLive|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{B3CCC343-8CC6-4E2F-9BE2-6EDF568135F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B3CCC343-8CC6-4E2F-9BE2-6EDF568135F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3CCC343-8CC6-4E2F-9BE2-6EDF568135F3}.OpenBLive|Any CPU.ActiveCfg = OpenBLive|Any CPU
+		{B3CCC343-8CC6-4E2F-9BE2-6EDF568135F3}.OpenBLive|Any CPU.Build.0 = OpenBLive|Any CPU
 		{B3CCC343-8CC6-4E2F-9BE2-6EDF568135F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B3CCC343-8CC6-4E2F-9BE2-6EDF568135F3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{67A03E3C-6198-4F8D-BEA0-779F96F4CFA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{67A03E3C-6198-4F8D-BEA0-779F96F4CFA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67A03E3C-6198-4F8D-BEA0-779F96F4CFA6}.OpenBLive|Any CPU.ActiveCfg = OpenBLive|Any CPU
 		{67A03E3C-6198-4F8D-BEA0-779F96F4CFA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{67A03E3C-6198-4F8D-BEA0-779F96F4CFA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F0A81D0-CAAD-4996-9E50-35E89F47F712}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F0A81D0-CAAD-4996-9E50-35E89F47F712}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F0A81D0-CAAD-4996-9E50-35E89F47F712}.OpenBLive|Any CPU.ActiveCfg = OpenBLive|Any CPU
+		{2F0A81D0-CAAD-4996-9E50-35E89F47F712}.OpenBLive|Any CPU.Build.0 = OpenBLive|Any CPU
+		{2F0A81D0-CAAD-4996-9E50-35E89F47F712}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F0A81D0-CAAD-4996-9E50-35E89F47F712}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF1E2FA1-E715-4371-8BCD-27D4A26C6922}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF1E2FA1-E715-4371-8BCD-27D4A26C6922}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF1E2FA1-E715-4371-8BCD-27D4A26C6922}.OpenBLive|Any CPU.ActiveCfg = OpenBLive|Any CPU
+		{DF1E2FA1-E715-4371-8BCD-27D4A26C6922}.OpenBLive|Any CPU.Build.0 = OpenBLive|Any CPU
+		{DF1E2FA1-E715-4371-8BCD-27D4A26C6922}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF1E2FA1-E715-4371-8BCD-27D4A26C6922}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

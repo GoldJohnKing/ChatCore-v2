@@ -1,0 +1,203 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="textBox_console.Text" xml:space="preserve">
+    <value>欢迎使用聊天核心!
+聊天核心是一个可以被第三方程序使用的库。该项目的主要目的是减少多程序对同一个聊天服务进行交互的开销（这对于游戏中有多个模块需要聊天服务来说非常有用）。
+
+基本设置 (节奏光剑mod用户)
+1. 从https://github.com/baoziii/ChatCore-v2/releases/latest下载最新的压缩包并解压到游戏根目录
+2. 在安装了任何调用聊天核心的mod以后，设置项网页将会在启动游戏后在你的默认浏览器中打开。你可以在里面配置你的Twitch和Bilibili设置项。
+
+更新日志：
+3.0.0-alpha:
+- 🔨[新增] Websocket服务器消息转发(外部可连接网页应用端口号+1的端口)
+- 🔨[新增] 直播叠加层(网页弹幕姬) (可自定义.chatcore文件下的custom.js和custom.css文件来自定义样式和功能)
+- 🔨[新增] 直播叠加层文字转语音功能(TTS)
+- 🔨[新增] 本地图片代理
+- 🔨[新增] 网页应用语言保存
+- 🔨[新增] 支持Brotli压缩
+
+- 🔧[修复] HTTP请求长时间未响应的问题
+- 🔧[修复] B站默认模式身份验证错误的问题
+- 🔧[修复] B站开放平台服务多次调用的问题
+- 🔧[修复] B站开放平台返回一些表情时不给予URL的问题
+- 🔧[修复] websocket在对应聊天服务关闭后仍然开启的问题
+- 🔧[修复] 本地配置文件变更后网页应用无法立即获取的问题
+
+- ⚙[变更] 网页应用UI变更
+- ⚙[变更] B站消息现在将在消息内所有信息全部处理完后才返回
+
+- 🛠[增强] 更新Material Icon至Material Symbols
+- 🛠[增强] 更新jquery至3.7.1
+- 🛠[增强] HTTP服务器返回内容更符合规范
+
+2.2.0：
+- 🔨[新增] 弹幕表情显示
+- 🔨[新增] 礼物星球点亮弹幕
+- 🔨[新增] 直播间点赞弹幕
+- 🔨[新增] 用户头像显示
+- 🔨[新增] 用户勋章显示
+- 🔨[新增] 主播、房管、大航海图标显示
+- 🔨[新增] 礼物图片显示
+- 🔨[新增] 红包弹幕支持
+- 🔨[新增] 礼物弹幕礼物合并功能(5秒内相同用户赠送相同的礼物会合并延迟显示)
+- 🔨[新增] B站直播互动玩法（填入直播间号与与之对应的主播身份码即可在直播时启用4种特殊礼物：红光剑 （1🔋），蓝光剑 （10🔋）， SS （55🔋）， 115 （115🔋））    
+  ⚠声明：主播收到的所有礼物**收益不会受到影响**，开发者与礼物画师将获得***平台独立发放***的来自特殊礼物的收益。
+- 🔨[新增] 支持三种弹幕连接服务
+- 🔨[新增] 反馈弹幕发送
+- 🔨[新增] 分离Twitch和B站服务
+- 🔨[新增] 图片缓存清理功能
+
+- ⚙[变更] 开播弹幕分为`开启直播`和`开始推流`两种
+- ⚙[变更] 配置文件存储格式变更。B站直播间号存储位置将会从`settings.ini`转移到`auth.ini` （无需用户操作，老版本自动转移）
+- ⚙[变更] 网页应用UI变更，更贴近Material Design 3
+
+- 🔧[修复] 配置文件保存后不能及时重连直播间的问题
+- 🔧[修复] Websocket短时间内执行断开操作报错的问题
+- 🔧[修复] 用户名未能正常显示的问题
+- 🔧[修复] 用户UID长度超过int范围而导致屏蔽功能抛出异常的问题
+
+- 🛠[增强] 支持2.1.3及以前的配置文件自动转换至2.2.0版
+- 🛠[增强] 更新Materialize CSS至2.0.2-alpha</value>
+  </data>
+  <data name="groupBox_Console.Text" xml:space="preserve">
+    <value>控制台</value>
+  </data>
+  <data name="button_web.Text" xml:space="preserve">
+    <value>打开网页应用</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>354, 459</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>29, 16</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterScreen</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>聊天核心（光剑弹幕姬）</value>
+  </data>
+</root>

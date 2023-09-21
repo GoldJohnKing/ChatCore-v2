@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,10 +19,13 @@ namespace ChatCore.Services
 
 		private WebSocket? _client;
 		private string _uri = string.Empty;
+		private string _userAgent = string.Empty;
+		private string _origin = string.Empty;
+		private List<KeyValuePair<string, string>>? _cookies = null;
 		private CancellationTokenSource? _cancellationToken;
 		private DateTime _startTime;
 
-		public bool IsConnected => !(_client is null) && (_client.State == WebSocketState.Open || _client.State == WebSocketState.Connecting);
+		public bool IsConnected => !(_client is null) && (_client?.State == WebSocketState.Open || _client?.State == WebSocketState.Connecting);
 		public bool AutoReconnect { get; set; } = true;
 		public int ReconnectDelay { get; set; } = 500;
 
@@ -39,128 +43,154 @@ namespace ChatCore.Services
 			_reconnectLock = new SemaphoreSlim(1, 1);
 		}
 
-		public void Connect(string uri, bool forceReconnect = false)
+		public void Connect(string uri, bool forceReconnect = false, string userAgent = "", string origin = "", List<KeyValuePair<string, string>>? cookies = null)
 		{
 			lock (_lock)
 			{
-				if (forceReconnect)
+				try
 				{
-					Dispose();
+					if (forceReconnect)
+					{
+						Dispose();
+					}
+
+					if (_client != null)
+					{
+						return;
+					}
+
+					_logger.LogDebug($"[WebSocket4NetServiceProvider] | [Connect] | Connecting to {uri}");
+					_uri = uri;
+					_userAgent = userAgent;
+					_origin = origin;
+					_cookies = cookies;
+
+					_cancellationToken = new CancellationTokenSource();
+					Task.Run(async () =>
+					{
+						try
+						{
+							_client = new WebSocket(uri, "", cookies, null, userAgent, origin);
+							_client.Opened += _client_Opened;
+							_client.Closed += _client_Closed;
+							//_client.Error += _client_Error;
+							_client.MessageReceived += _client_MessageReceived;
+							_client.DataReceived += _client_DataReceived;
+							_startTime = DateTime.UtcNow;
+
+							await _client.OpenAsync();
+						}
+						catch (TaskCanceledException)
+						{
+							_logger.LogInformation("[WebSocket4NetServiceProvider] | [Connect] | WebSocket client task was cancelled");
+						}
+						catch (Exception ex)
+						{
+							_logger.LogError(ex, $"[WebSocket4NetServiceProvider] | [Connect] | An exception occurred in WebSocket while connecting to {_uri}");
+							OnError?.Invoke();
+							TryHandleReconnect();
+						}
+					}, _cancellationToken.Token);
 				}
-
-				if (_client != null)
+				catch (Exception ex)
 				{
-					return;
+					_logger.LogError(ex, $"[WebSocket4NetServiceProvider] | [Connect] | An exception occurred while trying to connect");
 				}
-
-				_logger.LogDebug($"Connecting to {uri}");
-				_uri = uri;
-				_cancellationToken = new CancellationTokenSource();
-				Task.Run(async () =>
-				{
-					try
-					{
-						_client = new WebSocket(uri);
-						_client.Opened += _client_Opened;
-						_client.Closed += _client_Closed;
-						_client.Error += _client_Error;
-						_client.MessageReceived += _client_MessageReceived;
-						_client.DataReceived += _client_DataReceived;
-						_startTime = DateTime.UtcNow;
-
-						await _client.OpenAsync();
-					}
-					catch (TaskCanceledException)
-					{
-						_logger.LogInformation("WebSocket client task was cancelled");
-					}
-					catch (Exception ex)
-					{
-						_logger.LogError(ex, $"An exception occurred in WebSocket while connecting to {_uri}");
-						OnError?.Invoke();
-						TryHandleReconnect();
-					}
-				}, _cancellationToken.Token);
 			}
 		}
 
 		private void _client_DataReceived(object sender, DataReceivedEventArgs e)
 		{
-			_logger.LogDebug($"Message received from {_uri}");
+			_logger.LogDebug($"[WebSocket4NetServiceProvider] | [_client_DataReceived] | Message received from {_uri}");
 			OnDataRecevied?.Invoke(null!, e.Data);
 		}
 
 		private void _client_MessageReceived(object sender, MessageReceivedEventArgs e)
 		{
-			_logger.LogDebug($"Message received from {_uri}: {e.Message}");
+			_logger.LogDebug($"[WebSocket4NetServiceProvider] | [_client_MessageReceived] | Message received from {_uri}: {e.Message}");
 
 			OnMessageReceived?.Invoke(null!, e.Message);
 		}
 
 		private void _client_Opened(object sender, EventArgs e)
 		{
-			_logger.LogDebug($"Connection to {_uri} opened successfully!");
+			_logger.LogDebug($"[WebSocket4NetServiceProvider] | [_client_Opened] | Connection to {_uri} opened successfully!");
 			OnOpen?.Invoke();
 		}
 
 		private void _client_Error(object sender, ErrorEventArgs e)
 		{
-			_logger.LogError(e.Exception, $"An error occurred in WebSocket while connected to {_uri}");
+			_logger.LogError(e.Exception, $"[WebSocket4NetServiceProvider] | [_client_Error] | An error occurred in WebSocket while connected to {_uri}");
 			OnError?.Invoke();
 			TryHandleReconnect();
 		}
 
 		private void _client_Closed(object sender, EventArgs e)
 		{
-			_logger.LogDebug($"WebSocket connection to {_uri} was closed");
+			_logger.LogDebug($"[WebSocket4NetServiceProvider] | [_client_Closed] | WebSocket connection to {_uri} was closed");
 			OnClose?.Invoke();
 			TryHandleReconnect();
 		}
 
 		private async void TryHandleReconnect()
 		{
-			_logger.LogInformation($"Connection was closed after {(DateTime.UtcNow - _startTime).ToShortString()}.");
-			if (!await _reconnectLock.WaitAsync(0))
+			try
 			{
-				//_logger.LogInformation("Not trying to reconnect, connectLock already locked.");
-				return;
-			}
-
-			if (_client != null)
-			{
-				_client.Opened -= _client_Opened;
-				_client.Closed -= _client_Closed;
-				_client.Error -= _client_Error;
-				_client.MessageReceived -= _client_MessageReceived;
-				_client.DataReceived -= _client_DataReceived;
-				_client.Dispose();
-				_client = null;
-			}
-
-			if (AutoReconnect && (!_cancellationToken!.IsCancellationRequested))
-			{
-				_logger.LogInformation($"Trying to reconnect to {_uri} in {(int)TimeSpan.FromMilliseconds(ReconnectDelay).TotalSeconds} sec");
-				try
+				_logger.LogInformation($"[WebSocket4NetServiceProvider] | [TryHandleReconnect] | Connection was closed after {(DateTime.UtcNow - _startTime).ToShortString()}.");
+				if (!await _reconnectLock.WaitAsync(0))
 				{
-					await Task.Delay(ReconnectDelay, _cancellationToken.Token);
-					Connect(_uri);
-					ReconnectDelay *= 2;
-					if (ReconnectDelay > 60000)
-					{
-						ReconnectDelay = 60000;
-					}
+					//_logger.LogInformation("[WebSocket4NetServiceProvider] | [TryHandleReconnect] | Not trying to reconnect, connectLock already locked.");
+					return;
 				}
-				catch (TaskCanceledException) { }
+
+				if (_client != null)
+				{
+					_client.Opened -= _client_Opened;
+					_client.Closed -= _client_Closed;
+					_client.Error -= _client_Error;
+					_client.MessageReceived -= _client_MessageReceived;
+					_client.DataReceived -= _client_DataReceived;
+					_client.Dispose();
+					_client = null;
+				}
+
+				if (AutoReconnect && (!_cancellationToken!.IsCancellationRequested))
+				{
+					_logger.LogInformation($"[WebSocket4NetServiceProvider] | [TryHandleReconnect] | Trying to reconnect to {_uri} in {(int)TimeSpan.FromMilliseconds(ReconnectDelay).TotalSeconds} sec");
+					try
+					{
+						await Task.Delay(ReconnectDelay, _cancellationToken.Token);
+						Connect(_uri, false, _userAgent, _origin, _cookies);
+						ReconnectDelay *= 2;
+						if (ReconnectDelay > 60000)
+						{
+							ReconnectDelay = 60000;
+						}
+					}
+					catch (TaskCanceledException) { }
+				}
+				_reconnectLock.Release();
 			}
-			_reconnectLock.Release();
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, $"[WebSocket4NetServiceProvider] | [TryHandleReconnect] | An exception occurred while trying to handle reconnect");
+			}
 		}
 
 		public void Disconnect()
 		{
 			lock (_lock)
 			{
-				_logger.LogInformation("Disconnecting");
-				Dispose();
+				try
+				{
+					_logger.LogInformation("[WebSocket4NetServiceProvider] | [Disconnect] | Disconnecting");
+					_cancellationToken?.Cancel();
+					Dispose();
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, $"[WebSocket4NetServiceProvider] | [Disconnect] | An exception occurred while trying to disconnect");
+				}
 			}
 		}
 
@@ -171,18 +201,18 @@ namespace ChatCore.Services
 				if (IsConnected)
 				{
 #if DEBUG
-					_logger.LogDebug($"Sending {message}"); // Only log this in debug builds, since it can potentially contain sensitive auth data
+					_logger.LogDebug($"[WebSocket4NetServiceProvider] | [SendMessage] | Sending {message}"); // Only log this in debug builds, since it can potentially contain sensitive auth data
 #endif
 					_client!.Send(message);
 				}
 				else
 				{
-					_logger.LogDebug("WebSocket not connected, can't send message!");
+					_logger.LogDebug("[WebSocket4NetServiceProvider] | [SendMessage] | WebSocket not connected, can't send message!");
 				}
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, $"An exception occurred while trying to send message to {_uri}");
+				_logger.LogError(ex, $"[WebSocket4NetServiceProvider] | [SendMessage] | An exception occurred while trying to send message to {_uri}");
 			}
 		}
 
@@ -193,36 +223,47 @@ namespace ChatCore.Services
 				if (IsConnected)
 				{
 #if DEBUG
-					_logger.LogDebug($"Sending bytes"); // Only log this in debug builds, since it can potentially contain sensitive auth data
+					_logger.LogDebug($"[WebSocket4NetServiceProvider] | [SendMessage] | Sending bytes"); // Only log this in debug builds, since it can potentially contain sensitive auth data
 #endif
 					_client!.Send(bytes, 0, bytes.Length);
 				}
 				else
 				{
-					_logger.LogDebug("WebSocket not connected, can't send bytes!");
+					_logger.LogDebug("[WebSocket4NetServiceProvider] | [SendMessage] | WebSocket not connected, can't send bytes!");
 				}
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, $"An exception occurred while trying to send message to {_uri}");
+				_logger.LogError(ex, $"[WebSocket4NetServiceProvider] | [SendMessage] | An exception occurred while trying to send message to {_uri}");
 			}
 		}
 
 		public void Dispose()
 		{
-			if (_client == null)
+			try
 			{
-				return;
-			}
+				if (_client == null)
+				{
+					return;
+				}
 
-			if (IsConnected)
+				if (IsConnected)
+				{
+					_cancellationToken?.Cancel();
+					_client.Close();
+				}
+
+				if (_client == null)
+				{
+					return;
+				}
+
+				_client.Dispose();
+				_client = null;
+			} catch (ObjectDisposedException ex)
 			{
-				_cancellationToken?.Cancel();
-				_client.Close();
+				_logger.LogError("[WebSocket4NetServiceProvider] | [Dispose] | Caught: {0}", ex.Message);
 			}
-
-			_client.Dispose();
-			_client = null;
 		}
 	}
 }

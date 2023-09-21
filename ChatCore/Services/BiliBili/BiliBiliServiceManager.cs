@@ -4,18 +4,18 @@ using System.Reflection;
 using ChatCore.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace ChatCore.Services.BiliBili
+namespace ChatCore.Services.Bilibili
 {
-	public class BiliBiliServiceManager : IChatServiceManager, IDisposable
+	public class BilibiliServiceManager : IChatServiceManager, IDisposable
 	{
 		private readonly ILogger _logger;
-		private readonly BiliBiliService _bilibiliService;
+		private readonly BilibiliService _bilibiliService;
 		private static readonly object _lock = new object();
 
 		public bool IsRunning { get; private set; }
 		public HashSet<Assembly> RegisteredAssemblies => new HashSet<Assembly>();
 
-		public BiliBiliServiceManager(ILogger<BiliBiliServiceManager> logger, BiliBiliService bilibiliService)
+		public BilibiliServiceManager(ILogger<BilibiliServiceManager> logger, BilibiliService bilibiliService)
 		{
 			_logger = logger;
 			_bilibiliService = bilibiliService;
@@ -34,7 +34,7 @@ namespace ChatCore.Services.BiliBili
 				_bilibiliService.Start();
 				IsRunning = true;
 
-				_logger.LogInformation("Started");
+				_logger.LogInformation("[BilibiliServiceManager] | [Start] | Started");
 			}
 		}
 
@@ -59,7 +59,7 @@ namespace ChatCore.Services.BiliBili
 				_bilibiliService.Stop();
 				IsRunning = false;
 
-				_logger.LogInformation("Stopped");
+				_logger.LogInformation("[BilibiliServiceManager] | [Stop] | Stopped");
 			}
 		}
 
@@ -70,7 +70,7 @@ namespace ChatCore.Services.BiliBili
 				Stop(null!);
 			}
 
-			_logger.LogInformation("Disposed");
+			_logger.LogInformation("[BilibiliServiceManager] | [Dispose] | Disposed");
 		}
 
 		public IChatService GetService()

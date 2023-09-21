@@ -28,20 +28,20 @@ namespace ChatCore.Services.Twitch
 			var isGlobal = string.IsNullOrEmpty(category);
 			try
 			{
-				_logger.LogDebug($"Requesting BTTV {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : $" for channel {category}")}.");
+				_logger.LogDebug($"[BTTVDataProvider] | [TryRequestResources] | Requesting BTTV {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : $" for channel {category}")}.");
 				using var msg = new HttpRequestMessage(HttpMethod.Get, isGlobal ? "https://api.betterttv.net/2/emotes" : $"https://api.betterttv.net/2/channels/{category}");
 				msg.Headers.Add("User-Agent", $"ChatCore/{ChatCoreInstance.Version.ToString(3)}");
 				var resp = await _httpClient.SendAsync(msg);
 				if (!resp.IsSuccessStatusCode)
 				{
-					_logger.LogError($"Unsuccessful status code when requesting BTTV {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : " for channel " + category)}. {resp.ReasonPhrase}");
+					_logger.LogError($"[BTTVDataProvider] | [TryRequestResources] | Unsuccessful status code when requesting BTTV {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : " for channel " + category)}. {resp.ReasonPhrase}");
 					return false;
 				}
 
 				var json = JSON.Parse(await resp.Content.ReadAsStringAsync());
 				if (!json["emotes"].IsArray)
 				{
-					_logger.LogError("emotes was not an array.");
+					_logger.LogError("[BTTVDataProvider] | [TryRequestResources] | emotes was not an array.");
 					return false;
 				}
 
@@ -58,12 +58,12 @@ namespace ChatCore.Services.Twitch
 					}
 				}
 
-				_logger.LogDebug($"Success caching {count} BTTV {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : " for channel " + category)}.");
+				_logger.LogDebug($"[BTTVDataProvider] | [TryRequestResources] | Success caching {count} BTTV {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : " for channel " + category)}.");
 				return true;
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, $"An error occurred while requesting BTTV {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : " for channel " + category)}.");
+				_logger.LogError(ex, $"[BTTVDataProvider] | [TryRequestResources] | An error occurred while requesting BTTV {(isGlobal ? "global " : "")}emotes{(isGlobal ? "." : " for channel " + category)}.");
 			}
 
 			return false;
