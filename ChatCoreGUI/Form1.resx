@@ -146,6 +146,28 @@ Basic Configuration (for Beat Saber mod users)
 4. After installing any mod that utilizes ChatCore, a settings web app will be launched upon starting the game. Use this to login, join/leave channels, and configure various settings.
 
 Changelog:
+v3.0.0-alpha:
+- 🔨[Add] WebSocket server can forward message packet (External service can connect to the port num of the web app + 1)
+- 🔨[Add] Streaming Overlay (You can edit the custom.js and custom.css files in the .chatcore folder to customize the style and function)
+- 🔨[Add] Streaming Overlay Text-to-Speach(TTS) Function
+- 🔨[Add] Local Image proxy
+- 🔨[Add] Web App language settings can be saved
+- 🔨[Add] Brotli compression support
+
+- 🔧[Fix] The issue of HTTP requests is no response
+- 🔧[Fix] The issue of Bilibili authentication in Default mode
+- 🔧[Fix] The issue of multiple calls to the OpenBLive service
+- 🔧[Fix] The issue of OpenBLive does not respond with URLs for some emoticons
+- 🔧[Fix] The issue of the websocket still connected when the related chat service was disabled
+- 🔧[Fix] The issue of the web app cannot immediately get the configuration changes when the local file is changed
+
+- ⚙[Change] Tweak web app UI
+- ⚙[Change] BilibilMessage now will be returned after all the information in the message has been processed.
+
+- 🛠[Enhance] Upgrade Material Icon to Material Symbols
+- 🛠[Enhance] Upgrade jquery to 3.7.1
+- 🛠[Enhance] The content returned by the HTTP server is more consistent with the specification
+
 v2.2.0:
 - 🔨[Add] Emotion display support for Bilibili danmuku
 - 🔨[Add] Gift Star danmuku support for Bilibili
@@ -173,7 +195,7 @@ v2.2.0:
 - 🔧[Fix] The issue that the block function throws exceptions because the UID is out of the range of the int data type.
 
 - 🛠[Enhance] Support configuration convertion from 2.1.3 or older to 2.2.0.
-- 🛠[Enhance] Update Materialize CSS to 2.0.0-alpha</value>
+- 🛠[Enhance] Update Materialize CSS to 2.0.2-alpha</value>
   </data>
   <data name="&gt;&gt;textBox_console.Name" xml:space="preserve">
     <value>textBox_console</value>
