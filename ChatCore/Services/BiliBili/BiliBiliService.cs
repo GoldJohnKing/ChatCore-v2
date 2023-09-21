@@ -1212,6 +1212,8 @@ namespace ChatCore.Services.Bilibili
 			addItem("emoji_289", "[给力]", "http://i0.hdslb.com/bfs/live/d1ba5f4c54332a21ed2ca0dcecaedd2add587839.png");
 			addItem("emoji_290", "[耶]", "http://i0.hdslb.com/bfs/live/eb2d84ba623e2335a48f73fb5bef87bcf53c1239.png");
 
+			addItem("[点赞图标]", "[点赞图标]", "https://i0.hdslb.com/bfs/live/23678e3d90402bea6a65251b3e728044c21b1f0f.png");
+
 			void addItem(string id, string name, string uri)
 			{
 				var emoji = new Dictionary<string, string>();
