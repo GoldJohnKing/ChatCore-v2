@@ -70,6 +70,7 @@ namespace ChatCore.Services.Bilibili
 
 		public void Start(bool reconnect = false)
 		{
+			_logger.LogInformation($"[OpenBLiveProvider] | [Start] | Start");
 			if (_bApiClient != null)
 			{
 				_status = "Instance already exists";
@@ -172,7 +173,7 @@ namespace ChatCore.Services.Bilibili
 
 		public void Stop(bool force = false)
 		{
-			_logger.LogInformation($"[OpenBLiveProvider] | [Stop] | Stop | {_status}");
+			_logger.LogInformation($"[OpenBLiveProvider] | [Stop] | Stop");
 			if (_cancellationToken is null)
 			{
 				return;
@@ -185,11 +186,15 @@ namespace ChatCore.Services.Bilibili
 
 			Task.Run(async () =>
 			{
-				var ret = await _bApiClient!.EndInteractivePlay(_appId!, _gameId!);
-				_logger.LogDebug("[OpenBLiveProvider] | [Stop] | 关闭游戏: " + ret.Message);
+				if (_bApiClient != null)
+				{
+					var ret = await _bApiClient.EndInteractivePlay(_appId!, _gameId!);
+					_logger.LogInformation("[OpenBLiveProvider] | [Stop] | 关闭游戏: " + ret.Message);
+				}
+				
 				_status = $"Stopped";
 
-				_cancellationToken.Cancel();
+				_cancellationToken?.Cancel();
 				_bApiClient = null;
 				_gameId = null;
 				_appStartInfo = null;
@@ -198,7 +203,7 @@ namespace ChatCore.Services.Bilibili
 				_logger.LogInformation("[OpenBLiveProvider] | [Stop] | Stopped");
 				if (force)
 				{
-					_reconnectCancellationToken.Cancel();
+					_reconnectCancellationToken?.Cancel();
 					_deamon = null;
 				}
 			});
@@ -207,7 +212,7 @@ namespace ChatCore.Services.Bilibili
 		public void Enable()
 		{
 			_enable = true;
-			Start();
+			Start(true);
 		}
 
 		public void Disable()
