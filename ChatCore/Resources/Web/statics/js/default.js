@@ -12,8 +12,12 @@ var keywordsChipsInstance;
 var bilibiliBlockListKeywordTooltipInstance;
 var danmukuServiceMethodSelectorInstance;
 var saveButtonElement;
+var requestQRCodeElement;
 var ttsSpeedRangeInstance;
 var ttsPitchRangeInstance;
+var qrCodeTimer;
+var qrCodeCountdown;
+var qrCodeImgGenerator;
 
 // Helper functions
 // https://regex101.com/r/5Nrx9S/4
@@ -206,7 +210,14 @@ function fetch_language_file() {
 					"danmuku-service-method-default",
 					"danmuku-service-method-openblive",
 					"bilibili-settings-room-id",
+					"bilibili-settings-cookies-settings",
 					"bilibili-settings-room-cookies",
+					"bilibili-settings-cookies-settings-warning",
+					"bilibili-settings-cookies-qr-login-status-step-text",
+					"bilibili-settings-cookies-qr-login-status-request-text",
+					"bilibili-settings-cookies-qr-login-status-scan-text",
+					"bilibili-settings-cookies-qr-login-status-confirm-text",
+					"bilibili-settings-cookies-qr-login-request-button-text",
 					"bilibili-settings-blive-settings",
 					"bilibili-settings-blive-settings-code",
 					"bilibili-settings-danmuku-settings",
@@ -465,8 +476,10 @@ function fetch_language_file() {
 				[channelChipsInstance, usernameChipsInstance, uidChipsInstance, keywordsChipsInstance].forEach((el) => redrawChipInstance(el));
 
 				function toggle_bilibili_cookies() {
-					if (!bilibili_version && danmukuServiceMethodSelectorInstance.getSelectedValues()[0] === "Default" && $("#bilibili-settings-cookies-div").hasClass("hide")) {
-						$("#bilibili-settings-cookies-div").removeClass("hide");
+					if (!bilibili_version && danmukuServiceMethodSelectorInstance.getSelectedValues()[0] === "Default") {
+						if ($("#bilibili-settings-cookies-div").hasClass("hide")) {
+							$("#bilibili-settings-cookies-div").removeClass("hide");
+						}
 					} else {
 						if (!$("#bilibili-settings-cookies-div").hasClass("hide")) {
 							$("#bilibili-settings-cookies-div").addClass("hide");
@@ -605,6 +618,8 @@ $(function () {
 	detect_language();
 	document.getElementById("bilibili-settings-utilities-images-button").addEventListener("click", clean_cache_bilibili_image);
 	document.getElementById("global-settings-web-streaming-overlay-tts-test-button").addEventListener("click", TTSTest);
+	requestQRCodeElement = document.getElementById("bilibili-settings-cookies-qr-login-request-button");
+	requestQRCodeElement.addEventListener("click", request_new_bilibili_login_qr_code);
 
 	ttsSpeedRangeInstance = M.Range.init(document.getElementById("overlay_tts_voice_speed"));
 	ttsPitchRangeInstance = M.Range.init(document.getElementById("overlay_tts_voice_pitch"));
@@ -698,4 +713,140 @@ function change_tts_voice_speed() {
 function change_tts_voice_pitch() {
 	data["overlay_tts_voice_pitch"] = parseFloat(ttsPitchRangeInstance.value.textContent) * 10;
 	tts.pitch = parseFloat(ttsPitchRangeInstance.value.textContent);
+}
+
+function request_new_bilibili_login_qr_code() {
+	reset_bilibili_login_steps();
+	requestQRCodeElement.enabled = false;
+	requestQRCodeElement.classList.add("disabled");
+	set_bilibili_login_progress('busy');
+
+	var request = new XMLHttpRequest();
+	request.open("GET", "/bilibili_qr_request");
+	request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+	request.onabort = function () {
+		set_bilibili_login_progress('error');
+		$("#bilibili-settings-cookies-qr-login-status-request-icon").text("error");
+		M.toast({ text: set_translation("request-onabort", false) === "" ? "Something went wrong, try again later." : set_translation("request-onabort", false) })
+	};
+	request.onerror = function () {
+		set_bilibili_login_progress('error');
+		$("#bilibili-settings-cookies-qr-login-status-request-icon").text("error");
+		M.toast({ text: set_translation("request-onerror-request-qr-code", false) === "" ? "Something went wrong while trying to get QR code. Make sure Beat Saber is still running." : set_translation("request-onerror-request-qr-code", false) })
+	};
+	request.onload = function () {
+		if (request.readyState === 4 && request.status === 200) {
+			let response = JSON.parse(request.responseText);
+			toggleElement("bilibili-settings-cookies-qr-img", true, true);
+			if (qrCodeImgGenerator !== null && qrCodeImgGenerator !== undefined) {
+				qrCodeImgGenerator.makeCode(response["url"]);
+			} else {
+				qrCodeImgGenerator = new QRCode("bilibili-settings-cookies-qr-img", response["url"]);
+			}
+			
+			qrCodeTimer = setTimeout(qrCodeTimer_heartbeat, 1000);
+			$("#bilibili-settings-cookies-qr-login-status-request-icon").text("done");
+			M.toast({ text: set_translation("request-onload-request-qr-code", false) === "" ? "Requesting QR code successfully." : set_translation("request-onload-request-qr-code", false) })
+		} else {
+			set_bilibili_login_progress('error');
+			$("#bilibili-settings-cookies-qr-login-status-request-icon").text("error");
+			M.toast({ text: set_translation("request-onerror-request-qr-code", false) === "" ? "Something went wrong while trying to get QR code. Make sure Beat Saber is still running." : set_translation("request-onerror-request-qr-code", false) })
+		}
+	};
+	request.onloadend = function () {
+		requestQRCodeElement.classList.remove("disabled")
+		requestQRCodeElement.enabled = true;
+	};
+
+	request.send();
+}
+
+function reset_bilibili_login_steps() {
+	$("#bilibili-settings-cookies-qr-login-status-request-icon").text("pending");
+	$("#bilibili-settings-cookies-qr-login-status-scan-icon").text("qr_code_scanner");
+	$("#bilibili-settings-cookies-qr-login-status-confirm-icon").text("login");
+	set_bilibili_login_progress('init');
+	toggleElement("bilibili-settings-cookies-qr-img", true, false);
+	qrCodeCountdown = 180;
+	qrCodeTimer !== null && qrCodeTimer !== undefined && clearTimeout(qrCodeTimer);
+	qrCodeImgGenerator !== null && qrCodeImgGenerator !== undefined && qrCodeImgGenerator.clear();
+}
+
+function set_bilibili_login_progress(status, progress = 0) {
+	switch (status) {
+		case "init":
+			$("#bilibili-settings-cookies-qr-login-status-progress").removeClass().addClass('determinate green');
+			$("#bilibili-settings-cookies-qr-login-status-progress").css('width', "0%");
+			break;
+		case "busy":
+			$("#bilibili-settings-cookies-qr-login-status-progress").removeClass().addClass('indeterminate flash-color');
+			$("#bilibili-settings-cookies-qr-login-status-progress").css('width', "0%");
+			return;
+		case "countdown":
+			$("#bilibili-settings-cookies-qr-login-status-progress").removeClass().addClass('determinate blue');
+			$("#bilibili-settings-cookies-qr-login-status-progress").css('width', `${progress}%`);
+			break;
+		case "error":
+			$("#bilibili-settings-cookies-qr-login-status-progress").removeClass().addClass('determinate red');
+			$("#bilibili-settings-cookies-qr-login-status-progress").css('width', "100%");
+			break;
+		case "done":
+			$("#bilibili-settings-cookies-qr-login-status-progress").removeClass().addClass('determinate green');
+			$("#bilibili-settings-cookies-qr-login-status-progress").css('width', "100%");
+			break;
+		default:
+			return;
+	}
+	$("#bilibili-settings-cookies-qr-login-status-progress").empty();
+}
+
+function qrCodeTimer_heartbeat() {
+	qrCodeCountdown--;
+	set_bilibili_login_progress('countdown', qrCodeCountdown / 1.8);
+
+	var request = new XMLHttpRequest();
+	request.open("GET", "/bilibili_qr_status");
+	request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+	request.onabort = function () {
+		set_bilibili_login_progress('error');
+		$("#bilibili-settings-cookies-qr-login-status-confirm-icon").text("error");
+		M.toast({ text: set_translation("request-onabort", false) === "" ? "Something went wrong, try again later." : set_translation("request-onabort", false) })
+	};
+	request.onerror = function () {
+		set_bilibili_login_progress('error');
+		$("#bilibili-settings-cookies-qr-login-status-confirm-icon").text("error");
+		M.toast({ text: set_translation("request-onerror-request-qr-code-status", false) === "" ? "Something went wrong while trying to get QR code status. Make sure Beat Saber is still running." : set_translation("request-onerror-request-qr-code-status", false) })
+	};
+	request.onload = function () {
+		if (request.readyState === 4 && request.status === 200) {
+			let response = JSON.parse(request.responseText);
+			switch (response['status']) {
+				case "login_done":
+					$("#bilibili-settings-cookies-qr-login-status-scan-icon").text("done");
+					$("#bilibili-settings-cookies-qr-login-status-confirm-icon").text("done");
+					set_bilibili_login_progress('done');
+					$('#bilibili_cookies').val(response['cookies']);
+					toggleElement("bilibili-settings-cookies-qr-img", true, false);
+					return;
+				case "qr_scan_done":
+					$("#bilibili-settings-cookies-qr-login-status-scan-icon").text("done");
+				case "qr_fetch_done":
+				case "qr_scan_busy":
+					qrCodeTimer = setTimeout(qrCodeTimer_heartbeat, 1000);
+					break;
+				default:
+					console.log(response['status']);
+					set_bilibili_login_progress('error');
+					$("#bilibili-settings-cookies-qr-login-status-confirm-icon").text("error");
+					toggleElement("bilibili-settings-cookies-qr-img", true, false);
+					break;
+			}
+		} else {
+			set_bilibili_login_progress('error');
+			$("#bilibili-settings-cookies-qr-login-status-confirm-icon").text("error");
+			M.toast({ text: set_translation("request-onerror-request-qr-code-status", false) === "" ? "Something went wrong while trying to get QR code status. Make sure Beat Saber is still running." : set_translation("request-onerror-request-qr-code-status", false) })
+		}
+	};
+
+	request.send();
 }

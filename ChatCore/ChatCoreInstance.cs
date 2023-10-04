@@ -74,6 +74,7 @@ namespace ChatCore
 					.AddSingleton<MainSettingsProvider>()
 					.AddSingleton<BilibiliService>()
 					.AddSingleton<BilibiliServiceManager>()
+					.AddSingleton<BilibiliLoginProvider>()
 					.AddSingleton<IPathProvider, PathProvider>()
 					.AddSingleton<IUserAuthProvider, UserAuthProvider>()
 					.AddSingleton<IWebLoginProvider, WebLoginProvider>()
@@ -257,7 +258,10 @@ namespace ChatCore
 				}
 
 				_openBLiveProvider = (OpenBLiveProvider)_serviceProvider.GetService<IOpenBLiveProvider>();
-				_openBLiveProvider.Start();
+				if (_settings!.EnableBilibili)
+				{
+					_openBLiveProvider.Start();
+				}
 				return _openBLiveProvider;
 			}
 		}

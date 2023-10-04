@@ -1,9 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace ChatCore.Utilities
@@ -31,6 +34,7 @@ namespace ChatCore.Utilities
 				}
 				HttpResponseMessage response = await client.SendAsync(httpRequestMessage);
 				var responseBody = await response.Content.ReadAsStringAsync();
+				IEnumerable<string> cookies = response.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value;
 				switch (response.StatusCode)
 				{
 					case HttpStatusCode.OK:
@@ -42,6 +46,7 @@ namespace ChatCore.Utilities
 						result.Add($"{response.StatusCode}");
 						break;
 				}
+				result.Add(cookies == null ? string.Empty : new HttpClientUtils().RemoveExpiredTimeAndPath(string.Join("; ", cookies.ToList())));
 			}
 			catch (Exception e)
 			{
@@ -80,5 +85,21 @@ namespace ChatCore.Utilities
 
             return redirectedUrl;
         }
+
+		public string RemoveExpiredTimeAndPath(string cookies) {
+			var cookies_arr = cookies.Split(';');
+			var new_cookies_list = new List<string>();
+			foreach (var cookie_item in cookies_arr)
+			{
+				var value = cookie_item.Trim();
+				if (value.StartsWith("Path=") || value.StartsWith("Domain=") || value.StartsWith("Expires=") || value.IndexOf("=") == -1)
+				{
+					continue;
+				}
+				new_cookies_list.Add(value);
+			}
+
+			return string.Join("; ", new_cookies_list);
+		}
     }
 }

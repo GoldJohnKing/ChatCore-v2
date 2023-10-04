@@ -12,6 +12,7 @@
 	<link rel="stylesheet" href="Statics/Css/default.css">
 	<script src="Statics/Js/jquery-3.7.1.min.js"></script>
 	<script src="Statics/Js/tts.js"></script>
+	<script src="Statics/Js/qrcode.min.js"></script>
 </head>
 <body class="grey lighten-3">
 	<nav>
@@ -116,7 +117,7 @@
 				<!--bilibili setting-->
 				<div class="col s12 m10 offset-m1 l8 offset-l2 xl6 default-gap hide" id="bilibili-settings-card">
 					<div class="card">
-						<div class="card-content bilibili-header  card-force-round white-text">
+						<div class="card-content bilibili-header card-force-round white-text">
 							<span class="card-title" id="bilibili-settings-title">Bilibili Settings</span>
 						</div>
 						<div class="card-content">
@@ -135,10 +136,59 @@
 								<label for="bilibili_room_id" id="bilibili-settings-room-id">Room ID</label>
 							</div>
 
-							<div class="input-field default-gap hide" id="bilibili-settings-cookies-div">
-								<input id="bilibili_cookies" name="bilibili_cookies" type="password" class="validate" autocomplete="cookies"
-									   placeholder="dy_spec_agreed=1; buvid3=xxxxx..." form="settings-form">
-								<label for="bilibili_cookies" id="bilibili-settings-cookies">Cookies</label>
+							<div class="row default-gap" id="bilibili-settings-cookies-div">
+								<p class="caption col s12" id="bilibili-settings-cookies-settings">Bilibili Cookies settings</p>
+								<ul class="collapsible popout col s12">
+									<li class=" card-force-round">
+										<div class="collapsible-header card-force-round"><i class="material-symbols-outlined">cookie</i><span id="bilibili-settings-cookies-settings-cookies">Cookies</span></div>
+										<div class="collapsible-body card-force-round auto_overflow">
+											<div class="warning-tip col s12">
+												<i class="material-symbols-outlined">warning</i><span id="bilibili-settings-cookies-settings-warning">Cookies Warning</span>
+											</div>
+
+											<div class="input-field default-gap">
+												<input id="bilibili_cookies" name="bilibili_cookies" type="password" class="validate" autocomplete="cookies"
+													   placeholder="dy_spec_agreed=1; buvid3=xxxxx..." form="settings-form">
+												<label for="bilibili_cookies" id="bilibili-settings-cookies">Cookies</label>
+											</div>
+
+											<div class="row">
+												<div class="col s6 square center stack-parent" id="bilibili-settings-cookies-qr-login">
+													<span class="material-symbols-outlined x6-font stack-bottom">
+														qr_code_scanner
+													</span>
+													<div class="stack-top full-width" id="bilibili-settings-cookies-qr-img"></div>
+												</div>
+
+												<div class="col s6" id="bilibili-settings-cookies-qr-login-status">
+													<div class="progress">
+														<div class="determinate" style="width: 0%" id="bilibili-settings-cookies-qr-login-status-progress"></div>
+													</div>
+													<div class="step-list default-gap">
+														<div class="step-list-item">
+															<span id="bilibili-settings-cookies-qr-login-status-step-text">Steps:</span>
+														</div>
+														<div class="step-list-item">
+															<i class="material-symbols-outlined" id="bilibili-settings-cookies-qr-login-status-request-icon">pending</i><span id="bilibili-settings-cookies-qr-login-status-request-text">Request QR Code</span>
+														</div>
+
+														<div class="step-list-item">
+															<i class="material-symbols-outlined" id="bilibili-settings-cookies-qr-login-status-scan-icon">qr_code_scanner</i><span id="bilibili-settings-cookies-qr-login-status-scan-text">Scan QR Code using Bilibili App</span>
+														</div>
+
+														<div class="step-list-item">
+															<i class="material-symbols-outlined" id="bilibili-settings-cookies-qr-login-status-confirm-icon">login</i><span id="bilibili-settings-cookies-qr-login-status-confirm-text">Confirm Login</span>
+														</div>
+													</div>
+												</div>
+												<a class="waves-effect waves-light btn btn_primary_color col s12" id="bilibili-settings-cookies-qr-login-request-button">
+													<span id="bilibili-settings-cookies-qr-login-request-button-text">Request a new QR Code</span>
+													<i class="material-symbols-outlined right">qr_code_2_add</i>
+												</a>
+											</div>
+										</div>
+									</li>
+								</ul>
 							</div>
 
 							<div class="row default-gap">
@@ -181,8 +231,8 @@
 								<p class="caption col s12" id="bilibili-settings-danmuku-settings">Danmuku settings</p>
 								<ul class="collapsible popout col s12 ul-force-gap">
 									<li class=" card-force-round">
-										<div class="collapsible-header  card-force-round"><i class="material-symbols-outlined">chat</i><span id="bilibili-settings-danmuku-settings-basic">Basic</span></div>
-										<div class="collapsible-body  card-force-round">
+										<div class="collapsible-header card-force-round"><i class="material-symbols-outlined">chat</i><span id="bilibili-settings-danmuku-settings-basic">Basic</span></div>
+										<div class="collapsible-body card-force-round">
 											<div class="row">
 												<div class="switch col s12">
 													<label>
@@ -281,8 +331,8 @@
 										</div>
 									</li>
 									<li class=" card-force-round">
-										<div class="collapsible-header  card-force-round"><i class="material-symbols-outlined">attach_money</i><span id="bilibili-settings-danmuku-settings-gift">Gift</span></div>
-										<div class="collapsible-body  card-force-round">
+										<div class="collapsible-header card-force-round"><i class="material-symbols-outlined">attach_money</i><span id="bilibili-settings-danmuku-settings-gift">Gift</span></div>
+										<div class="collapsible-body card-force-round">
 											<div class="row">
 												<div class="switch col s12">
 													<label>
@@ -313,8 +363,8 @@
 										</div>
 									</li>
 									<li class=" card-force-round">
-										<div class="collapsible-header  card-force-round"><i class="material-symbols-outlined">connect_without_contact</i><span id="bilibili-settings-danmuku-settings-interaction">Interaction</span></div>
-										<div class="collapsible-body  card-force-round">
+										<div class="collapsible-header card-force-round"><i class="material-symbols-outlined">connect_without_contact</i><span id="bilibili-settings-danmuku-settings-interaction">Interaction</span></div>
+										<div class="collapsible-body card-force-round">
 											<div class="row">
 												<div class="switch col s12">
 													<label>
@@ -408,8 +458,8 @@
 										</div>
 									</li>
 									<li class=" card-force-round">
-										<div class="collapsible-header  card-force-round"><i class="material-symbols-outlined">anchor</i><span id="bilibili-settings-danmuku-settings-guard">Guard</span></div>
-										<div class="collapsible-body  card-force-round">
+										<div class="collapsible-header card-force-round"><i class="material-symbols-outlined">anchor</i><span id="bilibili-settings-danmuku-settings-guard">Guard</span></div>
+										<div class="collapsible-body card-force-round">
 											<div class="row">
 												<div class="switch col s12">
 													<label>
@@ -466,8 +516,8 @@
 										</div>
 									</li>
 									<li class=" card-force-round">
-										<div class="collapsible-header  card-force-round"><i class="material-symbols-outlined">notifications</i><span id="bilibili-settings-danmuku-settings-notification">Other Notification</span></div>
-										<div class="collapsible-body  card-force-round">
+										<div class="collapsible-header card-force-round"><i class="material-symbols-outlined">notifications</i><span id="bilibili-settings-danmuku-settings-notification">Other Notification</span></div>
+										<div class="collapsible-body card-force-round">
 											<div class="row">
 												<div class="switch col s12">
 													<label>
@@ -543,8 +593,8 @@
 										</div>
 									</li>
 									<li class=" card-force-round">
-										<div class="collapsible-header  card-force-round"><i class="material-symbols-outlined">do_not_disturb_on</i><span id="bilibili-settings-danmuku-settings-block-list">Block List</span></div>
-										<div class="collapsible-body  card-force-round">
+										<div class="collapsible-header card-force-round"><i class="material-symbols-outlined">do_not_disturb_on</i><span id="bilibili-settings-danmuku-settings-block-list">Block List</span></div>
+										<div class="collapsible-body card-force-round">
 											<div class="row info-tooltip-row-margin">
 												<p class="caption col s12"><span id="bilibili-settings-block-list-username">Blocked Username</span><a class="btn-floating pulse info-tooltip-icon-background tooltipped" data-position="right" id="bilibili-settings-block-list-username-tooltipped"><i class="material-symbols-outlined info-tooltip-icon">info</i></a></p>
 											</div>
@@ -684,15 +734,15 @@
 													</p>
 												</div>
 
-												<a class="waves-effect waves-light btn col s12" id="global-settings-web-streaming-overlay-tts-test-button">
-													<span id="global-settings-web-streaming-overlay-tts-test-button">Test Message</span>
+												<a class="waves-effect waves-light btn btn_primary_color col s12" id="global-settings-web-streaming-overlay-tts-test-button">
+													<span id="global-settings-web-streaming-overlay-tts-test-button-text">Test Message</span>
 													<i class="material-symbols-outlined left">headphones</i>
 												</a>
 											</div>
 											</div>
 									</li>
 								</ul>
-								<a class="waves-effect waves-light btn col s12" id="global-settings-web-streaming-overlay-button" href="overlay" target="_blank">
+								<a class="waves-effect waves-light btn btn_primary_color col s12" id="global-settings-web-streaming-overlay-button" href="overlay" target="_blank">
 									<i class="material-symbols-outlined left">layers</i>
 									<span id="global-settings-web-streaming-overlay-button-text">Click to open Streaming Overlay</span>
 									<i class="material-symbols-outlined right">open_in_new</i>
@@ -732,7 +782,7 @@
 				</div>
 			</div>
 			<div class="row center-align">
-				<button id="saveButton" class="btn waves-effect waves-light col s12" style="margin: 8px;">
+				<button id="saveButton" class="btn waves-effect waves-light btn_primary_color col s12" style="margin: 8px;">
 					<span id="save-button-text">Save settings</span>
 					<i class="material-symbols-outlined right">send</i>
 				</button>

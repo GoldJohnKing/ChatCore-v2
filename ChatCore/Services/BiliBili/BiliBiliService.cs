@@ -446,6 +446,7 @@ namespace ChatCore.Services.Bilibili
 						{
 							_buvid3 = NewChatBuvidInfo["data"]["b_3"].Value;
 							_logger.LogInformation($"[BilibiliService] | [GetChatBuvidAsync] | Success");
+							reloadWebsocketConnection();
 						}
 						else
 						{
@@ -472,8 +473,10 @@ namespace ChatCore.Services.Bilibili
 		}
 
 		private string GetValueFromCookie(string key) {
-			var _cookie_items = Regex.Matches(_authManager.Credentials.Bilibili_cookies.Trim(), @"(.+?)(?:=(.+?))?(?:;|$|,(?!\s))").Cast<Match>()
-								 .ToDictionary(m => m.Groups[1].Value.Trim(), m => m.Groups[2].Value.Trim());
+			var clean_cookie = new HttpClientUtils().RemoveExpiredTimeAndPath(_authManager.Credentials.Bilibili_cookies);
+
+			var _cookie_items = Regex.Matches(clean_cookie, @"(.+?)(?:=(.+?))?(?:;|$|,(?!\s))").Cast<Match>()
+								 .ToDictionary(m => m.Groups[1].Value.Trim(), m => m.Groups[2].Value.Trim(), StringComparer.OrdinalIgnoreCase);
 			return _cookie_items.TryGetValue(key, out var value)? value : "";
 		}
 

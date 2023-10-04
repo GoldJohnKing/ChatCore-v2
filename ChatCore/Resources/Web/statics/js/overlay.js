@@ -174,7 +174,7 @@ let formatBilibiliMessage = function (data) {
 			bilibiliMsg.tts_text = `${bilibiliMsg.message}`;
 			break;
 		case "like_info":
-			bilibiliMsg.tts_text = `${bilibiliMsg.usernamePure}${bilibiliMsg.message}`;
+			bilibiliMsg.tts_text = `${bilibiliMsg.usernamePure}${bilibiliMsg.message}`.replaceAll("[点赞图标]", "");
 			break;
 		case "pk_pre":
 		case "pk_start":

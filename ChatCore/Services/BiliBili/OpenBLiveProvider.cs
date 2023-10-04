@@ -39,7 +39,7 @@ namespace ChatCore.Services.Bilibili
 		private CancellationTokenSource? _cancellationToken;
 		private CancellationTokenSource _reconnectCancellationToken;
 		private string? _status;
-		private Task? _deamon;
+		//private Task? _deamon;
 		private bool _enable = false;
 		private string _identity_code = "";
 
@@ -77,14 +77,16 @@ namespace ChatCore.Services.Bilibili
 				if (_identity_code != _authManager.Credentials.Bilibili_identity_code)
 				{
 					_status = "Restarting";
-					Stop();
+					Restart();
 				}
+				Console.WriteLine(_status);
 				return;
 			}
 
 			if (string.IsNullOrEmpty(_authManager.Credentials.Bilibili_identity_code) || string.IsNullOrEmpty(_config["bilibili_live_app_id"]) || string.IsNullOrEmpty(_config["bilibili_live_access_key_id"]) || string.IsNullOrEmpty(_config["bilibili_live_access_key_secret"]))
 			{
 				_status = "Lack of parameters";
+				Console.WriteLine(_status);
 				Stop(true);
 				return;
 			}
@@ -92,11 +94,12 @@ namespace ChatCore.Services.Bilibili
 			if (!_enable)
 			{
 				_status = "Service not Enabled!";
+				Console.WriteLine(_status);
 				Stop(true);
 				return;
 			}
 
-			if (_deamon == null)
+			/*if (_deamon == null)
 			{
 				_deamon = Task.Run(async () =>
 				{
@@ -118,10 +121,11 @@ namespace ChatCore.Services.Bilibili
 						await Task.Delay(15000);
 					}
 				}, _reconnectCancellationToken.Token);
+				Console.WriteLine("deamon run");
 				return;
-			}
+			}*/
 
-			_logger.LogInformation($"[OpenBLiveProvider] | [Start] | Start");
+			//_logger.LogInformation($"[OpenBLiveProvider] | [Start] | Start | Deamon");
 			_reconnectCancellationToken = new CancellationTokenSource();
 			_bApiClient = new BApiClient();
 			_appStartInfo = new AppStartInfo();
@@ -141,7 +145,7 @@ namespace ChatCore.Services.Bilibili
 				{
 					_logger.LogCritical($"[OpenBLiveProvider] | [Start] | Connecting Error: {_appStartInfo?.Code}, _appStartInfo?.Message");
 					_status = $"Connecting Error: {_appStartInfo?.Code}, _appStartInfo?.Message";
-					Stop();
+					Restart();
 					return;
 				}
 
@@ -163,12 +167,12 @@ namespace ChatCore.Services.Bilibili
 				{
 					_logger.LogCritical("[OpenBLiveProvider] | [Start] | 开启游戏错误: " + _appStartInfo!.ToString());
 					_status = $"Connecting Error: {_appStartInfo!.ToString()}";
-					Stop();
+					Restart();
 					return;
 				}
 			});
 
-			_cancellationToken = new CancellationTokenSource();
+			//_cancellationToken = new CancellationTokenSource();
 		}
 
 		public void Stop(bool force = false)
@@ -204,9 +208,14 @@ namespace ChatCore.Services.Bilibili
 				if (force)
 				{
 					_reconnectCancellationToken?.Cancel();
-					_deamon = null;
+					//_deamon = null;
 				}
 			});
+		}
+
+		public void Restart() {
+			Stop(true);
+			Start();
 		}
 
 		public void Enable()

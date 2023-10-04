@@ -127,6 +127,16 @@
 	"global-settings-web-streaming-overlay-tts-voice-package": "语音包",
 	"global-settings-web-streaming-overlay-tts-voice-speed": "朗读速度",
 	"global-settings-web-streaming-overlay-tts-voice-pitch": "朗读语调",
-	"global-settings-web-streaming-overlay-tts-test-button": "试听测试消息",
-	"global-settings-web-streaming-overlay-button-text": "点击打开直播叠加层"
+	"global-settings-web-streaming-overlay-tts-test-button-text": "试听测试消息",
+	"global-settings-web-streaming-overlay-button-text": "点击打开直播叠加层",
+	"bilibili-settings-cookies-settings": "哔哩哔哩Cookies设置",
+	"bilibili-settings-cookies-settings-warning": "Cookie中包含了您账户的凭据，请妥善保管。",
+	"bilibili-settings-cookies-qr-login-status-step-text": "步骤: ",
+	"bilibili-settings-cookies-qr-login-status-request-text": "申请二维码",
+	"bilibili-settings-cookies-qr-login-status-scan-text": "用B站客户端扫码",
+	"bilibili-settings-cookies-qr-login-status-confirm-text": "确认登陆",
+	"bilibili-settings-cookies-qr-login-request-button-text": "申请新的二维码",
+	"request-onerror-request-qr-code": "在获取二维码时出了一些问题。请确保节奏光剑正在运行",
+	"request-onload-request-qr-code": "申请二维码成功。",
+	"request-onerror-request-qr-code-status": "在获取二维码状态时出了一些问题。请确保节奏光剑正在运行"
 }

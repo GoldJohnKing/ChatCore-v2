@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-		<Version>3.0.0-alpha</Version>
+		<Version>3.0.0-alpha2</Version>
 		<LangVersion>9</LangVersion>
 		<Nullable>enable</Nullable>
 		<NoWarn>1591</NoWarn>
@@ -72,6 +72,7 @@
 		<EmbeddedResource Include="Resources\Web\Statics\Js\overlay.js" />
 		<EmbeddedResource Include="Resources\Web\Statics\Js\jquery-3.7.1.min.js" />
 		<EmbeddedResource Include="Resources\Web\Statics\Js\materialize.min.js" />
+		<EmbeddedResource Include="Resources\Web\Statics\Js\qrcode.min.js" />
 		<EmbeddedResource Include="Resources\Web\Statics\Lang\en.json" />
 		<EmbeddedResource Include="Resources\Web\Statics\Lang\zh.json" />
 		<EmbeddedResource Include="Resources\Web\Statics\Lang\ja.json" />

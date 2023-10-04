@@ -127,6 +127,16 @@
 	"global-settings-web-streaming-overlay-tts-voice-package": "",
 	"global-settings-web-streaming-overlay-tts-voice-speed": "",
 	"global-settings-web-streaming-overlay-tts-voice-pitch": "",
-	"global-settings-web-streaming-overlay-tts-test-button": "",
-	"global-settings-web-streaming-overlay-button-text": ""
+	"global-settings-web-streaming-overlay-tts-test-button-text": "",
+	"global-settings-web-streaming-overlay-button-text": "",
+	"bilibili-settings-cookies-settings": "",
+	"bilibili-settings-cookies-settings-warning": "",
+	"bilibili-settings-cookies-qr-login-status-step-text": "",
+	"bilibili-settings-cookies-qr-login-status-request-text": "",
+	"bilibili-settings-cookies-qr-login-status-scan-text": "",
+	"bilibili-settings-cookies-qr-login-status-confirm-text": "",
+	"bilibili-settings-cookies-qr-login-request-button-text": "",
+	"request-onerror-request-qr-code": "",
+	"request-onload-request-qr-code": "",
+	"request-onerror-request-qr-code-status": ""
 }
