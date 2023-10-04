@@ -37,6 +37,7 @@ namespace ChatCore.Services.Bilibili
 		private static readonly string BilibiliChatTokenApi = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?type=0&id=";
 		private static readonly string BilibiliEmotionsApi = "https://api.live.bilibili.com/xlive/web-ucenter/v2/emoticon/GetEmoticons?platform=pc&room_id=";
 		private static readonly string BilibiliFingerprintApi = "https://api.bilibili.com/x/frontend/finger/spi";
+		private static readonly string BilibiliCookieValidApi = "https://passport.bilibili.com/x/passport-login/web/cookie/info?csrf=";
 
 		private readonly ILogger _logger;
 		private readonly IWebSocketService _websocketService;
@@ -68,6 +69,7 @@ namespace ChatCore.Services.Bilibili
 		private string _chatToken = "";
 		private string _buvid3 = "";
 		private string _cookies = "";
+		private bool _cookie_valid = false;
 
 		private readonly System.Timers.Timer packetTimer;
 
@@ -256,7 +258,7 @@ namespace ChatCore.Services.Bilibili
 			_websocketService.OnDataRecevied += _websocketService_OnDataRecevied;
 			OnBilibiliMessageReceived += _socketServerService.SendMessage;
 
-			_openBLiveProvider.onWssUpdate += reloadWebsocketConnection;
+			_openBLiveProvider.onWssUpdate += onOpenBLiveWssUpdate;
 			_authManager.OnBilibiliCredentialsUpdated += _authManager_OnCredentialsUpdated;
 
 			packetTimer = new System.Timers.Timer(1000 * 30);
@@ -277,15 +279,34 @@ namespace ChatCore.Services.Bilibili
 				}
 				if (_cookies != _authManager.Credentials.Bilibili_cookies)
 				{
-					_chatToken = "";
-					_buvid3 = "";
-					reload_flag = true;
+					var _old_cookie_valid = _cookie_valid;
+					_cookie_valid = false;
+					if (_authManager.Credentials.Bilibili_cookies != "")
+					{
+						UpdateCookieStatus();
+					}
+
+					if (!_cookie_valid && !_old_cookie_valid)
+					{ }
+					else
+					{
+						_chatToken = "";
+						_buvid3 = "";
+						reload_flag = true;
+					}
 				}
 				// Console.WriteLine($"Connecting to {_roomID}");
 				if (reload_flag)
 				{
 					Start(true);
 				}
+			}
+		}
+
+		public void onOpenBLiveWssUpdate() {
+			if (_settings.danmuku_service_method == "OpenBLive")
+			{
+				reloadWebsocketConnection();
 			}
 		}
 
@@ -305,7 +326,7 @@ namespace ChatCore.Services.Bilibili
 			foreach (var message in DanmakuMessage.ParsePackets(arg2))
 			{
 				var json = new JSONObject();
-				json["operation_code"] = new JSONNumber(message.Operation.ToString());
+				json["operation_code"] = new JSONNumber((int)message.Operation);
 				json["body"] = new JSONString(message.Body);
 				// _logger.LogInformation("Operation: " + message.Operation.ToString());
 				// _logger.LogInformation("Data: " + json.ToString());
@@ -425,6 +446,7 @@ namespace ChatCore.Services.Bilibili
 						{
 							_buvid3 = NewChatBuvidInfo["data"]["b_3"].Value;
 							_logger.LogInformation($"[BilibiliService] | [GetChatBuvidAsync] | Success");
+							reloadWebsocketConnection();
 						}
 						else
 						{
@@ -434,8 +456,8 @@ namespace ChatCore.Services.Bilibili
 					else
 					{
 						_logger.LogInformation($"[BilibiliService] | [GetChatBuvidAsync] | Get buvid3 failed. ({(apiResult == null ? "connection failed" : (apiResult[0] + " " + apiResult[1]))})");
+						reloadWebsocketConnection();
 					}
-					reloadWebsocketConnection();
 				}
 				catch
 				{
@@ -446,13 +468,63 @@ namespace ChatCore.Services.Bilibili
 			else
 			{
 				_logger.LogInformation($"[BilibiliService] | [GetChatBuvidAsync] | Get buvid3 from cookie");
+				reloadWebsocketConnection();
 			}
 		}
 
 		private string GetValueFromCookie(string key) {
-			var _cookie_items = Regex.Matches(_authManager.Credentials.Bilibili_cookies.Trim(), @"(.+?)(?:=(.+?))?(?:;|$|,(?!\s))").Cast<Match>()
-								 .ToDictionary(m => m.Groups[1].Value.Trim(), m => m.Groups[2].Value.Trim());
+			var clean_cookie = new HttpClientUtils().RemoveExpiredTimeAndPath(_authManager.Credentials.Bilibili_cookies);
+
+			var _cookie_items = Regex.Matches(clean_cookie, @"(.+?)(?:=(.+?))?(?:;|$|,(?!\s))").Cast<Match>()
+								 .ToDictionary(m => m.Groups[1].Value.Trim(), m => m.Groups[2].Value.Trim(), StringComparer.OrdinalIgnoreCase);
 			return _cookie_items.TryGetValue(key, out var value)? value : "";
+		}
+
+		private async Task<bool> GetCookieStatusAsync()
+		{
+			_logger.LogInformation($"[BilibiliService] | [GetCookieStatusAsync] | Start");
+			var _csrf = GetValueFromCookie("bili_jct");
+			var _status = false;
+			if (_csrf != "")
+			{
+				try
+				{
+					var apiResult = await (new HttpClientUtils()).HttpClient(BilibiliCookieValidApi + _csrf, HttpMethod.Get, _authManager.Credentials.Bilibili_cookies, null);
+					if (apiResult != null && apiResult[0] == "OK")
+					{
+						var NewCookieStatusInfo = JSONNode.Parse(apiResult[1]);
+						if (NewCookieStatusInfo["code"] == 0)
+						{
+							_logger.LogInformation($"[BilibiliService] | [GetCookieStatusAsync] | Valid!");
+							_status = true;
+						}
+						else if (NewCookieStatusInfo["code"] == -101)
+						{
+							_logger.LogInformation($"[BilibiliService] | [GetCookieStatusAsync] | Failed, Cookie is invalid!");
+						}
+					}
+					else
+					{
+						_logger.LogInformation($"[BilibiliService] | [GetCookieStatusAsync] | Get cookie status failed. ({(apiResult == null ? "connection failed" : (apiResult[0] + " " + apiResult[1]))})");
+					}
+				}
+				catch
+				{
+					_logger.LogInformation($"[BilibiliService] | [GetCookieStatusAsync] | Get cookie status failed. (Exception)");
+				}
+			}
+			else
+			{
+				_logger.LogInformation($"[BilibiliService] | [GetCookieStatusAsync] | Failed, Cookie is lack of csrf");
+			}
+
+			return _status;
+		}
+
+		private void UpdateCookieStatus() {
+			var _cookieStatusAsync = GetCookieStatusAsync();
+			_cookieStatusAsync.Wait();
+			_cookie_valid = _cookieStatusAsync.Result;
 		}
 
 		private async void GetChatTokenAsync(int roomID)
@@ -470,7 +542,7 @@ namespace ChatCore.Services.Bilibili
 
 			try
 			{
-				var apiResult = await (new HttpClientUtils()).HttpClient(BilibiliChatTokenApi + roomID, HttpMethod.Get, _authManager.Credentials.Bilibili_cookies, null);
+				var apiResult = await (new HttpClientUtils()).HttpClient(BilibiliChatTokenApi + roomID, HttpMethod.Get, _cookie_valid ? _authManager.Credentials.Bilibili_cookies : "", null);
 				if (apiResult != null && apiResult[0] == "OK")
 				{
 					var NewChatTokenInfo = JSONNode.Parse(apiResult[1]);
@@ -478,7 +550,7 @@ namespace ChatCore.Services.Bilibili
 					{
 						_chatToken = NewChatTokenInfo["data"]["token"].Value;
 						_logger.LogInformation($"[BilibiliService] | [GetChatTokenAsync] | Success");
-						_logger.LogInformation(apiResult[1]);
+						//_logger.LogInformation(apiResult[1]);
 					}
 					else
 					{
@@ -503,7 +575,7 @@ namespace ChatCore.Services.Bilibili
 		{
 			try
 			{
-				var apiResult = await (new HttpClientUtils()).HttpClient(BilibiliGiftRoomInfoApi + roomID, HttpMethod.Get, _authManager.Credentials.Bilibili_cookies, null);
+				var apiResult = await (new HttpClientUtils()).HttpClient(BilibiliGiftRoomInfoApi + roomID, HttpMethod.Get, _cookie_valid ? _authManager.Credentials.Bilibili_cookies : "", null);
 				if (apiResult != null && apiResult[0] == "OK")
 				{
 					var NewGiftInfo = JSONNode.Parse(apiResult[1]);
@@ -546,7 +618,7 @@ namespace ChatCore.Services.Bilibili
 		{
 			try
 			{
-				var apiResult = await (new HttpClientUtils()).HttpClient(BilibiliWealthApi, HttpMethod.Get, _authManager.Credentials.Bilibili_cookies, null);
+				var apiResult = await (new HttpClientUtils()).HttpClient(BilibiliWealthApi, HttpMethod.Get, _cookie_valid? _authManager.Credentials.Bilibili_cookies: "", null);
 				if (apiResult != null && apiResult[0] == "OK")
 				{
 					var NewWealthInfo = JSONNode.Parse(apiResult[1]);
@@ -581,7 +653,7 @@ namespace ChatCore.Services.Bilibili
 
 			initBilibiliEmoticonsDictionary();
 
-			if (GetValueFromCookie("DedeUserID") != "")
+			if (GetValueFromCookie("DedeUserID") != "" && _cookie_valid)
 			{
 				_logger.LogInformation($"[BilibiliService] | [GetEmotionsAsync] | Cookie found, get the emotions from the api!");
 				try
@@ -659,6 +731,7 @@ namespace ChatCore.Services.Bilibili
 							case "OpenBLive":
 								if (_wssLink != "")
 								{
+									UpdateCookieStatus();
 									GetEmotionsAsync(_roomID);
 									if (_websocketService.IsConnected)
 									{
@@ -674,6 +747,7 @@ namespace ChatCore.Services.Bilibili
 							case "Default":
 								if (_chatToken == "")
 								{
+									UpdateCookieStatus();
 									GetChatTokenAsync(_roomID);
 								}
 								else if (_buvid3 == "")
@@ -682,19 +756,11 @@ namespace ChatCore.Services.Bilibili
 								}
 								else
 								{
-									if (_websocketService.IsConnected)
-									{
-										_websocketService.Disconnect();
-									}
-									_websocketService.Connect("wss://broadcastlv.chat.bilibili.com:443/sub", forceReconnect, HttpClientUtils.UserAgent, "https://live.bilibili.com");
+									_websocketService.Connect("wss://broadcastlv.chat.bilibili.com:443/sub", forceReconnect || _websocketService.IsConnected, HttpClientUtils.UserAgent, "https://live.bilibili.com");
 								}
 								break;
 							case "Legacy":
-								if (_websocketService.IsConnected)
-								{
-									_websocketService.Disconnect();
-								}
-								_websocketService.Connect("wss://broadcastlv.chat.bilibili.com:443/sub", forceReconnect, HttpClientUtils.UserAgent, "https://live.bilibili.com");
+								_websocketService.Connect("wss://broadcastlv.chat.bilibili.com:443/sub", forceReconnect || _websocketService.IsConnected, HttpClientUtils.UserAgent, "https://live.bilibili.com");
 								break;
 
 						}
@@ -719,11 +785,18 @@ namespace ChatCore.Services.Bilibili
 				{
 					return;
 				}
-				packetTimer?.Stop();
-				_isStarted = false;
-				_channels?.Clear();
-				LoggedInUser = null;
-				_websocketService?.Disconnect();
+				try
+				{
+					packetTimer?.Stop();
+					_isStarted = false;
+					_channels?.Clear();
+					LoggedInUser = null;
+					_websocketService?.Disconnect();
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine("[STOP] Exceptions: " + ex.ToString());
+				}
 			}
 		}
 
@@ -1060,7 +1133,7 @@ namespace ChatCore.Services.Bilibili
 			_enable = false;
 			_buvid3 = "";
 			_chatToken = "";
-			Stop();
+			 Stop();
 		}
 
 		private void forwardPacket(JSONObject json, bool isRaw = false) {

@@ -39,7 +39,7 @@ namespace ChatCore.Services.Bilibili
 		private CancellationTokenSource? _cancellationToken;
 		private CancellationTokenSource _reconnectCancellationToken;
 		private string? _status;
-		private Task? _deamon;
+		//private Task? _deamon;
 		private bool _enable = false;
 		private string _identity_code = "";
 
@@ -70,20 +70,23 @@ namespace ChatCore.Services.Bilibili
 
 		public void Start(bool reconnect = false)
 		{
+			_logger.LogInformation($"[OpenBLiveProvider] | [Start] | Start");
 			if (_bApiClient != null)
 			{
 				_status = "Instance already exists";
 				if (_identity_code != _authManager.Credentials.Bilibili_identity_code)
 				{
 					_status = "Restarting";
-					Stop();
+					Restart();
 				}
+				Console.WriteLine(_status);
 				return;
 			}
 
 			if (string.IsNullOrEmpty(_authManager.Credentials.Bilibili_identity_code) || string.IsNullOrEmpty(_config["bilibili_live_app_id"]) || string.IsNullOrEmpty(_config["bilibili_live_access_key_id"]) || string.IsNullOrEmpty(_config["bilibili_live_access_key_secret"]))
 			{
 				_status = "Lack of parameters";
+				Console.WriteLine(_status);
 				Stop(true);
 				return;
 			}
@@ -91,11 +94,12 @@ namespace ChatCore.Services.Bilibili
 			if (!_enable)
 			{
 				_status = "Service not Enabled!";
+				Console.WriteLine(_status);
 				Stop(true);
 				return;
 			}
 
-			if (_deamon == null)
+			/*if (_deamon == null)
 			{
 				_deamon = Task.Run(async () =>
 				{
@@ -117,10 +121,11 @@ namespace ChatCore.Services.Bilibili
 						await Task.Delay(15000);
 					}
 				}, _reconnectCancellationToken.Token);
+				Console.WriteLine("deamon run");
 				return;
-			}
+			}*/
 
-			_logger.LogInformation($"[OpenBLiveProvider] | [Start] | Start");
+			//_logger.LogInformation($"[OpenBLiveProvider] | [Start] | Start | Deamon");
 			_reconnectCancellationToken = new CancellationTokenSource();
 			_bApiClient = new BApiClient();
 			_appStartInfo = new AppStartInfo();
@@ -140,7 +145,7 @@ namespace ChatCore.Services.Bilibili
 				{
 					_logger.LogCritical($"[OpenBLiveProvider] | [Start] | Connecting Error: {_appStartInfo?.Code}, _appStartInfo?.Message");
 					_status = $"Connecting Error: {_appStartInfo?.Code}, _appStartInfo?.Message";
-					Stop();
+					Restart();
 					return;
 				}
 
@@ -162,17 +167,17 @@ namespace ChatCore.Services.Bilibili
 				{
 					_logger.LogCritical("[OpenBLiveProvider] | [Start] | 开启游戏错误: " + _appStartInfo!.ToString());
 					_status = $"Connecting Error: {_appStartInfo!.ToString()}";
-					Stop();
+					Restart();
 					return;
 				}
 			});
 
-			_cancellationToken = new CancellationTokenSource();
+			//_cancellationToken = new CancellationTokenSource();
 		}
 
 		public void Stop(bool force = false)
 		{
-			_logger.LogInformation($"[OpenBLiveProvider] | [Stop] | Stop | {_status}");
+			_logger.LogInformation($"[OpenBLiveProvider] | [Stop] | Stop");
 			if (_cancellationToken is null)
 			{
 				return;
@@ -185,11 +190,15 @@ namespace ChatCore.Services.Bilibili
 
 			Task.Run(async () =>
 			{
-				var ret = await _bApiClient!.EndInteractivePlay(_appId!, _gameId!);
-				_logger.LogDebug("[OpenBLiveProvider] | [Stop] | 关闭游戏: " + ret.Message);
+				if (_bApiClient != null)
+				{
+					var ret = await _bApiClient.EndInteractivePlay(_appId!, _gameId!);
+					_logger.LogInformation("[OpenBLiveProvider] | [Stop] | 关闭游戏: " + ret.Message);
+				}
+				
 				_status = $"Stopped";
 
-				_cancellationToken.Cancel();
+				_cancellationToken?.Cancel();
 				_bApiClient = null;
 				_gameId = null;
 				_appStartInfo = null;
@@ -198,16 +207,21 @@ namespace ChatCore.Services.Bilibili
 				_logger.LogInformation("[OpenBLiveProvider] | [Stop] | Stopped");
 				if (force)
 				{
-					_reconnectCancellationToken.Cancel();
-					_deamon = null;
+					_reconnectCancellationToken?.Cancel();
+					//_deamon = null;
 				}
 			});
+		}
+
+		public void Restart() {
+			Stop(true);
+			Start();
 		}
 
 		public void Enable()
 		{
 			_enable = true;
-			Start();
+			Start(true);
 		}
 
 		public void Disable()

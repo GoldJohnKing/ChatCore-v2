@@ -12,6 +12,7 @@ using System.Web;
 using System.Xml.Linq;
 using ChatCore.Interfaces;
 using ChatCore.Models;
+using ChatCore.Services.Bilibili;
 using ChatCore.Utilities;
 using Microsoft.Extensions.Logging;
 
@@ -23,6 +24,7 @@ namespace ChatCore.Services
 		private readonly IUserAuthProvider _authManager;
 		private readonly MainSettingsProvider _settings;
 		private readonly IPathProvider _pathProvider;
+		private readonly BilibiliLoginProvider _bilibiliLoginProvider;
 
 		private HttpListener? _listener;
 		private CancellationTokenSource? _cancellationToken;
@@ -31,12 +33,13 @@ namespace ChatCore.Services
 
 		private readonly SemaphoreSlim _requestLock = new SemaphoreSlim(1, 1);
 
-		public WebLoginProvider(ILogger<WebLoginProvider> logger, IUserAuthProvider authManager, MainSettingsProvider settings, IPathProvider pathProvider)
+		public WebLoginProvider(ILogger<WebLoginProvider> logger, IUserAuthProvider authManager, MainSettingsProvider settings, IPathProvider pathProvider, BilibiliLoginProvider bilibiliLoginProvider)
 		{
 			_logger = logger;
 			_authManager = authManager;
 			_settings = settings;
 			_pathProvider = pathProvider;
+			_bilibiliLoginProvider	= bilibiliLoginProvider;
 		}
 
 		public void Start(bool bilibiliOnly = false)
@@ -102,6 +105,7 @@ namespace ChatCore.Services
 				"/Statics/Js/tts.js",
 				"/Statics/Js/materialize.min.js",
 				"/Statics/Js/jquery-3.7.1.min.js",
+				"/Statics/Js/qrcode.min.js",
 
 				"/Statics/Lang/en.json",
 				"/Statics/Lang/zh.json",
@@ -330,7 +334,7 @@ namespace ChatCore.Services
 							{
 								var buffer = new StreamReader(path);
 								buffer.BaseStream.CopyTo(response.OutputStream);
-								
+
 							}
 						}
 						catch (Exception ex)
@@ -339,6 +343,23 @@ namespace ChatCore.Services
 							Console.WriteLine(ex.ToString());
 							response.StatusCode = 404;
 						}
+					}
+					else if (request.Url.AbsolutePath == "/bilibili_qr_request")
+					{
+						_bilibiliLoginProvider.Login();
+						var resultJson = new JSONObject();
+						resultJson["url"] = new JSONString(_bilibiliLoginProvider.qr_url);
+						resultJson["status"] = new JSONString(_bilibiliLoginProvider.status);
+						var data = Encoding.UTF8.GetBytes(resultJson.ToString());
+						await response.OutputStream.WriteAsync(data, 0, data.Length);
+					}
+					else if (request.Url.AbsolutePath == "/bilibili_qr_status")
+					{
+						var resultJson = new JSONObject();
+						resultJson["status"] = new JSONString(_bilibiliLoginProvider.status);
+						resultJson["cookies"] = new JSONString(_bilibiliLoginProvider.cookie);
+						var data = Encoding.UTF8.GetBytes(resultJson.ToString());
+						await response.OutputStream.WriteAsync(data, 0, data.Length);
 					}
 					else if (request.Url.AbsolutePath == "/favicon.ico")
 					{
@@ -447,6 +468,10 @@ namespace ChatCore.Services
 					_authManager.Credentials.Bilibili_cookies = responseJson["bilibili_cookies"].Value;
 					authChanged = true;
 					responseJson.Remove("bilibili_cookies");
+					if (_authManager.Credentials.Bilibili_cookies == _bilibiliLoginProvider.cookie)
+					{
+						_bilibiliLoginProvider.cookie = string.Empty;
+					}
 				}
 
 				if (!_authManager.Credentials.Bilibili_identity_code_save && !string.IsNullOrWhiteSpace(_authManager.Credentials.Bilibili_identity_code) )

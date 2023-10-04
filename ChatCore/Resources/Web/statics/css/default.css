@@ -1,8 +1,6 @@
 nav,
 .switch label input[type=checkbox]:checked + .lever:after,
-#saveButton,
-#global-settings-web-streaming-overlay-button,
-#global-settings-web-streaming-overlay-tts-test-button {
+.btn_primary_color {
 	background-color: #1f60a0;
 }
 
@@ -26,17 +24,26 @@ nav,
 	color: #1a1c1e;
 }
 
-.notification-tip {
-	background-color: #2b93e8;
+.notification-tip,
+.warning-tip {
 	display: flex;
 	align-items: center;
-	color: #f3f6fc;
 	padding: 16px;
 	border-radius: 36px;
 	gap: 8px;
 	margin: 8px 0;
 	font-size: 1em;
 	font-weight: 200;
+}
+
+.notification-tip {
+	background-color: #2b93e8;
+	color: #f3f6fc;
+}
+
+.warning-tip {
+	background-color: #e9e87f;
+	color: #1a1c1e;
 }
 
 .default-gap {
@@ -54,12 +61,37 @@ nav,
 	align-items: center;
 }
 
+.center {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.x6-font {
+	font-size: 600%;
+}
+
 .card {
 	background-color: #f2f3fa;
 }
 
 .flex-auto-grow {
 	flex: 1;
+}
+
+.stack-parent {
+	position: relative;
+	margin: 8px;
+}
+
+.stack-bottom {
+	z-index: 0;
+	position: absolute;
+}
+
+.stack-top {
+	z-index: 999;
+	position: absolute;
 }
 
 .ul-force-gap {
@@ -121,6 +153,72 @@ ul,
 
 .bilibili-button {
 	background-color: #fb7299;
+}
+
+.square {
+	aspect-ratio: 1 / 1;
+}
+
+.full-width,
+.full-width img{
+	width: 100%;
+}
+
+.step-list {
+	display: flex;
+	flex-direction: column;
+}
+
+.step-list-item {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
+.step-list-item i {
+	margin-right: 4px;
+}
+
+.progress .red {
+	background-color: #db4437 !important;
+}
+
+.progress .green {
+	background-color: #0f9d58 !important;
+}
+
+.progress .blue {
+	background-color: #4285f4 !important;
+}
+
+.progress .yellow {
+	background-color: #f4b400 !important;
+}
+
+@keyframes flashColor {
+	0% {
+		background-color: #4285f4;
+	}
+
+	25% {
+		background-color: #db4437;
+	}
+
+	50% {
+		background-color: #f4b400;
+	}
+
+	75% {
+		background-color: #0f9d58;
+	}
+
+	100% {
+		background-color: #4285f4;
+	}
+}
+
+.indeterminate.flash-color {
+	animation: flashColor 8.4s linear infinite;
 }
 
 a.btn-floating.pulse.cyan.tooltipped {

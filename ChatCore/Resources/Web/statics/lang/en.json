@@ -127,6 +127,17 @@
 	"global-settings-web-streaming-overlay-tts-voice-package": "Voice Package",
 	"global-settings-web-streaming-overlay-tts-voice-speed": "Speach Speed",
 	"global-settings-web-streaming-overlay-tts-voice-pitch": "Speach Pitch",
-	"global-settings-web-streaming-overlay-tts-test-button": "Listen a test message",
-	"global-settings-web-streaming-overlay-button-text": "Click to open Streaming Overlay"
+	"global-settings-web-streaming-overlay-tts-test-button-text": "Listen a test message",
+	"global-settings-web-streaming-overlay-button-text": "Click to open Streaming Overlay",
+	"bilibili-settings-cookies-settings": "Bilibili Cookies settings",
+	"bilibili-settings-cookies-settings-warning": "The cookie contains the credentials for your account, please keep it safe.",
+	"bilibili-settings-cookies-qr-login-status-step-text": "Steps: ",
+	"bilibili-settings-cookies-qr-login-status-request-text": "Request QR Code",
+	"bilibili-settings-cookies-qr-login-status-scan-text": "Scan QR Code using Bilibili App",
+	"bilibili-settings-cookies-qr-login-status-confirm-text": "Confirm Login",
+	"bilibili-settings-cookies-qr-login-request-button-text": "Request a new QR Code",
+	"request-onerror-request-qr-code": "Something went wrong while trying to get QR code. Make sure Beat Saber is still running.",
+	"request-onload-request-qr-code": "Requesting QR code successfully.",
+	"request-onerror-request-qr-code-status": "Something went wrong while trying to get QR code status. Make sure Beat Saber is still running."
+
 }
