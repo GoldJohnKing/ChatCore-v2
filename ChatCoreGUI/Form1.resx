@@ -118,6 +118,9 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="textBox_console.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft YaHei Semibold, 9pt, style=Bold</value>
+  </data>
   <data name="textBox_console.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 21</value>
   </data>
@@ -146,6 +149,15 @@ Basic Configuration (for Beat Saber mod users)
 4. After installing any mod that utilizes ChatCore, a settings web app will be launched upon starting the game. Use this to login, join/leave channels, and configure various settings.
 
 Changelog:
+v3.0.0-alpha3:
+- 🔧[Fix] Some minor issues in the Web App
+
+v3.0.0-alpha2:
+- 🔨[Add] Bilibili sign in via QR code
+
+- 🛠[Enhance] OpenBLive service stability
+- 🛠[Enhance] Log will include the information of the cookie validation
+
 v3.0.0-alpha:
 - 🔨[Add] WebSocket server can forward message packet (External service can connect to the port num of the web app + 1)
 - 🔨[Add] Streaming Overlay (You can edit the custom.js and custom.css files in the .chatcore folder to customize the style and function)
@@ -231,7 +243,7 @@ v2.2.0:
     <value>$this</value>
   </data>
   <data name="&gt;&gt;groupBox_Console.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="button_web.Location" type="System.Drawing.Point, System.Drawing">
     <value>18, 456</value>
@@ -255,7 +267,7 @@ v2.2.0:
     <value>$this</value>
   </data>
   <data name="&gt;&gt;button_web.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="languageText.Items" xml:space="preserve">
     <value>简体中文(默认)</value>
@@ -313,6 +325,33 @@ v2.2.0:
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="button_config.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="button_config.Location" type="System.Drawing.Point, System.Drawing">
+    <value>157, 456</value>
+  </data>
+  <data name="button_config.Size" type="System.Drawing.Size, System.Drawing">
+    <value>133, 23</value>
+  </data>
+  <data name="button_config.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="button_config.Text" xml:space="preserve">
+    <value>Open Config Directory</value>
+  </data>
+  <data name="&gt;&gt;button_config.Name" xml:space="preserve">
+    <value>button_config</value>
+  </data>
+  <data name="&gt;&gt;button_config.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;button_config.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;button_config.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

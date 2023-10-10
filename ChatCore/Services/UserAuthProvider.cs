@@ -116,5 +116,10 @@ namespace ChatCore.Services
 				OnBilibiliCredentialsUpdated?.Invoke(Credentials);
 			}
 		}
+
+		public void Reload()
+		{
+			_credentialSerializer.Load(Credentials, _credentialsPath);
+		}
 	}
 }

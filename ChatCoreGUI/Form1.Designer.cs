@@ -36,6 +36,7 @@ namespace ChatCoreGUI
             this.button_web = new System.Windows.Forms.Button();
             this.languageText = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.button_config = new System.Windows.Forms.Button();
             this.groupBox_Console.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -75,12 +76,20 @@ namespace ChatCoreGUI
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
             // 
+            // button_config
+            // 
+            resources.ApplyResources(this.button_config, "button_config");
+            this.button_config.Name = "button_config";
+            this.button_config.UseVisualStyleBackColor = true;
+            this.button_config.Click += new System.EventHandler(this.button_config_Click);
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.label1);
             this.Controls.Add(this.languageText);
+            this.Controls.Add(this.button_config);
             this.Controls.Add(this.button_web);
             this.Controls.Add(this.groupBox_Console);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -102,6 +111,7 @@ namespace ChatCoreGUI
 		private System.Windows.Forms.Button button_web;
 		private System.Windows.Forms.ComboBox languageText;
 		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.Button button_config;
 	}
 }
 

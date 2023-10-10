@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using ChatCore.Config;
@@ -200,6 +201,11 @@ namespace ChatCore.Services
 		public void updateBilibili(bool enable)
 		{
 			onBilibiliUpdate?.Invoke(enable);
+		}
+
+		public void OpenConfigDirectory()
+		{
+			Process.Start("explorer.exe", _pathProvider.GetDataPath());
 		}
 	}
 }

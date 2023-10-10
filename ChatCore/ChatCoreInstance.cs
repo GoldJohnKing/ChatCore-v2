@@ -304,6 +304,19 @@ namespace ChatCore
 			}
 		}
 
+		public void OpenConfigDirectory()
+		{
+			lock (_runLock)
+			{
+				if (_serviceProvider == null)
+				{
+					throw new ChatCoreNotInitializedException("Make sure to call ChatCoreInstance.Create() to initialize ChatCore!");
+				}
+
+				_serviceProvider.GetService<MainSettingsProvider>().OpenConfigDirectory();
+			}
+		}
+
 		public void LaunchWebSocketServer()
 		{
 			lock (_runLock)

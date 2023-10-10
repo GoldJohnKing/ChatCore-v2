@@ -79,7 +79,6 @@ class TTS {
 		textToSpeak.rate = this.rate;
 
 		this.#synth.speak(textToSpeak);
-		console.log("[DEBUG | TTS]: ", text, this.voice, this.rate, this.pitch);
 	}
 
 	test() {
