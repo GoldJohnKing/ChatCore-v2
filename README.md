@@ -2,6 +2,11 @@
 
 聊天核心 ChatCore是用.NET Standard 2.0编写的共享聊天客户端库。该项目的主要目的是减少多程序对同一个聊天服务进行交互的开销（这对于游戏中有多个模块需要聊天服务来说非常有用）。
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/A0A8FH2TE) 
+
+<a href="https://baoziii.fanbox.cc/"><img src="https://raw.githubusercontent.com/baoziii/statics/main/fanbox.png" width=256px></a>
+<a href="https://afdian.net/a/baoziii"><img src="https://raw.githubusercontent.com/baoziii/statics/main/afdian.jpg" width=256px></a>
+
 # 基本设置 (节奏光剑mod用户)
 
 1. 从[这里](https://github.com/baoziii/ChatCore-v2)下载最新的压缩包并解压到游戏根目录
