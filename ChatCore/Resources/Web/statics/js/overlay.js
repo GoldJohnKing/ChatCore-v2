@@ -69,7 +69,6 @@ let formatBilibiliMessage = function (data) {
 	bilibiliMsg.username = data["Username"];
 	bilibiliMsg.avatar = default_image_bilibili;
 	if (data["Sender"] != null) {
-		debugData = data["Sender"]["Badges"];
 		if ((data["Sender"]["Badges"]).length > 0) {
 			let uri = data["Sender"]["Badges"][(data["Sender"]["Badges"]).length - 1]["Uri"];
 			if (uri !== undefined && typeof uri === "string" && uri !== null && uri.includes("/.chatcore/cache/Avatars/")) {
@@ -220,19 +219,19 @@ function debug_danmuku(command) {
 			break;
 		case 'sc':
 		case '醒目留言':
-			enqueueMessage("bilibili", "这是一条假的醒目留言", "super_chat", "ChatCore", default_image_bilibili, "0.0", undefined, undefined, undefined, "醒目留言测试");
+			enqueueMessage("bilibili", "这是一条假的醒目留言", "super_chat", "ChatCore", default_image_bilibili, "0.0", undefined, undefined, "醒目留言测试");
 			break;
 		case 'clearTTS':
 		case '清空语音':
 			if (urlParams.has('TTSConfig')) {
 				tts.cancelAll();
-				enqueueMessage("bilibili", "已清空语音队列", "danmuku", "鸽舍弹幕姬", default_image_bilibili, undefined, undefined, undefined, "已清空语音队列");
+				enqueueMessage("bilibili", "已清空语音队列", "danmuku", "ChatCore", default_image_bilibili, undefined, undefined, "已清空语音队列");
 			}
 	}
 }
 
 function enqueueMessage(channel_type, message, type, username, avatar, price, giftImg = undefined, extra = undefined, tts_text = undefined) {
-	if (debug === "1") console.log(type, message, username, avatar, price, giftImg, extra);
+	if (debug === "1") console.log(type, message, username, avatar, price, giftImg, extra, tts_text);
 	let message_obj = {};
 	message_obj['channel_type'] = channel_type;
 	message_obj['message'] = message;

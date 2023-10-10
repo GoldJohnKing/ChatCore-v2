@@ -9,5 +9,6 @@ namespace ChatCore.Interfaces
 		LoginCredentials Credentials { get; }
 		void SaveTwitch(bool callback = true);
 		void SaveBilibili(bool callback = true);
+		void Reload();
 	}
 }

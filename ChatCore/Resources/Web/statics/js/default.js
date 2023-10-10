@@ -290,7 +290,7 @@ function fetch_language_file() {
 					"global-settings-web-streaming-overlay-tts-voice-package",
 					"global-settings-web-streaming-overlay-tts-voice-speed",
 					"global-settings-web-streaming-overlay-tts-voice-pitch",
-					"global-settings-web-streaming-overlay-tts-test-button",
+					"global-settings-web-streaming-overlay-tts-test-button-text",
 					"global-settings-web-streaming-overlay-button-text"
 				];
 				translation_list.forEach((key) => {

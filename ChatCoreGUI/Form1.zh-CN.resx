@@ -117,6 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="textBox_console.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft YaHei UI Semibold, 9.75pt, style=Bold</value>
+  </data>
   <data name="textBox_console.Text" xml:space="preserve">
     <value>欢迎使用聊天核心!
 聊天核心是一个可以被第三方程序使用的库。该项目的主要目的是减少多程序对同一个聊天服务进行交互的开销（这对于游戏中有多个模块需要聊天服务来说非常有用）。
@@ -126,6 +130,15 @@
 2. 在安装了任何调用聊天核心的mod以后，设置项网页将会在启动游戏后在你的默认浏览器中打开。你可以在里面配置你的Twitch和Bilibili设置项。
 
 更新日志：
+3.0.0-alpha3:
+- 🔧[修复] 网页应用的一些小错误
+
+3.0.0-alpha2:
+- 🔨[新增] B站扫码登录
+
+- 🛠[增强] 开放平台连接稳定性
+- 🛠[增强] 日志中将会显示当前cookie是否有效
+
 3.0.0-alpha:
 - 🔨[新增] Websocket服务器消息转发(外部可连接网页应用端口号+1的端口)
 - 🔨[新增] 直播叠加层(网页弹幕姬) (可自定义.chatcore文件下的custom.js和custom.css文件来自定义样式和功能)
@@ -183,7 +196,6 @@
   <data name="button_web.Text" xml:space="preserve">
     <value>打开网页应用</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
     <value>354, 459</value>
   </data>
@@ -192,6 +204,9 @@
   </data>
   <data name="label1.Text" xml:space="preserve">
     <value>语言</value>
+  </data>
+  <data name="button_config.Text" xml:space="preserve">
+    <value>打开配置文件目录</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">

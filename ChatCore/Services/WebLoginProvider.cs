@@ -259,6 +259,7 @@ namespace ChatCore.Services
 					else if (request.HttpMethod == "GET" && request.Url.AbsolutePath == "/" && request.Url.Query == "") // Get Config Data
 					{
 						_settings.Reload();
+						_authManager.Reload();
 						var settingsJson = _settings.GetSettingsAsJson();
 						settingsJson["twitch_oauth_token"] = new JSONString(_authManager.Credentials.Twitch_OAuthToken);
 						settingsJson["twitch_channels"] = new JSONArray(_authManager.Credentials.Twitch_Channels);
@@ -291,6 +292,7 @@ namespace ChatCore.Services
 					else if (request.Url.AbsolutePath == "/overlay" || request.Url.AbsolutePath == "/overlay/") // Get Overlay
 					{
 						_settings.Reload();
+						_authManager.Reload();
 						var settingsJson = _settings.GetSettingsAsJson();
 						settingsJson["bilibili_room_id"] = new JSONNumber(_authManager.Credentials.Bilibili_room_id);
 						var pageBuilder = new StringBuilder(_overlayPageData);
@@ -304,6 +306,7 @@ namespace ChatCore.Services
 					} else if (request.Url.AbsolutePath == "/config" || request.Url.AbsolutePath == "/config/") // Get config
 					{
 						_settings.Reload();
+						_authManager.Reload();
 						var settingsJson = _settings.GetSettingsAsJson();
 						settingsJson["bilibili_room_id"] = new JSONNumber(_authManager.Credentials.Bilibili_room_id);
 						var data = Encoding.UTF8.GetBytes(settingsJson.ToString());
@@ -330,11 +333,25 @@ namespace ChatCore.Services
 								f.Close();
 							}
 
+							Console.WriteLine("Load " + request.Url.AbsolutePath);
 							if (new FileInfo(path).Length != 0)
 							{
 								var buffer = new StreamReader(path);
-								buffer.BaseStream.CopyTo(response.OutputStream);
-
+								if (buffer.BaseStream.Length != 0)
+								{
+									Console.WriteLine("Read " + request.Url.AbsolutePath);
+									buffer.BaseStream.CopyTo(response.OutputStream);
+								}
+								else
+								{
+									Console.WriteLine("Empty " + request.Url.AbsolutePath);
+								}
+								buffer.BaseStream.Close();
+								Console.WriteLine("Close " + request.Url.AbsolutePath);
+							}
+							else
+							{
+								Console.WriteLine("Skip " + request.Url.AbsolutePath);
 							}
 						}
 						catch (Exception ex)

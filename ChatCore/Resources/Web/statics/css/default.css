@@ -264,8 +264,8 @@ a.btn-floating.pulse.cyan.tooltipped {
 
 .BLive_row {
 	margin: 0 12px;
-	display:flex;
-	justify-content:center;
+	display: flex;
+	align-items: center;
 }
 
 .Blive_code_row {
@@ -310,7 +310,6 @@ a.btn-floating.pulse.cyan.tooltipped {
 	background-image: url("../Images/Blive/Close01.png");
 	position: relative;
 	right: 12px;
-	top: 14px;
 }
 
 .BLive_code_promote_text {
