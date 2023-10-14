@@ -149,6 +149,10 @@ Basic Configuration (for Beat Saber mod users)
 4. After installing any mod that utilizes ChatCore, a settings web app will be launched upon starting the game. Use this to login, join/leave channels, and configure various settings.
 
 Changelog:
+v3.0.0-alpha4:
+- 🔧[Fix] the thread block issue caused by the mixing of asynchronous and synchronous usage.
+- 🔧[Fix] the issue that Gift Message Packets are not forwarded.
+
 v3.0.0-alpha3:
 - 🔧[Fix] Some minor issues in the Web App
 
