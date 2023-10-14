@@ -36,24 +36,21 @@ namespace ChatCore.Services.Bilibili
 			_loginLock = new SemaphoreSlim(1, 1);
 		}
 
-		public void Login()
+		public async Task Login()
 		{
-			Task.Run(async () =>
+			await _loginLock.WaitAsync();
+			try
 			{
-				await _loginLock.WaitAsync();
-				try
-				{
-					await GetQRCodeAsync();
-				}
-				catch (Exception ex)
-				{
-					_logger.LogError(ex, $"[BilibiliLoginProvider] | [Login] | An exception occurred while trying to login Bilibili.");
-				}
-				finally
-				{
-					_loginLock.Release();
-				}
-			}).Wait();
+				await GetQRCodeAsync();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, $"[BilibiliLoginProvider] | [Login] | An exception occurred while trying to login Bilibili.");
+			}
+			finally
+			{
+				_loginLock.Release();
+			}
 		}
 
 		private async Task<bool> GetQRCodeAsync()

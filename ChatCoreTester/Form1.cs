@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ChatCore;
 using ChatCore.Interfaces;
@@ -140,7 +141,9 @@ namespace ChatCoreTester
 
 		private void button_bili_mock_Click(object sender, EventArgs e)
 		{
-			_biliBiliService.DanmukuProcessor(Assembly.GetCallingAssembly(), textBox_bili_mock.Text);
+			Task.Run(() => {
+				_biliBiliService.DanmukuProcessor(Assembly.GetCallingAssembly(), textBox_bili_mock.Text);
+			});
 		}
 
 		private void button_bili_secret_check_Click(object sender, EventArgs e)

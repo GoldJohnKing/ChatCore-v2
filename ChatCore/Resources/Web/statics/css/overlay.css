@@ -171,11 +171,12 @@ div {
 	height: 56px;
 	margin: 8px;
 	border-radius: 28px;
-	background-size: 56px 56px;
+	background-size: 68px 68px;
 	flex-shrink: 0;
 	-moz-box-shadow: 0 0 4px black;
 	-webkit-box-shadow: 0 0 4px black;
 	box-shadow: 0 0 4px black;
+	background-position: -6px -6px;
 }
 
 .msg-SuperChat-username {

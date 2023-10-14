@@ -18,7 +18,6 @@ namespace ChatCore.Utilities
         public async Task<List<string>> HttpClient(string url, HttpMethod httpMethod, string? cookieVal, HttpContent? content)
         {
 			var client = new HttpClient(new HttpClientHandler() { UseCookies = false, AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
-
             var result = new List<string>();
 			try
 			{
@@ -52,9 +51,6 @@ namespace ChatCore.Utilities
 			{
 				result.Add("error");
 				result.Add($"{e.Message}");
-			}
-			finally {
-				client?.Dispose();
 			}
             return result;
         }

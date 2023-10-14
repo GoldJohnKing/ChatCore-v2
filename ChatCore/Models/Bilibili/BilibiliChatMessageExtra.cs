@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ChatCore.Models.Bilibili
 {
-	public interface BilibiliChatMessageExtra
+	public class BilibiliChatMessageExtra
 	{
 	}
 
