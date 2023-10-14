@@ -363,7 +363,7 @@ namespace ChatCore.Services
 					}
 					else if (request.Url.AbsolutePath == "/bilibili_qr_request")
 					{
-						_bilibiliLoginProvider.Login();
+						await _bilibiliLoginProvider.Login();
 						var resultJson = new JSONObject();
 						resultJson["url"] = new JSONString(_bilibiliLoginProvider.qr_url);
 						resultJson["status"] = new JSONString(_bilibiliLoginProvider.status);

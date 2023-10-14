@@ -253,10 +253,12 @@ namespace ChatCore.Models.Bilibili
 				if (data["blind_gift"].IsNull)
 				{
 					b.Message = data["action"].Value + data["num"].Value + "个" + data["giftName"].Value + GiftPlacholder + MessagePrice;
+					b.Content = data["action"].Value + data["num"].Value + "个" + data["giftName"].Value;
 				}
 				else
 				{
 					b.Message = data["action"].Value + data["num"].Value + "个" + data["giftName"].Value + GiftPlacholder + MessagePrice + $"(来自{extra.origin_gift})";
+					b.Content = data["action"].Value + data["num"].Value + "个" + data["giftName"].Value + $"(来自{extra.origin_gift})";
 				}
 
 				var emote_list = new List<IChatEmote>();

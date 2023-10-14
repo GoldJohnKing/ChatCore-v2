@@ -48,6 +48,7 @@ namespace ChatCore.Services.Bilibili
 
 		private readonly object _messageReceivedLock;
 		private readonly object _initLock;
+		private readonly object _chatTokenLock;
 
 		private bool _isStarted;
 		public bool _enable { get; private set; }
@@ -244,6 +245,7 @@ namespace ChatCore.Services.Bilibili
 			_channels = new ConcurrentDictionary<string, IChatChannel>();
 			_messageReceivedLock = new object();
 			_initLock = new object();
+			_chatTokenLock = new object();
 			_roomID = _authManager.Credentials.Bilibili_room_id;
 			_cookies = _authManager.Credentials.Bilibili_cookies;
 
@@ -265,16 +267,16 @@ namespace ChatCore.Services.Bilibili
 			packetTimer.Elapsed += PacketTimer_Elapsed;
 		}
 
-		private void _authManager_OnCredentialsUpdated(LoginCredentials credentials)
+		private async void _authManager_OnCredentialsUpdated(LoginCredentials credentials)
 		{
 			if (_isStarted && _enable)
 			{
 				var reload_flag = false;
 				if (_roomID != _authManager.Credentials.Bilibili_room_id)
 				{
+					_roomID = _authManager.Credentials.Bilibili_room_id;
 					GetChannelConfigAsync(_roomID);
 					GetChannelGiftRoomInfoAsync(_roomID);
-					_roomID = _authManager.Credentials.Bilibili_room_id;
 					reload_flag = true;
 				}
 				if (_cookies != _authManager.Credentials.Bilibili_cookies)
@@ -283,7 +285,7 @@ namespace ChatCore.Services.Bilibili
 					_cookie_valid = false;
 					if (_authManager.Credentials.Bilibili_cookies != "")
 					{
-						UpdateCookieStatus();
+						await UpdateCookieStatus();
 					}
 
 					if (!_cookie_valid && !_old_cookie_valid)
@@ -382,6 +384,7 @@ namespace ChatCore.Services.Bilibili
 				else
 				{
 					_logger.LogInformation($"[BilibiliService] | [DanmukuProcessor] | allowed {bmessage.MessageType} {bmessage.Message}");
+					// switch (bmessage.extra is )
 					forwardPacket(JsonSerializer.Serialize(bmessage));
 					TextMessageReceivedCallbacks?.InvokeAll(arg1, this, bmessage);
 				}
@@ -521,10 +524,22 @@ namespace ChatCore.Services.Bilibili
 			return _status;
 		}
 
-		private void UpdateCookieStatus() {
-			var _cookieStatusAsync = GetCookieStatusAsync();
-			_cookieStatusAsync.Wait();
-			_cookie_valid = _cookieStatusAsync.Result;
+		private async Task UpdateCookieStatus() {
+			_cookie_valid = await GetCookieStatusAsync();
+		}
+
+		private async void UpdateCookieStatusAndDo(string functionName)
+		{
+			await UpdateCookieStatus();
+			switch (functionName)
+			{
+				case "emotion":
+					GetEmotionsAsync(_roomID);
+					break;
+				case "chatToken":
+					GetChatTokenAsync(_roomID);
+					break;
+			}
 		}
 
 		private async void GetChatTokenAsync(int roomID)
@@ -545,6 +560,7 @@ namespace ChatCore.Services.Bilibili
 				var apiResult = await (new HttpClientUtils()).HttpClient(BilibiliChatTokenApi + roomID, HttpMethod.Get, _cookie_valid ? _authManager.Credentials.Bilibili_cookies : "", null);
 				if (apiResult != null && apiResult[0] == "OK")
 				{
+					Console.WriteLine(apiResult[1]);
 					var NewChatTokenInfo = JSONNode.Parse(apiResult[1]);
 					if (NewChatTokenInfo["code"] == 0)
 					{
@@ -731,8 +747,8 @@ namespace ChatCore.Services.Bilibili
 							case "OpenBLive":
 								if (_wssLink != "")
 								{
-									UpdateCookieStatus();
-									GetEmotionsAsync(_roomID);
+									UpdateCookieStatusAndDo("emotion");
+									
 									if (_websocketService.IsConnected)
 									{
 										_websocketService.Disconnect();
@@ -745,18 +761,20 @@ namespace ChatCore.Services.Bilibili
 								}
 								break;
 							case "Default":
-								if (_chatToken == "")
+								lock (_chatTokenLock)
 								{
-									UpdateCookieStatus();
-									GetChatTokenAsync(_roomID);
-								}
-								else if (_buvid3 == "")
-								{
-									GetChatBuvidAsync();
-								}
-								else
-								{
-									_websocketService.Connect("wss://broadcastlv.chat.bilibili.com:443/sub", forceReconnect || _websocketService.IsConnected, HttpClientUtils.UserAgent, "https://live.bilibili.com");
+									if (_chatToken == "")
+									{
+										UpdateCookieStatusAndDo("chatToken");
+									}
+									else if (_buvid3 == "")
+									{
+										GetChatBuvidAsync();
+									}
+									else
+									{
+										_websocketService.Connect("wss://broadcastlv.chat.bilibili.com:443/sub", forceReconnect || _websocketService.IsConnected, HttpClientUtils.UserAgent, "https://live.bilibili.com");
+									}
 								}
 								break;
 							case "Legacy":
@@ -1100,6 +1118,20 @@ namespace ChatCore.Services.Bilibili
 				{
 					((BilibiliGiftTimer)sender).GetMessage();
 					TextMessageReceivedCallbacks?.InvokeAll(((BilibiliGiftTimer)sender).Arg1, this, ((BilibiliGiftTimer)sender).bmessage);
+					var _bmessage = JSON.Parse(JsonSerializer.Serialize(((BilibiliGiftTimer)sender).bmessage));
+					Console.WriteLine("Parse good");
+					var _extra = _bmessage["extra"].AsObject!;
+					Console.WriteLine("Obj get");
+					_extra["gift_id"] = new JSONString(extra.gift_id);
+					_extra["gift_action"] = new JSONString(extra.gift_action);
+					_extra["gift_num"] = new JSONNumber(extra.gift_num);
+					_extra["gift_name"] = new JSONString(extra.gift_name);
+					_extra["origin_gift"] = new JSONString(extra.origin_gift);
+					_extra["gift_type"] = new JSONString(extra.gift_type);
+					_extra["gift_price"] = new JSONNumber(extra.gift_price);
+					_extra["gift_img"] = new JSONString(extra.gift_img);
+					Console.WriteLine(_bmessage.ToString());
+					forwardPacket(_bmessage.ToString());
 					((BilibiliGiftTimer)sender).Close();
 					giftTimerDict.Remove(((BilibiliGiftTimer)sender).Name);
 				};

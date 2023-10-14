@@ -80,7 +80,12 @@ let formatBilibiliMessage = function (data) {
 	bilibiliMsg.content = data["Content"];
 	bilibiliMsg.extra = data["extra"];
 	bilibiliMsg.price = 0.0;
+	if (bilibiliMsg.messageType == "gift" || bilibiliMsg.messageType == "gift_in_SC") {
+		bilibiliMsg.message = bilibiliMsg.content;
+	}
+
 	if (bilibiliMsg.messageType == "gift" ||
+		bilibiliMsg.messageType == "gift_in_SC" ||
 		bilibiliMsg.messageType == "red_pocket_start" ||
 		bilibiliMsg.messageType == "red_pocket_new" ||
 		bilibiliMsg.messageType == "new_guard" ||
@@ -118,7 +123,8 @@ let formatBilibiliMessage = function (data) {
 			bilibiliMsg.tts_text = `${bilibiliMsg.usernamePure} 发了一个 ${bilibiliMsg.message} 表情`;
 			break;
 		case "gift":
-			bilibiliMsg.tts_text = `${bilibiliMsg.usernamePure}${bilibiliMsg.message}`;
+		case "gift_in_SC":
+			bilibiliMsg.tts_text = `${bilibiliMsg.usernamePure}${bilibiliMsg.content}`;
 			break;
 		case "super_chat":
 			bilibiliMsg.tts_text = `${bilibiliMsg.usernamePure} 的 ${(bilibiliMsg.extra)["sc_price"]} 元醒目留言说 ${bilibiliMsg.content}`;
@@ -465,7 +471,7 @@ var createMessage = function(channel_type, message, type, username, avatar, pric
 		danmukuContentElement.className = "msg-SuperChat-content";
 		danmukuContentElement.textContent = message;
 		danmukuPriceElement.className = "msg-SuperChat-price";
-		danmukuPriceElement.textContent = `${type === "new_guard_in_SC" ? "" : "￥"}${price}`;
+		danmukuPriceElement.textContent = `${extra["gift_type"] === "silver" ? "免" : ""}${type === "new_guard_in_SC" ? "" : "￥"}${price}`;
 		danmukuSuperChatTop.appendChild(danmukuAvatarElement);
 		danmukuSuperChatTop2.appendChild(danmukuUsernameElement);
 		danmukuSuperChatTop2.appendChild(danmukuPriceElement);
