@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using ChatCore.Interfaces;
 using ChatCore.Utilities;
 using Microsoft.Extensions.Logging;
 using SuperSocket.ClientEngine;
+using SuperSocket.ClientEngine.Proxy;
 using WebSocket4Net;
 
 namespace ChatCore.Services
@@ -71,6 +73,14 @@ namespace ChatCore.Services
 						try
 						{
 							_client = new WebSocket(uri, "", cookies, null, userAgent, origin);
+
+							var systemProxy = (WebProxy)WebRequest.DefaultWebProxy;
+							if (systemProxy.Address != null && systemProxy.Address.AbsoluteUri != string.Empty)
+							{
+								var proxyUri = systemProxy.Address;
+								_client.Proxy = new HttpConnectProxy(new IPEndPoint(IPAddress.Parse(proxyUri.Host), proxyUri.Port));
+							}
+
 							_client.Opened += _client_Opened;
 							_client.Closed += _client_Closed;
 							//_client.Error += _client_Error;

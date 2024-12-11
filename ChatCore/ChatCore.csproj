@@ -10,7 +10,7 @@
 		<NoWarn>1591</NoWarn>
 		<OutDir>$(ProjectDir)bin\$(Configuration)</OutDir>
 		<DocumentationFile>$(OutDir)\ChatCore.xml</DocumentationFile>
-		<GameDirPath>S:\Game\SteamLibrary\steamapps\common\Beat Saber</GameDirPath>
+		<GameDirPath>D:\GAMES\BSManager_Data\BSManager\BSInstances\Beat Saber v1.39.0\</GameDirPath>
 		<AssemblyVersion>3.0.0.0</AssemblyVersion>
 	  <UserSecretsId>7d582ffc-3828-492c-9f7f-ca06d47cec32</UserSecretsId>
 	  <Configurations>Debug;Release;OpenBLive</Configurations>

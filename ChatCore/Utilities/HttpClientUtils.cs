@@ -1,24 +1,23 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace ChatCore.Utilities
 {
-    public class HttpClientUtils
+	public class HttpClientUtils
     {
 		public static string UserAgent = @"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36";
 
         public async Task<List<string>> HttpClient(string url, HttpMethod httpMethod, string? cookieVal, HttpContent? content)
         {
-			var client = new HttpClient(new HttpClientHandler() { UseCookies = false, AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
-            var result = new List<string>();
+			var proxy = (WebProxy)WebRequest.DefaultWebProxy;
+			var useProxy = proxy.Address != null && proxy.Address.AbsoluteUri != string.Empty;
+			var client = new HttpClient(new HttpClientHandler() { Proxy = useProxy ? proxy : null, UseCookies = false, AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
+			var result = new List<string>();
 			try
 			{
 				var httpRequestMessage = new HttpRequestMessage(httpMethod, url);
@@ -49,8 +48,8 @@ namespace ChatCore.Utilities
 			}
 			catch (Exception e)
 			{
-				result.Add("error");
 				result.Add($"{e.Message}");
+				result.Add($"{e.StackTrace}");
 			}
             return result;
         }
